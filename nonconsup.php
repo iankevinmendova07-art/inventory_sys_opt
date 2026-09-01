@@ -34,6 +34,8 @@ $adminRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'Administra
     <!-- DataTables JS -->
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <!-- Shared logout handler -->
+    <script src="assets/js/index.js" defer></script>
     <!-- Custom Non-Consumable JS -->
     <script src="assets/js/nonconsup.js" defer></script>
 </head>

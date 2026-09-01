@@ -45,6 +45,8 @@ try {
     <!-- DataTables JS -->
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <!-- Shared logout handler -->
+    <script src="assets/js/index.js" defer></script>
     <!-- Custom textbooks JS -->
     <script src="assets/js/textbooks.js" defer></script>
 </head>

@@ -80,6 +80,8 @@ function renderRows(array $items): void {
     <!-- DataTables -->
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <!-- Shared logout handler -->
+    <script src="assets/js/index.js" defer></script>
 
     <style>
         /* Tab styling matching setting.php */
