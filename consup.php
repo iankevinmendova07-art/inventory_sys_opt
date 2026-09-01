@@ -188,10 +188,6 @@ $adminRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'Administra
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label for="category" class="form-label fw-semibold">Consumable Supply</label>
-                            <input type="text" class="form-control" id="category" name="category" value="Consumable Supply" readonly>
-                        </div>
-                        <div class="mb-3">
                             <label for="qty" class="form-label fw-semibold">Quantity</label>
                             <input type="number" class="form-control" id="qty" name="qty" placeholder="Enter quantity" required>
                         </div>
@@ -233,10 +229,6 @@ $adminRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'Administra
                             <option value="" disabled>Select unit of measure</option>
                             <?php include 'includes/partials/item_unit_options.php'; ?>
                         </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="editCategory" class="form-label fw-semibold">Category</label>
-                        <input type="text" class="form-control" id="editCategory" name="category" value="Consumable Supply" readonly>
                     </div>
                     <div class="mb-3">
                         <label for="editReference" class="form-label fw-semibold">Reference</label>
@@ -308,13 +300,9 @@ $adminRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'Administra
                              <input type="text" class="form-control" id="cartUnit" name="unit" placeholder="Enter unit of measure" required readonly>
                         </div>
                         <div class="mb-3">
-                            <label for="cartCategory" class="form-label fw-semibold">Category</label>
-                            <input type="text" class="form-control" id="cartCategory" name="category" placeholder="Enter category" required readonly>
-                        </div>
-                        <div class="mb-3">
                             <label for="cartQty" class="form-label fw-semibold">Quantity</label>
                             <input type="number" class="form-control" id="cartQty" name="qty" placeholder="Enter quantity" required readonly>
-                        </div>                       
+                        </div>
                     </form>
             </div>
             <div class="modal-footer">

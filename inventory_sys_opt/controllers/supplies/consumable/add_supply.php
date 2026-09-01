@@ -5,22 +5,21 @@ require_once __DIR__ . '/../../../includes/json_response.php';
 
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $supply_code     = trim($_POST['itemCode'] ?? '');
-    $supply_name     = trim($_POST['itemName'] ?? '');
-    $supply_category = trim($_POST['category'] ?? '');
-    $supply_qty      = intval($_POST['qty'] ?? 0);
-    $supply_unit     = trim($_POST['unit'] ?? '');
-    $reference       = trim($_POST['reference'] ?? '');
+    $supply_code = trim($_POST['itemCode'] ?? '');
+    $supply_name = trim($_POST['itemName'] ?? '');
+    $supply_qty  = intval($_POST['qty'] ?? 0);
+    $supply_unit = trim($_POST['unit'] ?? '');
+    $reference   = trim($_POST['reference'] ?? '');
 
-    if (empty($supply_code) || empty($supply_name) || empty($supply_category) || $supply_qty <= 0 || empty($supply_unit) || empty($reference)) {
+    if (empty($supply_code) || empty($supply_name) || $supply_qty <= 0 || empty($supply_unit) || empty($reference)) {
         json_error('Please fill in all required fields properly.');
     }
 
     try {
         $pdo->beginTransaction();
 
-        $stmt = $pdo->prepare("INSERT INTO supplies (supply_code, supply_name, supply_category, supply_qty, supply_unit, reference) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$supply_code, $supply_name, $supply_category, $supply_qty, $supply_unit, $reference]);
+        $stmt = $pdo->prepare("INSERT INTO supplies (supply_code, supply_name, supply_qty, supply_unit, reference) VALUES (?, ?, ?, ?, ?)");
+        $stmt->execute([$supply_code, $supply_name, $supply_qty, $supply_unit, $reference]);
 
         $stockCardStmt = $pdo->prepare(
             "INSERT INTO stock_card (supply_code, item_name, item_unit, transaction_date, transaction_type, qty, reference, recepient, created_at)

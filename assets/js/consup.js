@@ -52,15 +52,22 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            const itemCodeInput = document.getElementById('itemCode').value.trim();
+            const itemCodeInput = document.getElementById('itemCode').value.trim().toLowerCase();
+            const itemNameInput = document.getElementById('itemName').value.trim().toLowerCase();
             let codeExists = false;
+            let nameExists = false;
 
             if ($.fn.DataTable.isDataTable('#suppliesTable')) {
                 const table = $('#suppliesTable').DataTable();
                 table.rows().every(function () {
                     const data = this.data();
-                    if (data[0] && data[0].toString().trim() === itemCodeInput) {
+                    if (data[0] && data[0].toString().trim().toLowerCase() === itemCodeInput) {
                         codeExists = true;
+                    }
+                    if (data[1] && data[1].toString().trim().toLowerCase() === itemNameInput) {
+                        nameExists = true;
+                    }
+                    if (codeExists || nameExists) {
                         return false;
                     }
                 });
@@ -71,6 +78,22 @@ document.addEventListener('DOMContentLoaded', function () {
                     icon: 'warning',
                     title: 'Duplicate Item Code',
                     text: 'An item with this code already exists in the table. Please use a unique item code.',
+                    confirmButtonColor: '#0D3B66'
+                }).then(() => {
+                    const modalEl = document.getElementById('addItemModal');
+                    if (modalEl) {
+                        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                        modal.show();
+                    }
+                });
+                return;
+            }
+
+            if (nameExists) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Duplicate Item Name',
+                    text: 'An item with this name already exists in the table. Please use a unique item name.',
                     confirmButtonColor: '#0D3B66'
                 }).then(() => {
                     const modalEl = document.getElementById('addItemModal');
@@ -145,7 +168,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     document.getElementById('editId').value = item.id;
                     document.getElementById('editItemCode').value = item.supply_code;
                     document.getElementById('editItemName').value = item.supply_name;
-                    document.getElementById('editCategory').value = item.supply_category;
                     document.getElementById('editUnit').value = item.supply_unit;
                     document.getElementById('editReference').value = item.reference || '';
 

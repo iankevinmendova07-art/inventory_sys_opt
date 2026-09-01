@@ -39,7 +39,7 @@ function renderSupplyRow($row) {
     $code = htmlspecialchars($row['supply_code'] ?? '', ENT_QUOTES);
     $name = htmlspecialchars($row['supply_name'] ?? '', ENT_QUOTES);
     $unit = htmlspecialchars($row['supply_unit'] ?? '', ENT_QUOTES);
-    $category = htmlspecialchars($row['supply_category'] ?? 'Consumable Supply', ENT_QUOTES);
+    $category = 'Consumable Supply';
 
     echo "<tr class='{$rowClass}'>";
     echo "<td>" . htmlspecialchars($row['supply_code'] ?? '') . "</td>";

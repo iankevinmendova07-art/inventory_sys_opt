@@ -6,7 +6,7 @@ require_once dirname(__DIR__, 3) . '/config/db.php';
 header('Content-Type: application/json');
 
 try {
-    $stmt = $pdo->query("SELECT id, supply_code, supply_name, supply_unit, supply_category, supply_qty FROM supplies ORDER BY id DESC");
+    $stmt = $pdo->query("SELECT id, supply_code, supply_name, supply_unit, supply_qty FROM supplies ORDER BY id DESC");
     $supplies = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     $data = [];

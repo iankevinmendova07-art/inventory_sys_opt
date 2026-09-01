@@ -145,7 +145,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     document.getElementById('editId').value = item.id;
                     document.getElementById('editItemCode').value = item.supply_code;
                     document.getElementById('editItemName').value = item.supply_name;
-                    document.getElementById('editCategory').value = item.supply_category;
                     document.getElementById('editUnit').value = item.supply_unit;
                     document.getElementById('editReference').value = item.reference || '';
 
