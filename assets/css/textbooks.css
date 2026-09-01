@@ -1,0 +1,154 @@
+:root {
+            --primary-dark: #0D3B66;
+            --primary-darker: #05192D;
+            --accent-gold: #F4D35E;
+            --accent-gold-hover: #e0be48;
+        }
+
+        body {
+            background-color: #f4f6f9;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* Sidebar Styling */
+        #sidebar {
+            min-width: 260px;
+            max-width: 260px;
+            background: linear-gradient(180deg, var(--primary-dark) 0%, var(--primary-darker) 100%);
+            color: #fff;
+            min-height: 100vh;
+            transition: all 0.3s;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.1);
+        }
+
+        #sidebar .sidebar-header {
+            padding: 2rem 1.5rem;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        #sidebar .sidebar-logo {
+            width: 75px;
+            height: 75px;
+            background: #fff;
+            border-radius: 50%;
+            padding: 3px;
+            border: 3px solid var(--accent-gold);
+            object-fit: contain;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            margin-bottom: 0.75rem;
+        }
+
+        #sidebar h3 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: #fff;
+            margin-bottom: 0.2rem;
+        }
+
+        #sidebar p {
+            font-size: 0.75rem;
+            color: var(--accent-gold);
+            margin-bottom: 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        #sidebar ul.components {
+            padding: 1.5rem 1rem;
+        }
+
+        #sidebar ul li a {
+            padding: 0.85rem 1rem;
+            font-size: 0.95rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            color: rgba(255, 255, 255, 0.8);
+            border-radius: 8px;
+            margin-bottom: 0.4rem;
+            text-decoration: none;
+            transition: all 0.2s ease-in-out;
+        }
+
+        #sidebar ul li a i {
+            margin-right: 12px;
+            font-size: 1.2rem;
+            color: var(--accent-gold);
+        }
+
+        #sidebar ul li a:hover, #sidebar ul li.active > a {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(4px);
+        }
+
+        #sidebar ul li.active > a {
+            background: var(--accent-gold);
+            color: var(--primary-darker);
+            font-weight: 700;
+        }
+
+        #sidebar ul li.active > a i {
+            color: var(--primary-darker);
+        }
+
+        /* Main Content Area */
+        #content {
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Navbar */
+        .navbar-top {
+            background: #fff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            padding: 0.75rem 1.5rem;
+        }
+
+        .user-profile-badge {
+            display: flex;
+            align-items: center;
+            background: #f8f9fa;
+            padding: 0.4rem 1rem;
+            border-radius: 50rem;
+            border: 1px solid #e9ecef;
+        }
+
+        .user-avatar {
+            width: 35px;
+            height: 35px;
+            background: var(--primary-dark);
+            color: var(--accent-gold);
+            font-weight: bold;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+        }
+
+        /* Dashboard Cards */
+        .stat-card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+        }
+                /* Make DataTable headers larger */
+        #suppliesTable th {
+            font-size: 0.9rem !important; /* Adjust size as needed (e.g., 0.9rem or 1rem) */
+            font-weight: 700 !important;
+        }
+
+        /* Remove bold styling from regular table data cells */
+        #suppliesTable td {
+            font-weight: normal !important;
+        }

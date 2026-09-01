@@ -1,0 +1,134 @@
+/* assets/css/login.style.css */
+
+body {
+    background: linear-gradient(135deg, #0D3B66 0%, #05192D 100%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+}
+
+.login-container {
+    width: 100%;
+    max-width: 420px;
+    padding: 15px;
+}
+
+/* Fade-in and slide-up animation */
+@keyframes fadeInSlide {
+    from {
+        opacity: 0;
+        transform: translateY(25px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.login-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 2.5rem 2rem;
+    border-radius: 16px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    position: relative;
+    overflow: hidden;
+    
+    /* Apply the animation here (duration: 0.8 seconds) */
+    animation: fadeInSlide 0.8s ease-out forwards;
+}
+
+/* Decorative top gold border accent inspired by the seal */
+.login-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, #F4D35E, #C9A73B);
+}
+
+.logo-wrapper {
+    width: 90px;
+    height: 90px;
+    margin: 0 auto 1.2rem auto;
+    background: #0D3B66;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 15px rgba(13, 59, 102, 0.3);
+    border: 3px solid #F4D35E;
+}
+
+.logo-wrapper img {
+    width: 75px;
+    height: 75px;
+    object-fit: contain;
+    border-radius: 50%;
+}
+
+.school-title {
+    color: #0D3B66;
+    font-weight: 800;
+    font-size: 1.4rem;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.2rem;
+}
+
+.system-subtitle {
+    color: #6c757d;
+    margin-bottom: 1.8rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.form-label {
+    font-weight: 600;
+    color: #0D3B66;
+    font-size: 0.9rem;
+}
+
+.form-control {
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    border: 1.5px solid #ced4da;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: #F4D35E;
+    box-shadow: 0 0 0 0.2rem rgba(244, 211, 94, 0.3);
+}
+
+.btn-primary-custom {
+    background: linear-gradient(135deg, #0D3B66 0%, #1a528a 100%);
+    border: none;
+    color: #ffffff;
+    font-weight: 700;
+    padding: 0.8rem;
+    border-radius: 8px;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(13, 59, 102, 0.2);
+}
+
+.btn-primary-custom:hover {
+    background: linear-gradient(135deg, #082442 0%, #0D3B66 100%);
+    box-shadow: 0 6px 15px rgba(13, 59, 102, 0.4);
+    transform: translateY(-1px);
+}
+
+.footer-text {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.85rem;
+    margin-top: 1.5rem;
+    text-align: center;
+    animation: fadeInSlide 1s ease-out forwards;
+}

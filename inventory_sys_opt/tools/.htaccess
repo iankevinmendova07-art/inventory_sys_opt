@@ -1,0 +1,3 @@
+# Defense in depth: this script already refuses to run outside the CLI,
+# but there's no reason this directory should be web-reachable at all.
+Require all denied
