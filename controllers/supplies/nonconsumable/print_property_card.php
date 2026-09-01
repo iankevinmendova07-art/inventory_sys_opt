@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-$dbPath = $_SERVER['DOCUMENT_ROOT'] . '/inventory_sys/config/db.php';
+$dbPath = $_SERVER['DOCUMENT_ROOT'] . '/inventory_sys_opt/config/db.php';
 if (!file_exists($dbPath)) {
     $dbPath = __DIR__ . '/../../../../config/db.php';
 }
