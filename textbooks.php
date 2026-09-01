@@ -1,8 +1,9 @@
 <?php
 session_start();
 // Protect the page using your auth check
+
+require_once $_SERVER['DOCUMENT_ROOT'] . '/inventory_sys_opt/config/db.php';
 require_once 'controllers/auth/auth.php';
-require_once $_SERVER['DOCUMENT_ROOT'] . '/inventory_sys/config/db.php';
 
 // Get admin name for display
 $adminName = isset($_SESSION['admin_name']) ? strtoupper($_SESSION['admin_name']) : 'ADMIN';

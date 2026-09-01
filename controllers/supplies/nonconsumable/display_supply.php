@@ -1,7 +1,7 @@
 <?php
 require_once dirname(__DIR__, 3) . '/config/db.php';
 try {
-    $stmt = $pdo->query("SELECT * FROM nonconsumable ORDER BY id DESC");
+    $stmt = $pdo->query("SELECT * FROM nonconsumable ORDER BY qty_property_card DESC");
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         echo '<tr>
                 <td>' . htmlspecialchars($row['property_number']) . '</td>
@@ -27,11 +27,12 @@ try {
                         data-shortage_overage_qty="' . htmlspecialchars($row['shortage_overage_qty'] ?? '', ENT_QUOTES) . '"
                         data-shortage_overage_value="' . htmlspecialchars($row['shortage_overage_value'] ?? '', ENT_QUOTES) . '"
                         data-remarks="' . htmlspecialchars($row['remarks'], ENT_QUOTES) . '"
-                        data-recipient="' . htmlspecialchars($row['recepient'], ENT_QUOTES) . '">
+                        data-recipient="' . htmlspecialchars($row['recepient'], ENT_QUOTES) . '"
+                        title="Edit">
                         <i class="bi bi-pencil-square"></i>
                     </button>
-                    <button class="btn btn-sm btn-danger delete-btn" data-id="' . $row['id'] . '"><i class="bi bi-trash"></i></button>
-                    <button class="btn btn-sm btn-secondary print-btn me-1" 
+                    <button class="btn btn-sm btn-danger delete-btn me-1" data-id="' . $row['id'] . '" title="Delete"><i class="bi bi-trash"></i></button>
+                    <button class="btn btn-sm btn-secondary print-btn" 
                         data-id="' . $row['id'] . '"
                         data-category="' . htmlspecialchars($row['item_type'], ENT_QUOTES) . '"
                         data-unit_cost="' . htmlspecialchars($row['unit_cost'], ENT_QUOTES) . '"

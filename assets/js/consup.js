@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function () {
             responsive: true,
             pageLength: 5,
             lengthMenu: [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
-            order: [],
+            order: [[4, 'desc']],
             language: {
                 search: "_INPUT_",
                 searchPlaceholder: "Search supplies..."
@@ -300,8 +300,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (unitField) unitField.value = data.data.supply_unit;
                     if (catField) catField.value = data.data.supply_category;
                     if (qtyField) {
-                        qtyField.value = data.data.supply_qty;
+                        qtyField.value = 1;
                         qtyField.dataset.maxQty = data.data.supply_qty;
+                        qtyField.setAttribute('max', data.data.supply_qty);
+                        qtyField.setAttribute('min', 1);
                         qtyField.removeAttribute('readonly');
                     }
                 } else {
@@ -325,6 +327,64 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // Handle Table Row "Add to Cart" Button Click
+    $(document).on('click', '.add-to-cart-btn', function () {
+        const supplyId = $(this).data('id');
+        const itemCode = $(this).data('code') || '';
+        const itemName = $(this).data('name') || '';
+        const unit = $(this).data('unit') || '';
+        const category = $(this).data('category') || 'Consumable Supply';
+        const qty = parseInt($(this).data('qty'), 10) || 0;
+
+        if (qty <= 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Out of Stock',
+                text: `"${itemName}" is currently out of stock and cannot be added to the cart.`,
+                confirmButtonColor: '#0D3B66'
+            });
+            return;
+        }
+
+        const idField = document.getElementById('cartSupplyId');
+        const codeField = document.getElementById('cartItemCode');
+        const nameField = document.getElementById('cartItemName');
+        const unitField = document.getElementById('cartUnit');
+        const catField = document.getElementById('cartCategory');
+        const qtyField = document.getElementById('cartQty');
+
+        if (idField) idField.value = supplyId;
+        if (codeField) {
+            codeField.value = itemCode;
+            codeField.setAttribute('readonly', true);
+        }
+        if (nameField) {
+            nameField.value = itemName;
+            nameField.setAttribute('readonly', true);
+        }
+        if (unitField) {
+            unitField.value = unit;
+            unitField.setAttribute('readonly', true);
+        }
+        if (catField) {
+            catField.value = category;
+            catField.setAttribute('readonly', true);
+        }
+        if (qtyField) {
+            qtyField.value = 1;
+            qtyField.dataset.maxQty = qty;
+            qtyField.setAttribute('max', qty);
+            qtyField.setAttribute('min', 1);
+            qtyField.removeAttribute('readonly');
+        }
+
+        const modalEl = document.getElementById('addToCartModal');
+        if (modalEl) {
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal.show();
+        }
+    });
+
     // 8. Add to Cart Quantity Validation
     const cartQtyInput = document.getElementById('cartQty');
     if (cartQtyInput) {
@@ -339,7 +399,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     text: 'Quantity cannot be zero or negative.',
                     confirmButtonColor: '#0D3B66'
                 }).then(() => {
-                    this.value = !isNaN(maxQty) ? maxQty : 1;
+                    this.value = !isNaN(maxQty) ? Math.min(1, maxQty) : 1;
                 });
                 return;
             }
@@ -359,7 +419,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const addToCartModalEl = document.getElementById('addToCartModal');
     if (addToCartModalEl) {
-        addToCartModalEl.addEventListener('show.bs.modal', function () {
+        addToCartModalEl.addEventListener('shown.bs.modal', function () {
+            const qtyField = document.getElementById('cartQty');
+            if (qtyField) {
+                qtyField.focus();
+                qtyField.select();
+            }
+        });
+        addToCartModalEl.addEventListener('hidden.bs.modal', function () {
             const cartForm = document.getElementById('cartForm');
             if (cartForm) cartForm.reset();
 

@@ -102,17 +102,6 @@ $adminRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'Administra
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="card stat-card px-4 py-3 shadow-sm" style="cursor: pointer; border-radius: 12px; border: 2px solid #ffc107; min-height: 88px;" data-bs-toggle="modal" data-bs-target="#addToCartModal">
-                        <div class="d-flex align-items-center h-100">
-                            <div class="flex-grow-1">
-                                <span class="d-block text-uppercase text-muted fw-semibold" style="font-size: 0.65rem; letter-spacing: 0.5px;">RELEASING</span>
-                                <h5 class="fw-bold text-dark mb-0" style="font-size: 1.15rem;">Add to Cart</h5>
-                            </div>
-                            <div class="fs-2 text-warning opacity-75 ms-3"><i class="bi bi-cart-check"></i></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
                     <div class="card stat-card px-4 py-3 shadow-sm" style="cursor: pointer; border-radius: 12px; border: 2px solid #198754; min-height: 88px;" data-bs-toggle="modal" data-bs-target="#requestReportModal">
                         <div class="d-flex align-items-center h-100">
                             <div class="flex-grow-1">
@@ -308,7 +297,7 @@ $adminRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'Administra
                         <input type="hidden" id="cartSupplyId" name="supplyId">
                         <div class="mb-3">
                             <label for="cartItemCode" class="form-label fw-semibold">Item Code</label>
-                            <input type="text" class="form-control" id="cartItemCode" name="itemCode" placeholder="Enter item code" required>
+                            <input type="text" class="form-control" id="cartItemCode" name="itemCode" placeholder="Item code" required readonly>
                         </div>
                         <div class="mb-3">
                             <label for="cartItemName" class="form-label fw-semibold">Item Name</label>

@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', function () {
             responsive: true,
             pageLength: 5,
             lengthMenu: [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
-            order: [],
+            order: [[5, 'desc']],
             language: {
                 search: "_INPUT_",
                 searchPlaceholder: "Search items..."
