@@ -16,6 +16,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     try {
+        $duplicateStmt = $pdo->prepare(
+            "SELECT id, supply_code, supply_name FROM supplies WHERE (LOWER(TRIM(supply_code)) = LOWER(TRIM(?)) OR LOWER(TRIM(supply_name)) = LOWER(TRIM(?))) AND id != ? LIMIT 1"
+        );
+        $duplicateStmt->execute([$supply_code, $supply_name, $id]);
+        $existingItem = $duplicateStmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($existingItem) {
+            $existingCode = trim((string)($existingItem['supply_code'] ?? ''));
+            $existingName = trim((string)($existingItem['supply_name'] ?? ''));
+
+            if (strcasecmp($existingCode, $supply_code) === 0) {
+                json_error('Another item with this Item Code already exists.');
+            }
+
+            if (strcasecmp($existingName, $supply_name) === 0) {
+                json_error('Another item with this Item Name already exists.');
+            }
+        }
+
         $stmt = $pdo->prepare("UPDATE supplies SET supply_code = ?, supply_name = ?, supply_unit = ?, reference = ? WHERE id = ?");
         $execute = $stmt->execute([$supply_code, $supply_name, $supply_unit, $reference, $id]);
 

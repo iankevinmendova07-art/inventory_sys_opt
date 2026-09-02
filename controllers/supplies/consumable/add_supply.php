@@ -15,19 +15,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         json_error('Please fill in all required fields properly.');
     }
 
-    try {
-        // Check if item code already exists
-        $checkCodeStmt = $pdo->prepare("SELECT id FROM supplies WHERE LOWER(TRIM(supply_code)) = LOWER(TRIM(?)) LIMIT 1");
-        $checkCodeStmt->execute([$supply_code]);
-        if ($checkCodeStmt->fetch()) {
-            json_error('An item with this Item Code already exists.');
-        }
+    $normalizeValue = function (string $value): string {
+        $value = strtolower(trim($value));
+        $value = preg_replace('/[()\[\]{}_\-_.]+/', ' ', $value);
+        $value = preg_replace('/\s+/', ' ', $value);
+        return trim($value);
+    };
 
-        // Check if item name already exists
-        $checkNameStmt = $pdo->prepare("SELECT id FROM supplies WHERE LOWER(TRIM(supply_name)) = LOWER(TRIM(?)) LIMIT 1");
-        $checkNameStmt->execute([$supply_name]);
-        if ($checkNameStmt->fetch()) {
-            json_error('An item with this Item Name already exists.');
+    try {
+        $existingItemsStmt = $pdo->query("SELECT supply_code, supply_name FROM supplies");
+        while ($existingItem = $existingItemsStmt->fetch(PDO::FETCH_ASSOC)) {
+            $existingCode = (string)($existingItem['supply_code'] ?? '');
+            $existingName = (string)($existingItem['supply_name'] ?? '');
+
+            if ($normalizeValue($existingCode) === $normalizeValue($supply_code)) {
+                json_error('An item with this Item Code already exists.');
+            }
+
+            if ($normalizeValue($existingName) === $normalizeValue($supply_name)) {
+                json_error('An item with this Item Name already exists.');
+            }
         }
 
         $pdo->beginTransaction();

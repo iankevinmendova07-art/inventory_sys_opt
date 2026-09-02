@@ -52,10 +52,35 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            const itemCodeInput = document.getElementById('itemCode').value.trim().toLowerCase();
-            const itemNameInput = document.getElementById('itemName').value.trim().toLowerCase();
+            const normalizeForComparison = function (value) {
+                return String(value || '')
+                    .trim()
+                    .toLowerCase()
+                    .replace(/[()\[\]{}_\-_.]+/g, ' ')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+            };
+
+            const itemCodeInput = normalizeForComparison(document.getElementById('itemCode').value);
+            const itemNameInput = normalizeForComparison(document.getElementById('itemName').value);
             let codeExists = false;
             let nameExists = false;
+
+            const tableRows = document.querySelectorAll('#suppliesTable tbody tr');
+
+            tableRows.forEach(function (row) {
+                const cells = row.querySelectorAll('td');
+                const codeValue = cells[0] ? normalizeForComparison(cells[0].textContent) : '';
+                const nameValue = cells[1] ? normalizeForComparison(cells[1].textContent) : '';
+
+                if (codeValue && codeValue === itemCodeInput) {
+                    codeExists = true;
+                }
+
+                if (nameValue && nameValue === itemNameInput) {
+                    nameExists = true;
+                }
+            });
 
             if ($.fn.DataTable.isDataTable('#suppliesTable')) {
                 const table = $('#suppliesTable').DataTable();

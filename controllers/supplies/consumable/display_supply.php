@@ -50,7 +50,9 @@ function renderSupplyRow($row) {
     echo "<td>";
     echo "<button class='btn btn-sm btn-primary edit-btn me-1' data-id='{$row['id']}' title='Edit'><i class='bi bi-pencil-square'></i></button>";
     echo "<button class='btn btn-sm btn-danger delete-btn me-1' data-id='{$row['id']}' title='Delete'><i class='bi bi-trash'></i></button>";
-    echo "<button class='btn btn-sm btn-warning add-to-cart-btn text-dark' data-id='{$row['id']}' data-code='{$code}' data-name='{$name}' data-unit='{$unit}' data-category='{$category}' data-qty='{$qty}' title='Add to Cart'><i class='bi bi-cart-plus'></i></button>";
+    if ($qty > 0) {
+        echo "<button class='btn btn-sm btn-warning add-to-cart-btn text-dark' data-id='{$row['id']}' data-code='{$code}' data-name='{$name}' data-unit='{$unit}' data-category='{$category}' data-qty='{$qty}' title='Add to Cart'><i class='bi bi-cart-plus'></i></button>";
+    }
     echo "</td>";
     echo "</tr>";
 }
