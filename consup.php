@@ -287,6 +287,7 @@ $adminRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'Administra
             <div class="modal-body">
                   <form id="cartForm">
                         <input type="hidden" id="cartSupplyId" name="supplyId">
+                        <input type="hidden" id="cartCategory" name="category" value="Consumable Supply">
                         <div class="mb-3">
                             <label for="cartItemCode" class="form-label fw-semibold">Item Code</label>
                             <input type="text" class="form-control" id="cartItemCode" name="itemCode" placeholder="Item code" required readonly>
@@ -360,7 +361,7 @@ $adminRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'Administra
         </div>
     </div>
 </div>
-<!-- Request Report Modal -->
+<!-- Stock Card Modal -->
 <div class="modal fade" id="stockCardModal" tabindex="-1" aria-labelledby="stockCardModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content" style="border-radius: 12px;">
@@ -369,6 +370,12 @@ $adminRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'Administra
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-muted small">Select an item below to view/print its individual stock card, or print all stock cards at once.</span>
+                    <button type="button" class="btn btn-sm btn-primary px-3 btn-print-all-stock-cards" style="background-color: #0D3B66; border-color: #0D3B66;">
+                        <i class="bi bi-printer me-1"></i> Print All Stock Cards
+                    </button>
+                </div>
                 <div class="table-responsive">
                     <table id="stockCardItemsTable" class="table table-hover align-middle w-100">
                         <thead class="table-light text-uppercase text-muted" style="font-size: 0.75rem;">
@@ -380,8 +387,11 @@ $adminRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'Administra
                     </table>
                 </div>
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer d-flex justify-content-between">
                 <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary px-4 btn-print-all-stock-cards" style="background-color: #0D3B66; border-color: #0D3B66;">
+                    <i class="bi bi-printer me-1"></i> Print All Stock Cards
+                </button>
             </div>
         </div>
     </div>

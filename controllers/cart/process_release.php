@@ -209,7 +209,9 @@ try {
 
     echo json_encode([
         'status' => 'success',
-        'message' => 'Successfully released ' . count($normalizedItems) . ' item type(s) to ' . $recipientCount . ' recipient(s). Transaction codes: ' . implode(', ', $transCodes) . '.'
+        'message' => 'Successfully released ' . count($normalizedItems) . ' item type(s) to ' . $recipientCount . ' recipient(s). Transaction codes: ' . implode(', ', $transCodes) . '.',
+        'trans_codes' => $transCodes,
+        'print_url' => 'controllers/supplies/consumable/print_ris.php?trans_codes=' . urlencode(implode(',', $transCodes))
     ]);
 } catch (PDOException $e) {
     if ($pdo->inTransaction()) {

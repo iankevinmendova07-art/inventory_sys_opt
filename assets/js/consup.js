@@ -500,15 +500,22 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            const supplyId = parseInt(document.getElementById('cartSupplyId').value, 10);
-            const itemCode = document.getElementById('cartItemCode').value.trim();
-            const itemName = document.getElementById('cartItemName').value.trim();
-            const unit = document.getElementById('cartUnit').value.trim();
-            const category = document.getElementById('cartCategory').value.trim();
-            const qty = parseInt(document.getElementById('cartQty').value, 10);
-            const maxQty = parseInt(document.getElementById('cartQty').dataset.maxQty, 10);
+            const supplyIdField = document.getElementById('cartSupplyId');
+            const itemCodeField = document.getElementById('cartItemCode');
+            const itemNameField = document.getElementById('cartItemName');
+            const unitField = document.getElementById('cartUnit');
+            const catField = document.getElementById('cartCategory');
+            const qtyField = document.getElementById('cartQty');
 
-            if (!supplyId || !itemCode || !itemName || !unit || !category || !qty || qty <= 0) {
+            const supplyId = parseInt(supplyIdField ? supplyIdField.value : '0', 10);
+            const itemCode = itemCodeField ? itemCodeField.value.trim() : '';
+            const itemName = itemNameField ? itemNameField.value.trim() : '';
+            const unit = unitField ? unitField.value.trim() : '';
+            const category = (catField && catField.value ? catField.value.trim() : '') || 'Consumable Supply';
+            const qty = parseInt(qtyField ? qtyField.value : '0', 10);
+            const maxQty = parseInt(qtyField && qtyField.dataset.maxQty ? qtyField.dataset.maxQty : '0', 10);
+
+            if (!supplyId || !itemCode || !itemName || !unit || !qty || qty <= 0) {
                 Swal.fire({
                     icon: 'warning',
                     title: 'Invalid Item',
@@ -518,13 +525,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            const existingCart = window.InventoryCart.readCart();
+            const existingCart = window.InventoryCart ? window.InventoryCart.readCart() : [];
             const existingItem = existingCart.find(function (entry) {
                 return entry.supplyId === supplyId;
             });
             const totalRequestedQty = (existingItem ? existingItem.qty : 0) + qty;
 
-            if (!isNaN(maxQty) && totalRequestedQty > maxQty) {
+            if (!isNaN(maxQty) && maxQty > 0 && totalRequestedQty > maxQty) {
                 Swal.fire({
                     icon: 'warning',
                     title: 'Insufficient Stock',
@@ -534,15 +541,17 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            window.InventoryCart.addItem({
-                supplyId: supplyId,
-                itemCode: itemCode,
-                itemName: itemName,
-                unit: unit,
-                category: category,
-                qty: qty,
-                maxQty: maxQty
-            });
+            if (window.InventoryCart) {
+                window.InventoryCart.addItem({
+                    supplyId: supplyId,
+                    itemCode: itemCode,
+                    itemName: itemName,
+                    unit: unit,
+                    category: category,
+                    qty: qty,
+                    maxQty: maxQty || qty
+                });
+            }
 
             const modalEl = document.getElementById('addToCartModal');
             const modal = bootstrap.Modal.getInstance(modalEl);
@@ -707,15 +716,35 @@ document.addEventListener('DOMContentLoaded', function () {
                 .then(function (data) {
                     if (data.status === 'success') {
                         window.InventoryCart.clearCart();
+                        
+                        // Explicitly hide modal and remove backdrop & body locks
                         const modal = bootstrap.Modal.getInstance(viewCartModalEl);
-                        if (modal) modal.hide();
+                        if (modal) {
+                            modal.hide();
+                        }
+                        $('.modal-backdrop').remove();
+                        $('body').removeClass('modal-open').css({ overflow: '', paddingRight: '' });
+
+                        const printUrl = data.print_url || ('controllers/supplies/consumable/print_ris.php?trans_codes=' + encodeURIComponent((data.trans_codes || []).join(',')));
 
                         Swal.fire({
                             icon: 'success',
-                            title: 'Released!',
-                            text: data.message,
-                            confirmButtonColor: '#0D3B66'
-                        }).then(function () {
+                            title: 'Items Released!',
+                            html: '<p class="mb-0">' + data.message + '</p>',
+                            showCancelButton: true,
+                            confirmButtonColor: '#0D3B66',
+                            cancelButtonColor: '#6c757d',
+                            confirmButtonText: '<i class="bi bi-printer me-1"></i> Print / View RIS',
+                            cancelButtonText: 'Done',
+                            allowOutsideClick: false,
+                            didClose: () => {
+                                $('.modal-backdrop').remove();
+                                $('body').removeClass('modal-open').css({ overflow: '', paddingRight: '' });
+                            }
+                        }).then(function (result) {
+                            if (result.isConfirmed) {
+                                window.open(printUrl, '_blank');
+                            }
                             location.reload();
                         });
                     } else {
@@ -778,6 +807,13 @@ $(document).ready(function() {
 
         window.open(
             'controllers/supplies/consumable/print_stock_card.php?id=' + encodeURIComponent(item.id),
+            '_blank'
+        );
+    });
+
+    $(document).on('click', '.btn-print-all-stock-cards', function () {
+        window.open(
+            'controllers/supplies/consumable/print_stock_card.php?all=1',
             '_blank'
         );
     });
@@ -1037,6 +1073,16 @@ $(document).ready(function() {
                 });
             }
         });
+    });
+
+    // Global safeguard to ensure modal backdrops never freeze the screen
+    $(document).on('hidden.bs.modal', function () {
+        setTimeout(function () {
+            if ($('.modal.show').length === 0) {
+                $('.modal-backdrop').remove();
+                $('body').removeClass('modal-open').css({ overflow: '', paddingRight: '' });
+            }
+        }, 150);
     });
 });
 function printRsmiReport() {

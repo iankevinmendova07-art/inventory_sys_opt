@@ -4,42 +4,30 @@ session_start();
 require_once '../../../controllers/auth/auth.php';
 require_once dirname(__DIR__, 3) . '/config/db.php';
 
-$trans_code = $_GET['trans_code'] ?? '';
+$rawCodes = $_GET['trans_codes'] ?? ($_GET['trans_code'] ?? '');
+if (is_array($rawCodes)) {
+    $transCodes = $rawCodes;
+} else {
+    $transCodes = array_filter(array_map('trim', explode(',', (string)$rawCodes)));
+}
+$transCodes = array_values(array_unique($transCodes));
 
-if (empty($trans_code)) {
+if (empty($transCodes)) {
     die("Invalid Transaction Code.");
 }
 
 try {
-    // 1. Fetch all items under this transaction code from transaction_log
-    $stmt = $pdo->prepare("SELECT * FROM transaction_log WHERE trans_code = ?");
-    $stmt->execute([$trans_code]);
-    $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    if (!$items) {
-        die("Transaction not found.");
-    }
-
-    $recipient_name = $items[0]['emp_name'] ?? '';
-    $transaction_date = $items[0]['created_at'] ?? date('Y-m-d H:i:s');
-
-    // 2. Fetch all employees to find exact designation from emp_position
+    // 1. Fetch all employees to find exact designation from emp_position
     $empQuery = $pdo->prepare("SELECT emp_name, emp_position FROM employee");
     $empQuery->execute();
     $employees = $empQuery->fetchAll(PDO::FETCH_ASSOC);
 
-    $recipient_position = "Teacher I"; // Default fallback
     $school_head_name = "SCHOOL HEAD";
     $admin_officer_name = "ADMINISTRATIVE OFFICER II";
 
     foreach ($employees as $emp) {
         $dbEmpName = trim($emp['emp_name']);
         $position = trim($emp['emp_position']);
-
-        // Check if this employee is the transaction recipient
-        if (strcasecmp($dbEmpName, trim($recipient_name)) === 0) {
-            $recipient_position = $position;
-        }
 
         // Dynamically find School Head
         if (stripos($position, 'School Head') !== false || stripos($position, 'Principal') !== false) {
@@ -52,6 +40,41 @@ try {
         }
     }
 
+    $transactions = [];
+    $stmt = $pdo->prepare("SELECT * FROM transaction_log WHERE trans_code = ? ORDER BY id ASC");
+
+    foreach ($transCodes as $code) {
+        $stmt->execute([$code]);
+        $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        if (!$items) {
+            continue;
+        }
+
+        $recipient_name = $items[0]['emp_name'] ?? '';
+        $transaction_date = $items[0]['created_at'] ?? date('Y-m-d H:i:s');
+        $recipient_position = "Teacher I";
+
+        foreach ($employees as $emp) {
+            if (strcasecmp(trim($emp['emp_name']), trim($recipient_name)) === 0) {
+                $recipient_position = trim($emp['emp_position']);
+                break;
+            }
+        }
+
+        $transactions[] = [
+            'trans_code' => $code,
+            'recipient_name' => $recipient_name,
+            'recipient_position' => $recipient_position,
+            'transaction_date' => $transaction_date,
+            'items' => $items
+        ];
+    }
+
+    if (empty($transactions)) {
+        die("No transaction records found.");
+    }
+
 } catch (Exception $e) {
     error_log('controllers/supplies/consumable/print_ris.php DB error: ' . $e->getMessage());
     die('A database error occurred while generating this document. Please try again or contact the administrator.');
@@ -61,7 +84,7 @@ try {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Requisition and Issue Slip - <?php echo htmlspecialchars($trans_code); ?></title>
+    <title>Requisition and Issue Slip<?php echo count($transactions) === 1 ? ' - ' . htmlspecialchars($transactions[0]['trans_code']) : 's (' . count($transactions) . ' Recipients)'; ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         @page {
@@ -75,6 +98,14 @@ try {
             background: #fff; 
             margin: 0; 
             padding: 2px; 
+        }
+        .ris-page-sheet {
+            page-break-after: always;
+            break-after: page;
+        }
+        .ris-page-sheet:last-child {
+            page-break-after: auto;
+            break-after: auto;
         }
         .ris-half { 
             height: auto; 
@@ -107,21 +138,16 @@ try {
             position: relative; 
             top: -7px; 
         }
-        @media print {
-            .print-btn-container { display: none; }
-            body { padding: 0; margin: 0; }
-            .ris-half { border: 1.5px solid #000; }
-        }
         .deped-header {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
             line-height: 1.2;
         }
         .deped-header img {
-            width: 70px;
-            height: 70px;
+            width: 60px;
+            height: 60px;
             object-fit: contain;
-            margin-bottom: 5px;
+            margin-bottom: 4px;
         }
         .deped-header .republic {
             font-size: 11px;
@@ -129,39 +155,71 @@ try {
             letter-spacing: 0.5px;
         }
         .deped-header .department {
-            font-size: 15px;
+            font-size: 14px;
             font-weight: bold;
             font-family: "Times New Roman", Times, serif;
             margin: 2px 0;
         }
         .deped-header .region, .deped-header .division, .deped-header .school, .deped-header .address {
-            font-size: 11px;
+            font-size: 10.5px;
             text-transform: uppercase;
             font-weight: bold;
         }
-        .header-title {
-            text-align: center;
-            font-weight: bold;
-            font-size: 15px;
-            margin: 15px 0 20px 0;
-            letter-spacing: 0.5px;
-            text-decoration: underline;
+        @media screen {
+            body {
+                background: #eef2f6;
+                padding: 15px;
+            }
+            .ris-page-sheet {
+                background: #fff;
+                padding: 15px;
+                margin: 0 auto 25px auto;
+                max-width: 210mm;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+            }
+            .ris-page-sheet:last-child {
+                margin-bottom: 0;
+            }
+        }
+        @media print {
+            .print-btn-container { display: none; }
+            body { padding: 0; margin: 0; background: none; }
+            .ris-page-sheet {
+                background: none;
+                padding: 0;
+                margin: 0;
+                box-shadow: none;
+                page-break-after: always;
+                break-after: page;
+            }
+            .ris-page-sheet:last-child {
+                page-break-after: auto;
+                break-after: auto;
+            }
+            .ris-half { border: 1.5px solid #000; }
         }
     </style>
 </head>
 <body onload="window.print()">
 
 <div class="print-btn-container text-end mb-2">
-    <button onclick="window.print()" class="btn btn-primary btn-sm"><i class="bi bi-printer"></i> Print RIS</button>
+    <button onclick="window.print()" class="btn btn-primary btn-sm"><i class="bi bi-printer"></i> Print RIS<?php echo count($transactions) > 1 ? ' (' . count($transactions) . ' Slips)' : ''; ?></button>
     <button onclick="window.close()" class="btn btn-secondary btn-sm">Close</button>
 </div>
 
 <?php 
-$render_ris_form = function() use ($trans_code, $transaction_date, $items, $recipient_name, $school_head_name, $admin_officer_name, $recipient_position) {
-?>
+foreach ($transactions as $tx):
+    $trans_code = $tx['trans_code'];
+    $transaction_date = $tx['transaction_date'];
+    $recipient_name = $tx['recipient_name'];
+    $recipient_position = $tx['recipient_position'];
+    $items = $tx['items'];
+
+    $render_ris_form = function() use ($trans_code, $transaction_date, $items, $recipient_name, $school_head_name, $admin_officer_name, $recipient_position) {
+    ?>
     <div class="ris-half">
        <div class="deped-header">
-        <img src="/inventory_sys/assets/img/deped.png" alt="DepEd Logo">
+        <img src="/inventory_sys/assets/img/deped.png" onerror="this.src='../../../assets/img/deped.png'" alt="DepEd Logo">
         <div class="republic">Republic of the Philippines</div>
         <div class="department">Department of Education</div>
         <div class="region">Region VIII — Eastern Visayas</div>
@@ -287,28 +345,31 @@ $render_ris_form = function() use ($trans_code, $transaction_date, $items, $reci
             </tr>
         </table>
     </div>
-<?php
-};
-?>
-
-<?php
-$singlePageMode = count($items) > 5;
-
-if ($singlePageMode) {
-    $render_ris_form();
-} else {
-    // Render Upper Copy
-    $render_ris_form();
+    <?php
+    };
     ?>
 
-    <!-- Divider / Cut Line -->
-    <div class="page-divider"><span>✂ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ✂</span></div>
+    <div class="ris-page-sheet">
+        <?php
+        $singlePageMode = count($items) > 5;
 
-    <?php
-    // Render Lower Copy
-    $render_ris_form();
-}
-?>
+        if ($singlePageMode) {
+            $render_ris_form();
+        } else {
+            // Render Upper Copy
+            $render_ris_form();
+            ?>
+
+            <!-- Divider / Cut Line -->
+            <div class="page-divider"><span>✂ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ✂</span></div>
+
+            <?php
+            // Render Lower Copy
+            $render_ris_form();
+        }
+        ?>
+    </div>
+<?php endforeach; ?>
 
 </body>
 </html>
