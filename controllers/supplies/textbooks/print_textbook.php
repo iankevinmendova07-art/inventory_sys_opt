@@ -1,9 +1,9 @@
 <?php
 session_start();
 
-$dbPath = $_SERVER['DOCUMENT_ROOT'] . '/inventory_sys/config/db.php';
+$dbPath = $_SERVER['DOCUMENT_ROOT'] . '/inventory_sys_opt/config/db.php';
 if (!file_exists($dbPath)) {
-    $dbPath = __DIR__ . '/../../../config/db.php';
+    $dbPath = dirname(__DIR__, 3) . '/config/db.php';
 }
 require_once $dbPath;
 
@@ -160,6 +160,7 @@ try {
                 <th>Description</th>
                 <th>Grade Level</th>
                 <th>Subject</th>
+                <th>Condition</th>
             </tr>
         </thead>
         <tbody>
@@ -169,6 +170,7 @@ try {
                 <td class="text-start"><?php echo htmlspecialchars($item['lr_item']); ?></td>
                 <td><?php echo htmlspecialchars($item['grade_level'] ?? ''); ?></td>
                 <td><?php echo htmlspecialchars($item['lr_subject'] ?? ''); ?></td>
+                <td><?php echo htmlspecialchars($item['condition'] ?? 'Good'); ?></td>
             </tr>
         </tbody>
     </table>

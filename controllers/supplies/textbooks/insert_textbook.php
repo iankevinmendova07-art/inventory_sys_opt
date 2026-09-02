@@ -1,19 +1,20 @@
 <?php
 session_start();
-require_once '../../auth/auth.php';
-require_once $_SERVER['DOCUMENT_ROOT'] . '/inventory_sys/config/db.php';
+require_once dirname(__DIR__, 3) . '/controllers/auth/auth.php';
+require_once dirname(__DIR__, 3) . '/config/db.php';
 
 if (isset($_POST['save_textbook'])) {
-    $lr_item     = $_POST['lr_item'];
-    $grade_level = $_POST['grade_level'];
-    $lr_subject  = $_POST['lr_subject'];
-    $lr_qty      = $_POST['lr_qty'];
-    $lr_unit     = $_POST['lr_unit'];
-    $recipient   = $_POST['recipient'];
+    $lr_item     = trim($_POST['lr_item'] ?? '');
+    $grade_level = trim($_POST['grade_level'] ?? '');
+    $lr_subject  = trim($_POST['lr_subject'] ?? '');
+    $lr_qty      = intval($_POST['lr_qty'] ?? 0);
+    $lr_unit     = trim($_POST['lr_unit'] ?? 'pc');
+    $recipient   = trim($_POST['recipient'] ?? '');
+    $condition   = trim($_POST['condition'] ?? 'Good');
 
     try {
-        $stmt = $pdo->prepare("INSERT INTO lr_textbooks (lr_item, grade_level, lr_subject, lr_qty, lr_unit, recipient) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$lr_item, $grade_level, $lr_subject, $lr_qty, $lr_unit, $recipient]);
+        $stmt = $pdo->prepare("INSERT INTO lr_textbooks (lr_item, grade_level, lr_subject, lr_qty, lr_unit, recipient, `condition`) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$lr_item, $grade_level, $lr_subject, $lr_qty, $lr_unit, $recipient, $condition]);
 
         header("Location: ../../../textbooks.php?success=added");
         exit();

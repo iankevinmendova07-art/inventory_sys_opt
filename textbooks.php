@@ -113,6 +113,7 @@ try {
                                     <th>Quantity</th>
                                     <th>Unit</th>
                                     <th>Recipient</th>
+                                    <th>Condition</th>
                                     <th>Date Added</th>
                                     <th>Action</th>
                                 </tr>
@@ -194,6 +195,10 @@ try {
                             <?php endforeach; ?>
                         </select>
                     </div>
+                    <div class="mb-3">
+                        <label for="condition" class="form-label fw-semibold">Condition</label>
+                        <input type="text" class="form-control" id="condition" name="condition" placeholder="Enter condition (e.g., Good, New, Fair, Damaged)" required>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancel</button>
@@ -268,6 +273,10 @@ try {
                                 </option>
                             <?php endforeach; ?>
                         </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_condition" class="form-label fw-semibold">Condition</label>
+                        <input type="text" class="form-control" id="edit_condition" name="condition" placeholder="Enter condition (e.g., Good, New, Fair, Damaged)" required>
                     </div>
                 </div>
                 <div class="modal-footer">

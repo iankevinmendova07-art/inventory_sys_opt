@@ -11,6 +11,7 @@ try {
         echo "<td>" . htmlspecialchars($row['lr_qty']) . "</td>";
         echo "<td>" . htmlspecialchars($row['lr_unit']) . "</td>";
         echo "<td>" . htmlspecialchars($row['recipient']) . "</td>";
+        echo "<td>" . htmlspecialchars($row['condition'] ?? '') . "</td>";
         echo "<td>" . htmlspecialchars($row['created_at']) . "</td>";
         echo "<td>
             <button class='btn btn-sm btn-primary edit-btn' 
@@ -20,7 +21,8 @@ try {
                 data-subject='" . htmlspecialchars($row['lr_subject']) . "'
                 data-qty='" . htmlspecialchars($row['lr_qty']) . "'
                 data-unit='" . htmlspecialchars($row['lr_unit']) . "'
-                data-recipient='" . htmlspecialchars($row['recipient']) . "'>
+                data-recipient='" . htmlspecialchars($row['recipient']) . "'
+                data-condition='" . htmlspecialchars($row['condition'] ?? '') . "'>
                 <i class='bi bi-pencil-square'></i>
             </button>         
             <button class='btn btn-sm btn-danger delete-btn' data-id='" . $row['id'] . "'>
@@ -34,6 +36,6 @@ try {
     }
 } catch (PDOException $e) {
     error_log('controllers/supplies/textbooks/display_textbook.php error: ' . $e->getMessage());
-    echo "<tr><td colspan='8' class='text-center text-danger'>Unable to load data. Please try again later.</td></tr>";
+    echo "<tr><td colspan='9' class='text-center text-danger'>Unable to load data. Please try again later.</td></tr>";
 }
 ?>
