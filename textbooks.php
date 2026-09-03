@@ -88,7 +88,7 @@ try {
             </div>
             <!-- Quick Metrics Row (Inline Buttons) -->
             <div class="row g-3 mb-4">
-                <div class="col-md-6">
+                <div class="col-md-3">
                     <div class="card stat-card px-4 py-3 shadow-sm" style="cursor: pointer; border-radius: 12px; border: 2px solid #0d6efd; min-height: 88px;" data-bs-toggle="modal" data-bs-target="#addTextbookModal">
                         <div class="d-flex align-items-center h-100">
                             <div class="flex-grow-1">
@@ -96,6 +96,17 @@ try {
                                 <h5 class="fw-bold text-dark mb-0" style="font-size: 1.15rem;">Add Textbooks</h5>
                             </div>
                             <div class="fs-2 text-primary opacity-75 ms-3"><i class="bi bi-box-seam"></i></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stat-card px-4 py-3 shadow-sm" style="cursor: pointer; border-radius: 12px; border: 2px solid #198754; min-height: 88px;" onclick="window.open('controllers/supplies/textbooks/print_textbook_report.php', '_blank');">
+                        <div class="d-flex align-items-center h-100">
+                            <div class="flex-grow-1">
+                                <span class="d-block text-uppercase text-muted fw-semibold" style="font-size: 0.65rem; letter-spacing: 0.5px;">REPORTS</span>
+                                <h5 class="fw-bold text-dark mb-0" style="font-size: 1.15rem;">Textbooks Report</h5>
+                            </div>
+                            <div class="fs-2 text-success opacity-75 ms-3"><i class="bi bi-file-earmark-pdf"></i></div>
                         </div>
                     </div>
                 </div>
