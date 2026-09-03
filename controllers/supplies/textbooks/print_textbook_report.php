@@ -33,6 +33,18 @@ $reportDate = date('F d, Y');
             size: landscape;
             margin: 10mm;
         }
+        .signatures {
+            margin-top: 40px;
+            width: 100%;
+            page-break-inside: avoid;
+        }
+        .signatures td {
+            border: none;
+            text-align: center;
+            vertical-align: top;
+            padding-top: 30px;
+            font-size: 9.5pt;
+        }
         body {
             font-family: Arial, sans-serif;
             font-size: 10px;
@@ -227,6 +239,22 @@ $reportDate = date('F d, Y');
                 </tr>
             <?php endif; ?>
         </tbody>
+    </table>
+       <table class="signatures">
+        <tr>
+            <td style="width: 33%;">
+                Prepared by:<br><br><br>
+                <strong>IAN KEVIN T. MENDOVA</strong><br>
+                <div class="line"></div>
+                <span style="font-size: 8.5pt; font-weight: normal;">Administrative Officer II</span>
+            </td>
+            <td style="width: 33%;">
+                Noted by:<br><br><br>                
+                <strong>ROSELLE U. GAYAMAT</strong><br>
+                <div class="line"></div>
+                <span style="font-size: 8.5pt; font-weight: normal;">School Head</span>
+            </td>
+        </tr>
     </table>
 </div>
 </body>
