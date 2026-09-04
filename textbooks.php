@@ -148,11 +148,11 @@ try {
                 <h5 class="modal-title fw-bold" id="addTextbookModalLabel">Add New Textbook</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form action="controllers/supplies/textbooks/insert_textbook.php" method="POST">
+            <form action="controllers/supplies/textbooks/insert_textbook.php" method="POST" autocomplete="off">
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="lr_item" class="form-label fw-semibold">Item Name (lr_item)</label>
-                        <input type="text" class="form-control" id="lr_item" name="lr_item" placeholder="Enter textbook name" required>
+                        <input type="text" class="form-control" id="lr_item" name="lr_item" placeholder="Enter textbook name" autocomplete="off" required>
                     </div>
                     <div class="mb-3">
                         <label for="grade_level" class="form-label fw-semibold">Grade Level</label>
@@ -239,12 +239,12 @@ try {
                 <h5 class="modal-title fw-bold" id="editTextbookModalLabel">Edit Textbook</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form action="controllers/supplies/textbooks/update_textbook.php" method="POST">
+            <form action="controllers/supplies/textbooks/update_textbook.php" method="POST" autocomplete="off">
                 <div class="modal-body">
                     <input type="hidden" id="edit_id" name="id">
                     <div class="mb-3">
                         <label for="edit_lr_item" class="form-label fw-semibold">Item Name</label>
-                        <input type="text" class="form-control" id="edit_lr_item" name="lr_item" required>
+                        <input type="text" class="form-control" id="edit_lr_item" name="lr_item" autocomplete="off" required>
                     </div>
                     <div class="mb-3">
                         <label for="edit_grade_level" class="form-label fw-semibold">Grade Level</label>

@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function () {
-    // Initialize DataTables safely
+    // 1. Initialize DataTables safely
     if ($.fn.DataTable) {
         if ($.fn.DataTable.isDataTable('#suppliesTable')) {
             $('#suppliesTable').DataTable().destroy();
@@ -16,7 +16,18 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Open Edit Modal & Populate Data
+    // 2. Focus input automatically when Add Modal opens
+    const addModalEl = document.getElementById('addTextbookModal');
+    if (addModalEl) {
+        addModalEl.addEventListener('shown.bs.modal', function () {
+            const itemInput = document.getElementById('lr_item');
+            if (itemInput) {
+                itemInput.focus();
+            }
+        });
+    }
+
+    // 3. Open Edit Modal & Populate Data
     $(document).on('click', '.edit-btn', function () {
         $('#edit_id').val($(this).data('id'));
         $('#edit_lr_item').val($(this).data('item'));
@@ -30,13 +41,23 @@ document.addEventListener('DOMContentLoaded', function () {
         $('#editTextbookModal').modal('show');
     });
 
-    // Print Button Click Handler
+    const editModalEl = document.getElementById('editTextbookModal');
+    if (editModalEl) {
+        editModalEl.addEventListener('shown.bs.modal', function () {
+            const editItemInput = document.getElementById('edit_lr_item');
+            if (editItemInput) {
+                editItemInput.focus();
+            }
+        });
+    }
+
+    // 4. Print Button Click Handler
     $(document).on('click', '.print-btn', function () {
         const textbookId = $(this).data('id');
         window.open('controllers/supplies/textbooks/print_textbook.php?id=' + encodeURIComponent(textbookId), '_blank');
     });
 
-    // Delete Button Click Handler with SweetAlert Confirmation
+    // 5. Delete Button Click Handler with SweetAlert Confirmation
     $(document).on('click', '.delete-btn', function () {
         const textbookId = $(this).data('id');
 
@@ -89,7 +110,17 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Success SweetAlert Notifications
+    // 6. Global safeguard for modal backdrop cleanup
+    $(document).on('hidden.bs.modal', function () {
+        setTimeout(function () {
+            if ($('.modal.show').length === 0) {
+                $('.modal-backdrop').remove();
+                $('body').removeClass('modal-open').css({ overflow: '', paddingRight: '' });
+            }
+        }, 150);
+    });
+
+    // 7. Success SweetAlert Notifications
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('success') === 'added') {
         Swal.fire({
