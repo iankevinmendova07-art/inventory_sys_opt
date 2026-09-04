@@ -1,14 +1,20 @@
 <?php
 session_start();
-require_once '../../../controllers/auth/auth.php';
+require_once dirname(__DIR__, 3) . '/controllers/auth/auth.php';
 require_once dirname(__DIR__, 3) . '/config/db.php';
 
 try {
     $stmt = $pdo->query("SELECT lr_item, grade_level, lr_subject, lr_qty, lr_unit, recipient, `condition`, created_at FROM lr_textbooks ORDER BY grade_level ASC, lr_item ASC");
     $textbooks = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
-    error_log('controllers/supplies/textbooks/print_textbook_report.php DB error: ' . $e->getMessage());
-    die('A database error occurred while generating this report. Please try again or contact the administrator.');
+    // If condition column was somehow missing, fallback to standard query
+    try {
+        $stmt = $pdo->query("SELECT lr_item, grade_level, lr_subject, lr_qty, lr_unit, recipient, 'Good' AS `condition`, created_at FROM lr_textbooks ORDER BY grade_level ASC, lr_item ASC");
+        $textbooks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $ex) {
+        error_log('controllers/supplies/textbooks/print_textbook_report.php DB error: ' . $ex->getMessage());
+        die('A database error occurred while generating this report. Please try again or contact the administrator.');
+    }
 }
 
 $gradeLevels = ['Kinder', 'Grade I', 'Grade II', 'Grade III', 'Grade IV', 'Grade V', 'Grade VI'];
@@ -160,7 +166,7 @@ $reportDate = date('F d, Y');
 
 <div class="report-sheet">
     <div class="deped-header">
-        <img src="/inventory_sys/assets/img/deped.png" onerror="this.src='../../../assets/img/deped.png'" alt="DepEd Logo">
+        <img src="assets/img/deped.png" onerror="this.src='../../../assets/img/deped.png'" alt="DepEd Logo">
         <div class="republic">Republic of the Philippines</div>
         <div class="department">Department of Education</div>
         <div class="region">Region VIII — Eastern Visayas</div>
@@ -221,7 +227,7 @@ $reportDate = date('F d, Y');
                                 <td class="text-center"><?php echo htmlspecialchars($textbook['lr_qty'] ?? ''); ?></td>
                                 <td class="text-center"><?php echo htmlspecialchars($textbook['lr_unit'] ?? ''); ?></td>
                                 <td><?php echo htmlspecialchars($textbook['recipient'] ?? ''); ?></td>
-                                <td><?php echo htmlspecialchars($textbook['condition'] ?? ''); ?></td>
+                                <td><?php echo htmlspecialchars($textbook['condition'] ?? 'Good'); ?></td>
                                 <td class="text-center"><?php echo htmlspecialchars($textbook['created_at'] ?? ''); ?></td>
                             </tr>
                         <?php endforeach; ?>

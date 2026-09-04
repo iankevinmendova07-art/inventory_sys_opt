@@ -1,17 +1,91 @@
-console.log('consup.js loaded');
+console.log('consup.js (optimized) loaded');
 
-// Global error handler to surface uncaught errors
+// Global error handler
 window.addEventListener('error', function (event) {
     console.error('Global JS error:', event.message, 'at', event.filename + ':' + event.lineno);
 });
 
+// Reusable Utilities
+function debounce(func, wait) {
+    let timeout;
+    return function (...args) {
+        const context = this;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(context, args), wait);
+    };
+}
+
+const itemSearchCache = new Map();
+let cachedEmployees = null;
+let suppliesTable = null;
+
 document.addEventListener('DOMContentLoaded', function () {
-    // 1. Initialize DataTable
-    if ($.fn.DataTable) {
-        $('#suppliesTable').DataTable({
+    // 1. Initialize Server-Side DataTable for Main Supplies Table
+    if ($.fn.DataTable && document.getElementById('suppliesTable')) {
+        suppliesTable = $('#suppliesTable').DataTable({
+            processing: true,
+            serverSide: true,
             responsive: true,
-            pageLength: 5,
-            lengthMenu: [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
+            pageLength: 10,
+            lengthMenu: [[5, 10, 25, 50, 100], [5, 10, 25, 50, 100]],
+            ajax: {
+                url: 'controllers/supplies/consumable/get_supplies_paginated.php',
+                type: 'GET',
+                error: function (xhr, error, thrown) {
+                    console.error('Supplies DataTables Error:', thrown);
+                }
+            },
+            columns: [
+                { data: 'supply_code', className: 'fw-semibold' },
+                { data: 'supply_name' },
+                { data: 'supply_unit' },
+                { data: 'reference' },
+                { 
+                    data: 'supply_qty',
+                    render: function (data, type, row) {
+                        const qty = parseInt(data, 10);
+                        if (type === 'display') {
+                            if (qty === 0) {
+                                return '<span class="badge bg-danger">0 (Out of Stock)</span>';
+                            } else if (qty <= 5) {
+                                return '<span class="badge bg-warning text-dark">' + qty + ' (Low Stock)</span>';
+                            }
+                            return '<span class="badge bg-success">' + qty + '</span>';
+                        }
+                        return qty;
+                    }
+                },
+                {
+                    data: null,
+                    orderable: false,
+                    searchable: false,
+                    render: function (data, type, row) {
+                        const qty = parseInt(row.supply_qty, 10);
+                        const code = (row.supply_code || '').replace(/"/g, '&quot;');
+                        const name = (row.supply_name || '').replace(/"/g, '&quot;');
+                        const unit = (row.supply_unit || '').replace(/"/g, '&quot;');
+                        const category = 'Consumable Supply';
+
+                        let cartBtn = '';
+                        if (qty > 0) {
+                            cartBtn = '<button class="btn btn-sm btn-warning add-to-cart-btn text-dark" ' +
+                                'data-id="' + row.id + '" ' +
+                                'data-code="' + code + '" ' +
+                                'data-name="' + name + '" ' +
+                                'data-unit="' + unit + '" ' +
+                                'data-category="' + category + '" ' +
+                                'data-qty="' + qty + '" ' +
+                                'title="Add to Cart"><i class="bi bi-cart-plus"></i></button>';
+                        }
+
+                        return '<div class="d-flex gap-1">' +
+                            '<button class="btn btn-sm btn-primary edit-btn" data-id="' + row.id + '" title="Edit"><i class="bi bi-pencil-square"></i></button>' +
+                            '<button class="btn btn-sm btn-danger delete-btn" data-id="' + row.id + '" title="Delete"><i class="bi bi-trash"></i></button>' +
+                            cartBtn +
+                            '</div>';
+                    }
+                }
+            ],
             order: [[4, 'desc']],
             language: {
                 search: "_INPUT_",
@@ -41,94 +115,18 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-   // 3. Add Supply Item AJAX submission
+    // 3. Add Supply Item AJAX submission (In-Place Reload)
     const saveSupplyBtn = document.getElementById('saveSupplyBtn');
     if (saveSupplyBtn) {
         saveSupplyBtn.addEventListener('click', function () {
             const form = document.getElementById('addItemForm');
-            
             if (!form.checkValidity()) {
                 form.reportValidity();
                 return;
             }
 
-            const normalizeForComparison = function (value) {
-                return String(value || '')
-                    .trim()
-                    .toLowerCase()
-                    .replace(/[()\[\]{}_\-_.]+/g, ' ')
-                    .replace(/\s+/g, ' ')
-                    .trim();
-            };
-
-            const itemCodeInput = normalizeForComparison(document.getElementById('itemCode').value);
-            const itemNameInput = normalizeForComparison(document.getElementById('itemName').value);
-            let codeExists = false;
-            let nameExists = false;
-
-            const tableRows = document.querySelectorAll('#suppliesTable tbody tr');
-
-            tableRows.forEach(function (row) {
-                const cells = row.querySelectorAll('td');
-                const codeValue = cells[0] ? normalizeForComparison(cells[0].textContent) : '';
-                const nameValue = cells[1] ? normalizeForComparison(cells[1].textContent) : '';
-
-                if (codeValue && codeValue === itemCodeInput) {
-                    codeExists = true;
-                }
-
-                if (nameValue && nameValue === itemNameInput) {
-                    nameExists = true;
-                }
-            });
-
-            if ($.fn.DataTable.isDataTable('#suppliesTable')) {
-                const table = $('#suppliesTable').DataTable();
-                table.rows().every(function () {
-                    const data = this.data();
-                    if (data[0] && data[0].toString().trim().toLowerCase() === itemCodeInput) {
-                        codeExists = true;
-                    }
-                    if (data[1] && data[1].toString().trim().toLowerCase() === itemNameInput) {
-                        nameExists = true;
-                    }
-                    if (codeExists || nameExists) {
-                        return false;
-                    }
-                });
-            }
-
-            if (codeExists) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Duplicate Item Code',
-                    text: 'An item with this code already exists in the table. Please use a unique item code.',
-                    confirmButtonColor: '#0D3B66'
-                }).then(() => {
-                    const modalEl = document.getElementById('addItemModal');
-                    if (modalEl) {
-                        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
-                        modal.show();
-                    }
-                });
-                return;
-            }
-
-            if (nameExists) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Duplicate Item Name',
-                    text: 'An item with this name already exists in the table. Please use a unique item name.',
-                    confirmButtonColor: '#0D3B66'
-                }).then(() => {
-                    const modalEl = document.getElementById('addItemModal');
-                    if (modalEl) {
-                        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
-                        modal.show();
-                    }
-                });
-                return;
-            }
+            saveSupplyBtn.disabled = true;
+            saveSupplyBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving...';
 
             const formData = new FormData(form);
 
@@ -136,35 +134,32 @@ document.addEventListener('DOMContentLoaded', function () {
                 method: 'POST',
                 body: formData
             })
-            .then(response => response.text().then(text => ({ ok: response.ok, text })))
-            .then(({ ok, text }) => {
-                let data;
-                try {
-                    data = JSON.parse(text);
-                } catch (e) {
-                    throw new Error('Server returned invalid response');
-                }
-
+            .then(response => response.json())
+            .then(data => {
                 if (data.status === 'success') {
                     const modalEl = document.getElementById('addItemModal');
                     const modal = bootstrap.Modal.getInstance(modalEl);
                     if (modal) modal.hide();
 
                     form.reset();
+                    itemSearchCache.clear();
 
                     Swal.fire({
                         icon: 'success',
                         title: 'Success!',
                         text: data.message,
-                        confirmButtonColor: '#0D3B66'
-                    }).then(() => {
-                        location.reload();
+                        timer: 1500,
+                        showConfirmButton: false
                     });
+
+                    if (suppliesTable) {
+                        suppliesTable.ajax.reload(null, false);
+                    }
                 } else {
                     Swal.fire({
-                        icon: 'error',
-                        title: 'Oops...',
-                        text: data.message || 'Server error',
+                        icon: 'warning',
+                        title: 'Notice',
+                        text: data.message || 'Server returned an error',
                         confirmButtonColor: '#0D3B66'
                     });
                 }
@@ -173,9 +168,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 Swal.fire({
                     icon: 'error',
                     title: 'Server Error',
-                    text: error.message || 'Something went wrong while processing your request.',
+                    text: error.message || 'Something went wrong.',
                     confirmButtonColor: '#0D3B66'
                 });
+            })
+            .finally(() => {
+                saveSupplyBtn.disabled = false;
+                saveSupplyBtn.textContent = 'Add Item';
             });
         });
     }
@@ -207,19 +206,21 @@ document.addEventListener('DOMContentLoaded', function () {
                     });
                 }
             })
-            .catch(error => console.error('Error:', error));
+            .catch(error => console.error('Error fetching item for edit:', error));
     });
 
-    // 5. Handle Update Submission
+    // 5. Handle Update Submission (In-Place Reload)
     const updateSupplyBtn = document.getElementById('updateSupplyBtn');
     if (updateSupplyBtn) {
         updateSupplyBtn.addEventListener('click', function () {
             const form = document.getElementById('editItemForm');
-
             if (!form.checkValidity()) {
                 form.reportValidity();
                 return;
             }
+
+            updateSupplyBtn.disabled = true;
+            updateSupplyBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving...';
 
             const formData = new FormData(form);
 
@@ -232,16 +233,21 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (data.status === 'success') {
                     const modalEl = document.getElementById('editItemModal');
                     const modal = bootstrap.Modal.getInstance(modalEl);
-                    modal.hide();
+                    if (modal) modal.hide();
+
+                    itemSearchCache.clear();
 
                     Swal.fire({
                         icon: 'success',
                         title: 'Success!',
                         text: data.message,
-                        confirmButtonColor: '#0D3B66'
-                    }).then(() => {
-                        location.reload();
+                        timer: 1500,
+                        showConfirmButton: false
                     });
+
+                    if (suppliesTable) {
+                        suppliesTable.ajax.reload(null, false);
+                    }
                 } else {
                     Swal.fire({
                         icon: 'error',
@@ -258,11 +264,15 @@ document.addEventListener('DOMContentLoaded', function () {
                     text: 'Something went wrong while processing your request.',
                     confirmButtonColor: '#0D3B66'
                 });
+            })
+            .finally(() => {
+                updateSupplyBtn.disabled = false;
+                updateSupplyBtn.textContent = 'Save Changes';
             });
         });
     }
 
-    // 6. Handle Delete Button Click
+    // 6. Handle Delete Button Click (In-Place Reload)
     $(document).on('click', '.delete-btn', function () {
         const supplyId = $(this).data('id');
 
@@ -286,14 +296,19 @@ document.addEventListener('DOMContentLoaded', function () {
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'success') {
+                        itemSearchCache.clear();
+
                         Swal.fire({
                             icon: 'success',
                             title: 'Deleted!',
                             text: data.message,
-                            confirmButtonColor: '#0D3B66'
-                        }).then(() => {
-                            location.reload();
+                            timer: 1200,
+                            showConfirmButton: false
                         });
+
+                        if (suppliesTable) {
+                            suppliesTable.ajax.reload(null, false);
+                        }
                     } else {
                         Swal.fire({
                             icon: 'error',
@@ -315,7 +330,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // 7. Add to Cart Auto-Fill Search & Readonly Toggle
+    // 7. Add to Cart Debounced Auto-Fill Search & Readonly Toggle
     const cartCodeInput = document.getElementById('cartItemCode');
 
     function fetchItemDetails(value) {
@@ -325,7 +340,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const catField = document.getElementById('cartCategory');
         const qtyField = document.getElementById('cartQty');
 
-        if (!value || value.trim().length === 0) {
+        const trimmed = (value || '').trim();
+        if (!trimmed) {
             if (idField) idField.value = '';
             if (nameField) nameField.value = '';
             if (unitField) unitField.value = '';
@@ -333,45 +349,62 @@ document.addEventListener('DOMContentLoaded', function () {
             if (qtyField) {
                 qtyField.value = '';
                 qtyField.removeAttribute('data-max-qty');
-                qtyField.setAttribute('readonly', true);
+                qtyField.setAttribute('readonly', 'true');
             }
             return;
         }
 
-        fetch(`controllers/supplies/consumable/search_supply.php?q=${encodeURIComponent(value)}`)
+        if (itemSearchCache.has(trimmed)) {
+            populateCartItemFields(itemSearchCache.get(trimmed));
+            return;
+        }
+
+        fetch(`controllers/supplies/consumable/search_supply.php?q=${encodeURIComponent(trimmed)}`)
             .then(response => response.json())
             .then(data => {
-                if (data.status === 'success' && data.data) {
-                    if (idField) idField.value = data.data.id;
-                    if (nameField) nameField.value = data.data.supply_name;
-                    if (unitField) unitField.value = data.data.supply_unit;
-                    if (catField) catField.value = data.data.supply_category;
-                    if (qtyField) {
-                        qtyField.value = 1;
-                        qtyField.dataset.maxQty = data.data.supply_qty;
-                        qtyField.setAttribute('max', data.data.supply_qty);
-                        qtyField.setAttribute('min', 1);
-                        qtyField.removeAttribute('readonly');
-                    }
-                } else {
-                    if (idField) idField.value = '';
-                    if (nameField) nameField.value = '';
-                    if (unitField) unitField.value = '';
-                    if (catField) catField.value = '';
-                    if (qtyField) {
-                        qtyField.value = '';
-                        qtyField.removeAttribute('data-max-qty');
-                        qtyField.setAttribute('readonly', true);
-                    }
-                }
+                const item = (data.status === 'success' && data.data) ? data.data : null;
+                itemSearchCache.set(trimmed, item);
+                populateCartItemFields(item);
             })
             .catch(error => console.error('Search error:', error));
     }
 
+    function populateCartItemFields(item) {
+        const idField = document.getElementById('cartSupplyId');
+        const nameField = document.getElementById('cartItemName');
+        const unitField = document.getElementById('cartUnit');
+        const catField = document.getElementById('cartCategory');
+        const qtyField = document.getElementById('cartQty');
+
+        if (item) {
+            if (idField) idField.value = item.id;
+            if (nameField) nameField.value = item.supply_name;
+            if (unitField) unitField.value = item.supply_unit;
+            if (catField) catField.value = item.supply_category || 'Consumable Supply';
+            if (qtyField) {
+                qtyField.value = 1;
+                qtyField.dataset.maxQty = item.supply_qty;
+                qtyField.setAttribute('max', item.supply_qty);
+                qtyField.setAttribute('min', 1);
+                qtyField.removeAttribute('readonly');
+            }
+        } else {
+            if (idField) idField.value = '';
+            if (nameField) nameField.value = '';
+            if (unitField) unitField.value = '';
+            if (catField) catField.value = '';
+            if (qtyField) {
+                qtyField.value = '';
+                qtyField.removeAttribute('data-max-qty');
+                qtyField.setAttribute('readonly', 'true');
+            }
+        }
+    }
+
     if (cartCodeInput) {
-        cartCodeInput.addEventListener('input', function() { 
+        cartCodeInput.addEventListener('input', debounce(function() { 
             fetchItemDetails(this.value); 
-        });
+        }, 300));
     }
 
     // Handle Table Row "Add to Cart" Button Click
@@ -403,19 +436,19 @@ document.addEventListener('DOMContentLoaded', function () {
         if (idField) idField.value = supplyId;
         if (codeField) {
             codeField.value = itemCode;
-            codeField.setAttribute('readonly', true);
+            codeField.setAttribute('readonly', 'true');
         }
         if (nameField) {
             nameField.value = itemName;
-            nameField.setAttribute('readonly', true);
+            nameField.setAttribute('readonly', 'true');
         }
         if (unitField) {
             unitField.value = unit;
-            unitField.setAttribute('readonly', true);
+            unitField.setAttribute('readonly', 'true');
         }
         if (catField) {
             catField.value = category;
-            catField.setAttribute('readonly', true);
+            catField.setAttribute('readonly', 'true');
         }
         if (qtyField) {
             qtyField.value = 1;
@@ -484,7 +517,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (qtyField) {
                 qtyField.value = '';
                 qtyField.removeAttribute('data-max-qty');
-                qtyField.setAttribute('readonly', true);
+                qtyField.setAttribute('readonly', 'true');
             }
         });
     }
@@ -494,7 +527,6 @@ document.addEventListener('DOMContentLoaded', function () {
     if (addToCartBtn) {
         addToCartBtn.addEventListener('click', function () {
             const form = document.getElementById('cartForm');
-
             if (!form.checkValidity()) {
                 form.reportValidity();
                 return;
@@ -526,9 +558,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             const existingCart = window.InventoryCart ? window.InventoryCart.readCart() : [];
-            const existingItem = existingCart.find(function (entry) {
-                return entry.supplyId === supplyId;
-            });
+            const existingItem = existingCart.find(entry => entry.supplyId === supplyId);
             const totalRequestedQty = (existingItem ? existingItem.qty : 0) + qty;
 
             if (!isNaN(maxQty) && maxQty > 0 && totalRequestedQty > maxQty) {
@@ -562,19 +592,20 @@ document.addEventListener('DOMContentLoaded', function () {
                 title: 'Added to Cart',
                 text: itemName + ' (x' + qty + ') was added to your cart.',
                 confirmButtonColor: '#0D3B66',
-                timer: 1800,
+                timer: 1500,
                 showConfirmButton: false
             });
         });
     }
 
-    // 10. Cart modal interactions
-    let cachedEmployees = [];
-
+    // 10. Cart modal interactions with Employee Caching
     function loadEmployees() {
+        if (cachedEmployees !== null) {
+            return Promise.resolve(cachedEmployees);
+        }
         return fetch('controllers/cart/get_employees.php')
-            .then(function (response) { return response.json(); })
-            .then(function (data) {
+            .then(response => response.json())
+            .then(data => {
                 if (data.status === 'success') {
                     cachedEmployees = data.data || [];
                     return cachedEmployees;
@@ -586,13 +617,11 @@ document.addEventListener('DOMContentLoaded', function () {
     function refreshCartModal() {
         const cartItemsBody = document.getElementById('cartItemsBody');
         window.InventoryCart.renderCartItems(cartItemsBody);
-        window.InventoryCart.renderRecipients(document.getElementById('recipientList'), cachedEmployees, getSelectedRecipients());
+        window.InventoryCart.renderRecipients(document.getElementById('recipientList'), cachedEmployees || [], getSelectedRecipients());
     }
 
     function getSelectedRecipients() {
-        return Array.from(document.querySelectorAll('.recipient-checkbox:checked')).map(function (checkbox) {
-            return checkbox.value;
-        });
+        return Array.from(document.querySelectorAll('.recipient-checkbox:checked')).map(cb => cb.value);
     }
 
     const cartToggleBtn = document.getElementById('cartToggleBtn');
@@ -632,18 +661,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const selectAllRecipientsBtn = document.getElementById('selectAllRecipientsBtn');
     if (selectAllRecipientsBtn) {
         selectAllRecipientsBtn.addEventListener('click', function () {
-            document.querySelectorAll('.recipient-checkbox').forEach(function (checkbox) {
-                checkbox.checked = true;
-            });
+            document.querySelectorAll('.recipient-checkbox').forEach(cb => { cb.checked = true; });
         });
     }
 
     const clearRecipientsBtn = document.getElementById('clearRecipientsBtn');
     if (clearRecipientsBtn) {
         clearRecipientsBtn.addEventListener('click', function () {
-            document.querySelectorAll('.recipient-checkbox').forEach(function (checkbox) {
-                checkbox.checked = false;
-            });
+            document.querySelectorAll('.recipient-checkbox').forEach(cb => { cb.checked = false; });
         });
     }
 
@@ -704,6 +729,9 @@ document.addEventListener('DOMContentLoaded', function () {
             }).then(function (result) {
                 if (!result.isConfirmed) return;
 
+                releaseCartBtn.disabled = true;
+                releaseCartBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Releasing...';
+
                 fetch('controllers/cart/process_release.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -712,16 +740,15 @@ document.addEventListener('DOMContentLoaded', function () {
                         items: cartItems
                     })
                 })
-                .then(function (response) { return response.json(); })
-                .then(function (data) {
+                .then(response => response.json())
+                .then(data => {
                     if (data.status === 'success') {
                         window.InventoryCart.clearCart();
+                        itemSearchCache.clear();
                         
-                        // Explicitly hide modal and remove backdrop & body locks
                         const modal = bootstrap.Modal.getInstance(viewCartModalEl);
-                        if (modal) {
-                            modal.hide();
-                        }
+                        if (modal) modal.hide();
+                        
                         $('.modal-backdrop').remove();
                         $('body').removeClass('modal-open').css({ overflow: '', paddingRight: '' });
 
@@ -736,16 +763,14 @@ document.addEventListener('DOMContentLoaded', function () {
                             cancelButtonColor: '#6c757d',
                             confirmButtonText: '<i class="bi bi-printer me-1"></i> Print / View RIS',
                             cancelButtonText: 'Done',
-                            allowOutsideClick: false,
-                            didClose: () => {
-                                $('.modal-backdrop').remove();
-                                $('body').removeClass('modal-open').css({ overflow: '', paddingRight: '' });
-                            }
-                        }).then(function (result) {
-                            if (result.isConfirmed) {
+                            allowOutsideClick: false
+                        }).then(function (res) {
+                            if (res.isConfirmed) {
                                 window.open(printUrl, '_blank');
                             }
-                            location.reload();
+                            if (suppliesTable) {
+                                suppliesTable.ajax.reload(null, false);
+                            }
                         });
                     } else {
                         Swal.fire({
@@ -763,6 +788,10 @@ document.addEventListener('DOMContentLoaded', function () {
                         text: 'Something went wrong while releasing items.',
                         confirmButtonColor: '#0D3B66'
                     });
+                })
+                .finally(() => {
+                    releaseCartBtn.disabled = false;
+                    releaseCartBtn.innerHTML = '<i class="bi bi-send me-1"></i> Release';
                 });
             });
         });
@@ -801,7 +830,6 @@ $(document).ready(function() {
 
     $('#stockCardItemsTable tbody').on('click', 'tr', function () {
         if (!stockCardItemsTable) return;
-
         const item = stockCardItemsTable.row(this).data();
         if (!item || !item.id) return;
 
@@ -812,10 +840,7 @@ $(document).ready(function() {
     });
 
     $(document).on('click', '.btn-print-all-stock-cards', function () {
-        window.open(
-            'controllers/supplies/consumable/print_stock_card.php?all=1',
-            '_blank'
-        );
+        window.open('controllers/supplies/consumable/print_stock_card.php?all=1', '_blank');
     });
 
     $('#requestReportModal').on('shown.bs.modal', function () {
@@ -845,7 +870,6 @@ $(document).ready(function() {
 
     // RSMI DataTable initialization
     let rsmiTable = null;
-
     $('#rsmiModal').on('shown.bs.modal', function () {
         if (!rsmiTable) {
             rsmiTable = $('#rsmiTable').DataTable({
@@ -875,7 +899,6 @@ $(document).ready(function() {
 
     // Quantity Management Modal & Update Functionality
     let quantityTable = null;
-
     $('#updateQtyModal').on('shown.bs.modal', function () {
         if (!quantityTable) {
             quantityTable = $('#quantityTable').DataTable({
@@ -897,9 +920,11 @@ $(document).ready(function() {
         }
     });
 
-    // Handle Quantity Update when modal closes to refresh main table if needed
+    // When modal closes, reload main supplies table in-place without page reload
     $('#updateQtyModal').on('hidden.bs.modal', function () {
-        location.reload();
+        if (suppliesTable) {
+            suppliesTable.ajax.reload(null, false);
+        }
     });
 
     // Helper function to submit inline quantity updates
@@ -944,6 +969,8 @@ $(document).ready(function() {
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success') {
+                itemSearchCache.clear();
+
                 Swal.fire({
                     icon: 'success',
                     title: 'Quantity Updated!',
@@ -954,6 +981,9 @@ $(document).ready(function() {
 
                 if (quantityTable) {
                     quantityTable.ajax.reload(null, false);
+                }
+                if (suppliesTable) {
+                    suppliesTable.ajax.reload(null, false);
                 }
             } else {
                 Swal.fire({
@@ -1001,80 +1031,6 @@ $(document).ready(function() {
         }
     });
 
-    $(document).on('click', '.update-qty-btn', function() {
-        const supplyId = $(this).data('id');
-        const supplyCode = $(this).data('code');
-        const supplyName = $(this).data('name');
-        const currentQty = $(this).data('qty');
-
-        Swal.fire({
-            title: 'Update Quantity',
-            html: '<p class="mb-2">Item: <strong>' + supplyCode + ' - ' + supplyName + '</strong></p><p class="text-muted small mb-0">Enter the new total quantity in stock:</p>',
-            input: 'number',
-            inputPlaceholder: currentQty ? currentQty.toString() : '0',
-            inputValue: '',
-            inputAttributes: {
-                min: 0,
-                step: 1,
-                class: 'form-control text-center fw-bold fs-5 mt-2'
-            },
-            showCancelButton: true,
-            confirmButtonColor: '#0D3B66',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Save Quantity',
-            inputValidator: (value) => {
-                if (value === '' || isNaN(value) || parseInt(value) < 0) {
-                    return 'Please enter a valid non-negative quantity!';
-                }
-            }
-        }).then((result) => {
-            if (result.isConfirmed) {
-                const newQty = parseInt(result.value);
-
-                const formData = new FormData();
-                formData.append('id', supplyId);
-                formData.append('qty', newQty);
-                formData.append('reference', 'Stock replenishment');
-
-                fetch('controllers/supplies/consumable/update_quantity.php', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Updated!',
-                            text: data.message,
-                            timer: 1500,
-                            showConfirmButton: false
-                        });
-
-                        if (quantityTable) {
-                            quantityTable.ajax.reload(null, false);
-                        }
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: data.message || 'Failed to update quantity.',
-                            confirmButtonColor: '#0D3B66'
-                        });
-                    }
-                })
-                .catch(error => {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Server Error',
-                        text: 'Something went wrong while updating quantity.',
-                        confirmButtonColor: '#0D3B66'
-                    });
-                });
-            }
-        });
-    });
-
     // Global safeguard to ensure modal backdrops never freeze the screen
     $(document).on('hidden.bs.modal', function () {
         setTimeout(function () {
@@ -1085,12 +1041,12 @@ $(document).ready(function() {
         }, 150);
     });
 });
+
 function printRsmiReport() {
     const monthYear = document.getElementById('rsmiMonthYear').value;
     if (!monthYear) {
         alert('Please select a month and year first.');
         return;
     }
-    // Opens print_rsmi_month.php with the selected month as a query parameter
     window.open('controllers/supplies/consumable/print_rsmi_month.php?month_year=' + monthYear, '_blank');
 }

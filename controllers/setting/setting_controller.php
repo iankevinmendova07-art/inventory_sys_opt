@@ -20,12 +20,8 @@ try {
     $stmtEmp = $pdo->query("SELECT * FROM employee ORDER BY id DESC");
     $employees = $stmtEmp->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
-    try {
-        $stmtEmp = $pdo->query("SELECT * FROM employee ORDER BY id DESC");
-        $employees = $stmtEmp->fetchAll(PDO::FETCH_ASSOC);
-    } catch (PDOException $ex) {
-        $employees = [];
-    }
+    error_log('setting_controller.php employee fetch error: ' . $e->getMessage());
+    $employees = [];
 }
 
 // Fetch units of measure from the database
@@ -33,12 +29,8 @@ try {
     $stmtCat = $pdo->query("SELECT * FROM unit_measure ORDER BY id DESC");
     $categories = $stmtCat->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
-    try {
-        $stmtCat = $pdo->query("SELECT * FROM unit_measure ORDER BY id DESC");
-        $categories = $stmtCat->fetchAll(PDO::FETCH_ASSOC);
-    } catch (PDOException $ex) {
-        $categories = [];
-    }
+    error_log('setting_controller.php unit_measure fetch error: ' . $e->getMessage());
+    $categories = [];
 }
 
 // Fetch admin profile data

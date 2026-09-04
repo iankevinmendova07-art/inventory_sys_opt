@@ -121,7 +121,7 @@ $adminRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'Administra
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php include 'controllers/supplies/nonconsumable/display_supply.php'; ?>
+                                <!-- Hydrated dynamically via Server-Side DataTables -->
                             </tbody>
                         </table>
                     </div>

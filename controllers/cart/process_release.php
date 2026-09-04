@@ -1,20 +1,18 @@
 <?php
 // controllers/cart/process_release.php
 session_start();
-require_once '../../config/db.php';
-require_once __DIR__ . '/../../includes/json_response.php';
-
+require_once dirname(__DIR__, 2) . '/config/db.php';
+require_once dirname(__DIR__, 2) . '/includes/json_response.php';
 
 if (!isset($_SESSION['admin_id'])) {
-    json_error('Unauthorized.');
+    json_error('Unauthorized access.', 401);
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    json_error('Invalid request method.');
+    json_error('Invalid request method.', 405);
 }
 
 $payload = json_decode(file_get_contents('php://input'), true);
-
 if (!is_array($payload)) {
     json_error('Invalid request payload.');
 }
@@ -25,22 +23,21 @@ $items = $payload['items'] ?? [];
 if (empty($recipients) || !is_array($recipients)) {
     json_error('Please select at least one recipient.');
 }
-
 if (empty($items) || !is_array($items)) {
     json_error('Your cart is empty.');
 }
 
 $recipients = array_values(array_unique(array_filter(array_map('trim', $recipients))));
 $recipientCount = count($recipients);
-
 if ($recipientCount === 0) {
-    json_error('Please select at least one recipient.');
+    json_error('Please select at least one valid recipient.');
 }
 
+// 1. Normalize and aggregate items by supplyId
 $normalizedItems = [];
 foreach ($items as $item) {
-    $supplyId = intval($item['supplyId'] ?? 0);
-    $qty = intval($item['qty'] ?? 0);
+    $supplyId = (int)($item['supplyId'] ?? 0);
+    $qty = (int)($item['qty'] ?? 0);
     $unit = trim($item['unit'] ?? 'PIECE');
 
     if ($supplyId <= 0 || $qty <= 0) {
@@ -52,170 +49,149 @@ foreach ($items as $item) {
             'supplyId' => $supplyId,
             'itemCode' => trim($item['itemCode'] ?? ''),
             'itemName' => trim($item['itemName'] ?? ''),
-            'unit' => $unit,
-            'qty' => $qty
+            'unit'     => $unit,
+            'qty'      => $qty
         ];
     } else {
         $normalizedItems[$supplyId]['qty'] += $qty;
     }
 }
 
-/**
- * Generate trans_code in YEAR-MONTH-INCREMENT format while continuing from the last issued number
- * even when the month changes (e.g. 2026-8-015 -> 2026-9-016).
- */
-function generateTransactionCode(PDO $pdo): string
-{
-    $year = date('Y');
-    $month = (int) date('n');
-    $prefix = $year . '-' . $month . '-';
-
-    $stmt = $pdo->prepare("SELECT trans_code FROM transaction_log WHERE trans_code IS NOT NULL AND trans_code <> '' ORDER BY id DESC LIMIT 1");
-    $stmt->execute();
-    $lastRow = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    $newIncrement = 1;
-    if ($lastRow && !empty($lastRow['trans_code'])) {
-        $lastTransCode = trim($lastRow['trans_code']);
-        if (preg_match('/-(\d{1,3})$/', $lastTransCode, $matches)) {
-            $newIncrement = (int) $matches[1] + 1;
-        }
-    }
-
-    return $prefix . str_pad((string) $newIncrement, 3, '0', STR_PAD_LEFT);
-}
+$supplyIds = array_keys($normalizedItems);
+$releasedBy = $_SESSION['admin_name'] ?? 'Administrator';
 
 try {
     $pdo->beginTransaction();
 
-    $releasedBy = $_SESSION['admin_name'] ?? 'Admin';
+    // 2. Fetch all recipient records in ONE query
+    $inRecipients = implode(',', array_fill(0, count($recipients), '?'));
+    $stmtEmp = $pdo->prepare("SELECT emp_name, emp_email FROM employee WHERE emp_name IN ($inRecipients)");
+    $stmtEmp->execute($recipients);
+    $employeeRows = $stmtEmp->fetchAll(PDO::FETCH_ASSOC);
 
-    foreach ($normalizedItems as $supplyId => $item) {
-        $stmt = $pdo->prepare("SELECT id, supply_code, supply_name, supply_qty FROM supplies WHERE id = ? FOR UPDATE");
-        $stmt->execute([$supplyId]);
-        $supply = $stmt->fetch(PDO::FETCH_ASSOC);
+    $employeeMap = [];
+    foreach ($employeeRows as $emp) {
+        $employeeMap[$emp['emp_name']] = $emp['emp_email'] ?? '';
+    }
 
-        if (!$supply) {
+    foreach ($recipients as $recipientName) {
+        if (!isset($employeeMap[$recipientName])) {
             $pdo->rollBack();
-            json_error('One or more items no longer exist in inventory.');
-        }
-
-        $totalNeeded = $item['qty'] * $recipientCount;
-
-        if ((int) $supply['supply_qty'] < $totalNeeded) {
-            $pdo->rollBack();
-            echo json_encode([
-                'status' => 'error',
-                'message' => 'Insufficient stock for ' . $supply['supply_name'] . '. Available: ' . $supply['supply_qty'] . ', needed: ' . $totalNeeded . ' (' . $item['qty'] . ' x ' . $recipientCount . ' recipients).'
-            ]);
-            exit;
+            json_error("Recipient '{$recipientName}' is not registered in employee records.");
         }
     }
 
-    $employeeStmt = $pdo->prepare("SELECT emp_name, emp_email FROM employee WHERE emp_name = ? LIMIT 1");
+    // 3. Lock all required inventory rows in ONE query with FOR UPDATE
+    $inSupplyIds = implode(',', array_fill(0, count($supplyIds), '?'));
+    $stmtSupplies = $pdo->prepare("SELECT id, supply_code, supply_name, supply_unit, supply_qty FROM supplies WHERE id IN ($inSupplyIds) FOR UPDATE");
+    $stmtSupplies->execute($supplyIds);
+    $dbSupplies = $stmtSupplies->fetchAll(PDO::FETCH_ASSOC);
 
-    // Updated statement to include supply_unit
-    $insertLog = $pdo->prepare(
+    $suppliesMap = [];
+    foreach ($dbSupplies as $s) {
+        $suppliesMap[(int)$s['id']] = $s;
+    }
+
+    // 4. Batch Stock Validation
+    foreach ($normalizedItems as $supplyId => $item) {
+        if (!isset($suppliesMap[$supplyId])) {
+            $pdo->rollBack();
+            json_error("Item ID {$supplyId} does not exist in inventory.");
+        }
+
+        $currentStock = (int)$suppliesMap[$supplyId]['supply_qty'];
+        $totalRequired = $item['qty'] * $recipientCount;
+
+        if ($currentStock < $totalRequired) {
+            $pdo->rollBack();
+            json_error("Insufficient stock for {$suppliesMap[$supplyId]['supply_name']}. Available: {$currentStock}, Needed: {$totalRequired} ({$item['qty']} x {$recipientCount} recipients).");
+        }
+    }
+
+    // 5. Generate Base Transaction Code Sequence
+    $yearMonth = date('Y-n-');
+    $stmtLastCode = $pdo->query("SELECT trans_code FROM transaction_log WHERE trans_code IS NOT NULL AND trans_code <> '' ORDER BY id DESC LIMIT 1");
+    $lastCodeRow = $stmtLastCode->fetch(PDO::FETCH_ASSOC);
+    $increment = 1;
+    if ($lastCodeRow && !empty($lastCodeRow['trans_code'])) {
+        if (preg_match('/-(\d+)$/', trim($lastCodeRow['trans_code']), $m)) {
+            $increment = (int)$m[1] + 1;
+        }
+    }
+
+    // 6. Prepared Statements for Batch Insertion & Stock Deduction
+    $stmtInsertLog = $pdo->prepare(
         "INSERT INTO transaction_log (trans_code, supply_code, supply_name, supply_unit, supply_qty, emp_name, emp_email, release_by, created_at)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())"
     );
 
-    $insertStockCard = $pdo->prepare(
+    $stmtInsertStockCard = $pdo->prepare(
         "INSERT INTO stock_card (supply_code, item_name, item_unit, transaction_date, transaction_type, qty, reference, recepient, created_at)
          VALUES (?, ?, ?, CURDATE(), 'OUT', ?, ?, ?, NOW())"
     );
 
-    $updateStock = $pdo->prepare(
+    $stmtDeductStock = $pdo->prepare(
         "UPDATE supplies SET supply_qty = supply_qty - ? WHERE id = ? AND supply_qty >= ?"
     );
 
-    $verifyStock = $pdo->prepare("SELECT supply_name, supply_qty FROM supplies WHERE id = ?");
-
     $transCodes = [];
 
+    // 7. Execute Transaction Logging
     foreach ($recipients as $recipientName) {
-        $transCode = generateTransactionCode($pdo);
+        $transCode = $yearMonth . str_pad((string)$increment++, 3, '0', STR_PAD_LEFT);
         $transCodes[] = $transCode;
-
-        $employeeStmt->execute([$recipientName]);
-        $employee = $employeeStmt->fetch(PDO::FETCH_ASSOC);
-
-        if (!$employee) {
-            $pdo->rollBack();
-            echo json_encode(['status' => 'error', 'message' => 'Recipient "' . $recipientName . '" was not found in the employee records.']);
-            exit;
-        }
+        $empEmail = $employeeMap[$recipientName];
 
         foreach ($normalizedItems as $supplyId => $item) {
-            $stmt = $pdo->prepare("SELECT supply_code, supply_name, supply_unit FROM supplies WHERE id = ?");
-            $stmt->execute([$supplyId]);
-            $supply = $stmt->fetch(PDO::FETCH_ASSOC);
+            $dbItem = $suppliesMap[$supplyId];
+            $unit = $item['unit'] ?: ($dbItem['supply_unit'] ?? 'PIECE');
 
-            // Use cart unit, or fallback to database unit if available
-            $supplyUnit = $item['unit'] ?? ($supply['supply_unit'] ?? 'PIECE');
-
-            $insertLog->execute([
+            $stmtInsertLog->execute([
                 $transCode,
-                $supply['supply_code'],
-                $supply['supply_name'],
-                $supplyUnit, // <-- Safely recorded into transaction_log
+                $dbItem['supply_code'],
+                $dbItem['supply_name'],
+                $unit,
                 $item['qty'],
-                $employee['emp_name'],
-                $employee['emp_email'],
+                $recipientName,
+                $empEmail,
                 $releasedBy
             ]);
 
-            // Record the same release in the stock card for this recipient.
-            $insertStockCard->execute([
-                $supply['supply_code'],
-                $supply['supply_name'],
-                $supplyUnit,
+            $stmtInsertStockCard->execute([
+                $dbItem['supply_code'],
+                $dbItem['supply_name'],
+                $unit,
                 $item['qty'],
                 'RIS No. ' . $transCode,
-                $employee['emp_name']
+                $recipientName
             ]);
         }
     }
 
+    // 8. Atomic Quantity Deduction
     foreach ($normalizedItems as $supplyId => $item) {
         $totalDeduct = $item['qty'] * $recipientCount;
-        $updateStock->execute([$totalDeduct, $supplyId, $totalDeduct]);
+        $stmtDeductStock->execute([$totalDeduct, $supplyId, $totalDeduct]);
 
-        if ($updateStock->rowCount() !== 1) {
-            $verifyStock->execute([$supplyId]);
-            $current = $verifyStock->fetch(PDO::FETCH_ASSOC);
+        if ($stmtDeductStock->rowCount() !== 1) {
             $pdo->rollBack();
-            echo json_encode([
-                'status' => 'error',
-                'message' => 'Release blocked for ' . ($current['supply_name'] ?? 'item') . '. Available stock is ' . ($current['supply_qty'] ?? 0) . ', but ' . $totalDeduct . ' is required. Quantity cannot go below zero.'
-            ]);
-            exit;
-        }
-
-        $verifyStock->execute([$supplyId]);
-        $current = $verifyStock->fetch(PDO::FETCH_ASSOC);
-
-        if (!$current || (int) $current['supply_qty'] < 0) {
-            $pdo->rollBack();
-            echo json_encode([
-                'status' => 'error',
-                'message' => 'Release blocked: stock level for ' . ($current['supply_name'] ?? 'item') . ' would fall below zero.'
-            ]);
-            exit;
+            json_error("Concurrency conflict: Stock level changed during checkout for {$suppliesMap[$supplyId]['supply_name']}. Transaction aborted.");
         }
     }
 
     $pdo->commit();
 
     echo json_encode([
-        'status' => 'success',
-        'message' => 'Successfully released ' . count($normalizedItems) . ' item type(s) to ' . $recipientCount . ' recipient(s). Transaction codes: ' . implode(', ', $transCodes) . '.',
+        'status'      => 'success',
+        'message'     => 'Successfully released ' . count($normalizedItems) . ' item type(s) to ' . $recipientCount . ' recipient(s).',
         'trans_codes' => $transCodes,
-        'print_url' => 'controllers/supplies/consumable/print_ris.php?trans_codes=' . urlencode(implode(',', $transCodes))
+        'print_url'   => 'controllers/supplies/consumable/print_ris.php?trans_codes=' . urlencode(implode(',', $transCodes))
     ]);
+
 } catch (PDOException $e) {
     if ($pdo->inTransaction()) {
         $pdo->rollBack();
     }
-    json_error('Database error while processing release.');
+    error_log('controllers/cart/process_release.php error: ' . $e->getMessage());
+    json_error('Database failure occurred while processing release.');
 }

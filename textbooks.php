@@ -2,8 +2,8 @@
 session_start();
 // Protect the page using your auth check
 
-require_once $_SERVER['DOCUMENT_ROOT'] . '/inventory_sys_opt/config/db.php';
-require_once 'controllers/auth/auth.php';
+require_once __DIR__ . '/config/db.php';
+require_once __DIR__ . '/controllers/auth/auth.php';
 
 // Get admin name for display
 $adminName = isset($_SESSION['admin_name']) ? strtoupper($_SESSION['admin_name']) : 'ADMIN';
@@ -165,6 +165,7 @@ try {
                             <option value="Grade IV">Grade IV</option>
                             <option value="Grade V">Grade V</option>
                             <option value="Grade VI">Grade VI</option>
+                            <option value="Others">Others</option>
                         </select>
                     </div>
                     <div class="mb-3">
@@ -183,6 +184,7 @@ try {
                             <option value="GMRC – Good Manners and Right Conduct">GMRC – Good Manners and Right Conduct</option>
                             <option value="Edukasyong Pantahanan at Pangkabuhayan (EPP)">Edukasyong Pantahanan at Pangkabuhayan (EPP)</option>
                             <option value="MAPEH">MAPEH</option>
+                            <option value="Others">Others</option>
                         </select>
                     </div>
                     <div class="row">
@@ -192,7 +194,10 @@ try {
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="lr_unit" class="form-label fw-semibold">Unit</label>
-                            <input type="text" class="form-control" id="lr_unit" name="lr_unit" value="pc" required>
+                            <select class="form-select" id="lr_unit" name="lr_unit" required>
+                                <option value="" selected disabled>Select unit of measure</option>
+                                <?php include 'includes/partials/item_unit_options.php'; ?>
+                            </select>
                         </div>
                     </div>
                     <div class="mb-3">
@@ -208,7 +213,13 @@ try {
                     </div>
                     <div class="mb-3">
                         <label for="condition" class="form-label fw-semibold">Condition</label>
-                        <input type="text" class="form-control" id="condition" name="condition" placeholder="Enter condition (e.g., Good, New, Fair, Damaged)" required>
+                        <select class="form-select" id="condition" name="condition" required>
+                            <option value="" disabled selected>Select condition...</option>
+                            <option value="New">New</option>
+                            <option value="Used">Used</option>
+                            <option value="Old">Old</option>
+                            <option value="Damage">Damage</option>
+                        </select>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -271,7 +282,10 @@ try {
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="edit_lr_unit" class="form-label fw-semibold">Unit</label>
-                            <input type="text" class="form-control" id="edit_lr_unit" name="lr_unit" required>
+                            <select class="form-select" id="edit_lr_unit" name="lr_unit" required>
+                                <option value="" disabled>Select unit of measure</option>
+                                <?php include 'includes/partials/item_unit_options.php'; ?>
+                            </select>
                         </div>
                     </div>
                     <div class="mb-3">
@@ -287,7 +301,7 @@ try {
                     </div>
                     <div class="mb-3">
                         <label for="edit_condition" class="form-label fw-semibold">Condition</label>
-                        <input type="text" class="form-control" id="edit_condition" name="condition" placeholder="Enter condition (e.g., Good, New, Fair, Damaged)" required>
+                        
                     </div>
                 </div>
                 <div class="modal-footer">

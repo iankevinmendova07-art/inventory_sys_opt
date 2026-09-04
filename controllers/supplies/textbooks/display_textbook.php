@@ -1,5 +1,5 @@
 <?php
-require_once $_SERVER['DOCUMENT_ROOT'] . '/inventory_sys_opt/config/db.php';
+require_once dirname(__DIR__, 3) . '/config/db.php';
 
 try {
     $stmt = $pdo->query("SELECT * FROM lr_textbooks ORDER BY id DESC");
