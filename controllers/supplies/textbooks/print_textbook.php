@@ -1,11 +1,7 @@
 <?php
 session_start();
 
-$dbPath = $_SERVER['DOCUMENT_ROOT'] . '/inventory_sys_opt/config/db.php';
-if (!file_exists($dbPath)) {
-    $dbPath = dirname(__DIR__, 3) . '/config/db.php';
-}
-require_once $dbPath;
+require_once dirname(__DIR__, 3) . '/config/db.php';
 
 $id = intval($_GET['id'] ?? 0);
 if ($id <= 0) {
@@ -135,7 +131,7 @@ try {
     </div>
 
     <div class="deped-header">
-        <img src="/inventory_sys/assets/img/deped.png" alt="DepEd Logo">
+        <img src="../../../assets/img/deped.png" alt="DepEd Logo">
         <div class="republic">Republic of the Philippines</div>
         <div class="department">Department of Education</div>
         <div class="region">Region VIII — Eastern Visayas</div>

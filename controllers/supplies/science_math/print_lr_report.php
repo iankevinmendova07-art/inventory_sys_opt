@@ -210,7 +210,7 @@ function renderSection(array $items, string $label, string $color): void {
 
     <!-- DepEd Header -->
     <div class="deped-header">
-        <img src="/inventory_sys/assets/img/deped.png" alt="DepEd Logo">
+        <img src="../../../assets/img/deped.png" alt="DepEd Logo">
         <div class="republic">Republic of the Philippines</div>
         <div class="department">Department of Education</div>
         <div class="sub">Region VIII — Eastern Visayas</div>

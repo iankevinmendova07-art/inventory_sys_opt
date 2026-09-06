@@ -1,6 +1,5 @@
 <?php
-// Include your database configuration file
-require_once $_SERVER['DOCUMENT_ROOT'] . '/inventory_sys_opt/config/db.php';
+require_once dirname(__DIR__, 3) . '/config/db.php';
 
 // Fallback safeguard if $conn isn't set globally but another variable is used
 if (!isset($conn) && isset($pdo)) {

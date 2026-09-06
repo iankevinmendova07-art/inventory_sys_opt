@@ -1,12 +1,7 @@
 <?php
 session_start();
 
-// Reliable database connection path
-$dbPath = $_SERVER['DOCUMENT_ROOT'] . '/inventory_sys/config/db.php';
-if (!file_exists($dbPath)) {
-    $dbPath = __DIR__ . '/../../../config/db.php';
-}
-require_once $dbPath;
+require_once dirname(__DIR__, 3) . '/config/db.php';
 
 if (!isset($pdo)) {
     die("Database connection failed: \$pdo is not defined in config/db.php.");
@@ -216,7 +211,7 @@ try {
         <button onclick="window.print();" style="padding: 8px 16px; background: #0D3B66; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Print / Save A4 Landscape PDF</button>
     </div>
         <div class="deped-header">
-        <img src="/inventory_sys/assets/img/deped.png" alt="DepEd Logo">
+        <img src="../../../assets/img/deped.png" alt="DepEd Logo">
         <div class="republic">Republic of the Philippines</div>
         <div class="department">Department of Education</div>
         <div class="region">Region VIII — Eastern Visayas</div>

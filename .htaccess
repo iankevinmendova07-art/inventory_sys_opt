@@ -1,0 +1,42 @@
+# ----------------------------------------------------------------------
+# Security & Deployment Configuration for Apache / cPanel / LiteSpeed
+# ----------------------------------------------------------------------
+
+# 1. Disable Directory Listing
+Options -Indexes
+
+# 2. Block access to sensitive and configuration files
+<FilesMatch "^(\.env|\.git|\.htaccess|\.htpasswd|composer\.(json|lock)|package\.(json|lock)|.*\.(sql|md|log|sh|bat|bak|config|env))$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# 3. Protect config directory from direct web requests
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Prevent direct access to config files if called directly
+    RewriteRule ^config/ - [F,L,NC]
+    RewriteRule ^tools/ - [F,L,NC]
+</IfModule>
+
+# 4. Security Headers (Defense in Depth)
+<IfModule mod_headers.c>
+    # Prevent clickjacking
+    Header always set X-Frame-Options "SAMEORIGIN"
+    # Prevent MIME-type sniffing
+    Header always set X-Content-Type-Options "nosniff"
+    # Enable XSS protection filter
+    Header set X-XSS-Protection "1; mode=block"
+    # Referrer policy
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# 5. Character Encoding
+AddDefaultCharset UTF-8
+
