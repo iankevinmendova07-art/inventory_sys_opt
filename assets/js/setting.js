@@ -335,4 +335,31 @@ document.addEventListener('DOMContentLoaded', function() {
     handleDelete('.delete-employee-btn', 'controllers/Employee/process_delete_employee.php', 'This employee record will be deleted permanently.');
     handleDelete('.delete-category-btn', 'controllers/category/process_delete_category.php', 'This unit of measure will be deleted permanently.');
     handleDelete('.delete-position-btn', 'controllers/position/process_delete_position.php', 'This position will be deleted permanently.');
+
+    // Database Backup Confirmation Handler
+    $(document).on('click', '#btnBackupDb', function(e) {
+        e.preventDefault();
+        const backupUrl = $(this).attr('href');
+
+        Swal.fire({
+            title: 'Download Database Backup?',
+            text: 'This will export and download the complete inventory database schema and data as a SQL file.',
+            icon: 'info',
+            showCancelButton: true,
+            confirmButtonColor: '#0D3B66',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '<i class="bi bi-download me-1"></i> Download Backup'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = backupUrl;
+                Swal.fire({
+                    title: 'Downloading...',
+                    text: 'Your database backup is being generated and downloaded.',
+                    icon: 'success',
+                    timer: 2500,
+                    showConfirmButton: false
+                });
+            }
+        });
+    });
 });

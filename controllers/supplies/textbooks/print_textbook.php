@@ -27,7 +27,8 @@ try {
     $recipientPosition = $item['recipient_position'] ?? 'Teacher I';
 
     $currentDate = date('F d, Y');
-    $receivedFromAdmin = isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : 'ADMIN';
+    $receivedFromAdmin    = 'IAN KEVIN T. MENDOVA';
+    $receivedFromPosition = 'Administrative Officer II';
 
 } catch (PDOException $e) {
     error_log('controllers/supplies/textbooks/print_textbook.php DB error: ' . $e->getMessage());
@@ -185,7 +186,7 @@ try {
                 <strong>Received From:</strong><br><br>
                 <div class="text-center">
                     <span class="fw-bold text-uppercase"><?php echo htmlspecialchars($receivedFromAdmin); ?></span><br>
-                    <span class="text-muted" style="font-size: 0.85rem;">Administrative Officer II</span><br>
+                    <span class="text-muted" style="font-size: 0.85rem;"><?php echo htmlspecialchars($receivedFromPosition); ?></span><br>
                     <span style="font-size: 0.8rem;">Date: <?php echo htmlspecialchars($currentDate); ?></span>
                 </div>
             </td>

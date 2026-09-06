@@ -36,31 +36,12 @@ try {
         }
     }
 
-    // 3. Fetch Signatories dynamically using emp_position
-    $adminOfficerName = "___________________________";
-    $adminOfficerPos = "Administrative Officer II";
-    
-    $schoolHeadName = "___________________________";
-    $schoolHeadPos = "Principal II / School Head";
+    // Fixed signatories — not pulled from DB
+    $adminOfficerName = "IAN KEVIN MENDOVA";
+    $adminOfficerPos  = "Admin. Officer II";
 
-    $empQuery = $pdo->query("SHOW TABLES LIKE 'employee'");
-    if ($empQuery->rowCount() > 0) {
-        $stmtAdmin = $pdo->prepare("SELECT * FROM employee WHERE emp_position LIKE ? OR emp_position LIKE ? LIMIT 1");
-        $stmtAdmin->execute(['%Administrative Officer%', '%Custodian%']);
-        $admin = $stmtAdmin->fetch(PDO::FETCH_ASSOC);
-        if ($admin) {
-            $adminOfficerName = $admin['name'] ?? ($admin['emp_name'] ?? $adminOfficerName);
-            $adminOfficerPos = $admin['emp_position'] ?? $adminOfficerPos;
-        }
-
-        $stmtHead = $pdo->prepare("SELECT * FROM employee WHERE emp_position LIKE ? OR emp_position LIKE ? LIMIT 1");
-        $stmtHead->execute(['%Principal%', '%School Head%']);
-        $head = $stmtHead->fetch(PDO::FETCH_ASSOC);
-        if ($head) {
-            $schoolHeadName = $head['name'] ?? ($head['emp_name'] ?? $schoolHeadName);
-            $schoolHeadPos = $head['emp_position'] ?? $schoolHeadPos;
-        }
-    }
+    $schoolHeadName = "ROSELLE U. GAYAMAT";
+    $schoolHeadPos  = "School Head";
 
 } catch (PDOException $e) {
     error_log('controllers/supplies/nonconsumable/generate_rpcppe_pdf.php DB error: ' . $e->getMessage());

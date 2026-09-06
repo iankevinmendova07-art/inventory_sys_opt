@@ -22,23 +22,9 @@ try {
     $empQuery->execute();
     $employees = $empQuery->fetchAll(PDO::FETCH_ASSOC);
 
-    $school_head_name = "SCHOOL HEAD";
-    $admin_officer_name = "ADMINISTRATIVE OFFICER II";
-
-    foreach ($employees as $emp) {
-        $dbEmpName = trim($emp['emp_name']);
-        $position = trim($emp['emp_position']);
-
-        // Dynamically find School Head
-        if (stripos($position, 'School Head') !== false || stripos($position, 'Principal') !== false) {
-            $school_head_name = strtoupper($dbEmpName);
-        }
-
-        // Dynamically find Administrative Officer II
-        if (stripos($position, 'Administrative Officer II') !== false || stripos($position, 'Admin. Officer II') !== false) {
-            $admin_officer_name = strtoupper($dbEmpName);
-        }
-    }
+    // Fixed names — not pulled from DB
+    $school_head_name   = 'ROSELLE U. GAYAMAT';
+    $admin_officer_name = 'IAN KEVIN MENDOVA';
 
     $transactions = [];
     $stmt = $pdo->prepare("SELECT * FROM transaction_log WHERE trans_code = ? ORDER BY id ASC");

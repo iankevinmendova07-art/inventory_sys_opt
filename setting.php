@@ -126,6 +126,20 @@ require_once 'controllers/setting/setting_controller.php';
                         </div>
                     </div>
                 </div>
+                <!-- Clickable Database Backup Card -->
+                <div class="col-md-3">
+                    <a href="controllers/setting/backup_database.php" class="text-decoration-none" id="btnBackupDb">
+                        <div class="card stat-card p-3 border-start border-4 border-info shadow-sm h-100 d-flex flex-column justify-content-between clickable-card">
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="flex-grow-1">
+                                    <span class="text-muted fw-semibold text-uppercase" style="font-size: 0.75rem;">System Maintenance</span>
+                                    <h5 class="fw-bold text-dark mb-0">Database Backup</h5>
+                                </div>
+                                <div class="fs-1 text-info opacity-50"><i class="bi bi-database-down"></i></div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
             </div>
             <!-- Nav Tabs for DataTables -->
             <ul class="nav nav-tabs custom-tabs mb-3" id="settingsTab" role="tablist">

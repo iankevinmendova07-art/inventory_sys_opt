@@ -256,14 +256,14 @@ function renderSection(array $items, string $label, string $color): void {
         <tr>
             <td style="width:50%;">
                 <strong>Prepared by:</strong><br><br><br>
-                <div class="sig-line"></div><br>
                 <strong>IAN KEVIN T. MENDOVA</strong><br>
+                <div class="sig-line" style="margin-top: 0;"></div><br>
                 Administrative Officer II
             </td>
-            <td style="width:50%; text-align:right;">
+            <td style="width:50%; text-align:center;">
                 <strong>Noted by:</strong><br><br><br>
-                <div class="sig-line"></div><br>
                 <strong>ROSELLE U. GAYAMAT</strong><br>
+                <div class="sig-line" style="margin-top: 0;"></div><br>
                 School Head
             </td>
         </tr>
