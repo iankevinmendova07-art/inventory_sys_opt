@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once dirname(__DIR__) . '/auth/auth.php';
 
 // Require the centralized database connection file
 require_once '../../config/db.php';

@@ -26,27 +26,35 @@ try {
     $school_head_name   = 'ROSELLE U. GAYAMAT';
     $admin_officer_name = 'IAN KEVIN MENDOVA';
 
+    $employeePositions = [];
+    foreach ($employees as $employee) {
+        $employeePositions[strtolower(trim($employee['emp_name']))] = trim($employee['emp_position']);
+    }
+
+    $placeholders = implode(',', array_fill(0, count($transCodes), '?'));
+    $stmt = $pdo->prepare(
+        "SELECT *
+         FROM transaction_log
+         WHERE trans_code IN ($placeholders)
+         ORDER BY trans_code ASC, id ASC"
+    );
+    $stmt->execute($transCodes);
+
+    $itemsByCode = [];
+    while ($item = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $itemsByCode[$item['trans_code']][] = $item;
+    }
+
     $transactions = [];
-    $stmt = $pdo->prepare("SELECT * FROM transaction_log WHERE trans_code = ? ORDER BY id ASC");
-
     foreach ($transCodes as $code) {
-        $stmt->execute([$code]);
-        $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
+        $items = $itemsByCode[$code] ?? [];
         if (!$items) {
             continue;
         }
 
         $recipient_name = $items[0]['emp_name'] ?? '';
         $transaction_date = $items[0]['created_at'] ?? date('Y-m-d H:i:s');
-        $recipient_position = "Teacher I";
-
-        foreach ($employees as $emp) {
-            if (strcasecmp(trim($emp['emp_name']), trim($recipient_name)) === 0) {
-                $recipient_position = trim($emp['emp_position']);
-                break;
-            }
-        }
+        $recipient_position = $employeePositions[strtolower(trim($recipient_name))] ?? 'Teacher I';
 
         $transactions[] = [
             'trans_code' => $code,

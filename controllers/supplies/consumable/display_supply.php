@@ -1,4 +1,5 @@
 <?php
+require_once dirname(__DIR__, 2) . '/auth/auth.php';
 require_once dirname(__DIR__, 3) . '/config/db.php';
 
 // Fallback safeguard if $conn isn't set globally but another variable is used

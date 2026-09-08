@@ -16,8 +16,59 @@ function debounce(func, wait) {
 }
 
 const itemSearchCache = new Map();
+const MAX_SEARCH_CACHE_ENTRIES = 100;
 let cachedEmployees = null;
 let suppliesTable = null;
+let suppliesReloadQueued = false;
+let itemSearchController = null;
+let itemSearchSequence = 0;
+
+async function requestJson(url, options = {}) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    const abortExternalRequest = () => controller.abort();
+
+    if (options.signal) {
+        if (options.signal.aborted) {
+            controller.abort();
+        } else {
+            options.signal.addEventListener('abort', abortExternalRequest, { once: true });
+        }
+    }
+
+    try {
+        const response = await fetch(url, { ...options, signal: controller.signal });
+        if (!response.ok) {
+            throw new Error(`Request failed with HTTP ${response.status}`);
+        }
+
+        const contentType = response.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+            throw new Error('Server returned a non-JSON response');
+        }
+
+        return await response.json();
+    } finally {
+        clearTimeout(timeoutId);
+        options.signal?.removeEventListener('abort', abortExternalRequest);
+    }
+}
+
+function setSearchCache(key, value) {
+    if (itemSearchCache.size >= MAX_SEARCH_CACHE_ENTRIES) {
+        itemSearchCache.delete(itemSearchCache.keys().next().value);
+    }
+    itemSearchCache.set(key, value);
+}
+
+function reloadSuppliesTable() {
+    if (!suppliesTable || suppliesReloadQueued) return;
+
+    suppliesReloadQueued = true;
+    suppliesTable.ajax.reload(() => {
+        suppliesReloadQueued = false;
+    }, false);
+}
 
 document.addEventListener('DOMContentLoaded', function () {
     // 1. Initialize Server-Side DataTable for Main Supplies Table
@@ -152,9 +203,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         showConfirmButton: false
                     });
 
-                    if (suppliesTable) {
-                        suppliesTable.ajax.reload(null, false);
-                    }
+                    reloadSuppliesTable();
                 } else {
                     Swal.fire({
                         icon: 'warning',
@@ -184,8 +233,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const supplyId = $(this).data('id');
         $(this).blur();
 
-        fetch(`controllers/supplies/consumable/edit_supply.php?id=${supplyId}`)
-            .then(response => response.json())
+        requestJson(`controllers/supplies/consumable/edit_supply.php?id=${supplyId}`)
             .then(data => {
                 if (data.status === 'success') {
                     const item = data.data;
@@ -245,9 +293,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         showConfirmButton: false
                     });
 
-                    if (suppliesTable) {
-                        suppliesTable.ajax.reload(null, false);
-                    }
+                    reloadSuppliesTable();
                 } else {
                     Swal.fire({
                         icon: 'error',
@@ -306,9 +352,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             showConfirmButton: false
                         });
 
-                        if (suppliesTable) {
-                            suppliesTable.ajax.reload(null, false);
-                        }
+                        reloadSuppliesTable();
                     } else {
                         Swal.fire({
                             icon: 'error',
@@ -359,14 +403,26 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        fetch(`controllers/supplies/consumable/search_supply.php?q=${encodeURIComponent(trimmed)}`)
-            .then(response => response.json())
+        const sequence = ++itemSearchSequence;
+        itemSearchController?.abort();
+        itemSearchController = new AbortController();
+
+        requestJson(
+            `controllers/supplies/consumable/search_supply.php?q=${encodeURIComponent(trimmed)}`,
+            { signal: itemSearchController.signal }
+        )
             .then(data => {
+                if (sequence !== itemSearchSequence) return;
+
                 const item = (data.status === 'success' && data.data) ? data.data : null;
-                itemSearchCache.set(trimmed, item);
+                setSearchCache(trimmed, item);
                 populateCartItemFields(item);
             })
-            .catch(error => console.error('Search error:', error));
+            .catch(error => {
+                if (error.name !== 'AbortError') {
+                    console.error('Search error:', error);
+                }
+            });
     }
 
     function populateCartItemFields(item) {
@@ -768,9 +824,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             if (res.isConfirmed) {
                                 window.open(printUrl, '_blank');
                             }
-                            if (suppliesTable) {
-                                suppliesTable.ajax.reload(null, false);
-                            }
+                            reloadSuppliesTable();
                         });
                     } else {
                         Swal.fire({
@@ -920,13 +974,6 @@ $(document).ready(function() {
         }
     });
 
-    // When modal closes, reload main supplies table in-place without page reload
-    $('#updateQtyModal').on('hidden.bs.modal', function () {
-        if (suppliesTable) {
-            suppliesTable.ajax.reload(null, false);
-        }
-    });
-
     // Helper function to submit inline quantity updates
     function submitInlineQty(supplyId, supplyCode, supplyName) {
         const inputEl = document.getElementById('qty_input_' + supplyId);
@@ -982,9 +1029,7 @@ $(document).ready(function() {
                 if (quantityTable) {
                     quantityTable.ajax.reload(null, false);
                 }
-                if (suppliesTable) {
-                    suppliesTable.ajax.reload(null, false);
-                }
+                reloadSuppliesTable();
             } else {
                 Swal.fire({
                     icon: 'error',

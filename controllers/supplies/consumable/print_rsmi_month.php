@@ -7,13 +7,34 @@ require_once dirname(__DIR__, 3) . '/controllers/auth/auth.php';
 require_once dirname(__DIR__, 3) . '/config/db.php';
 
 // Get the selected month and year from GET (e.g., '2026-08')
-$selectedMonthYear = isset($_GET['month_year']) ? $_GET['month_year'] : '';
+$selectedMonthYear = trim((string)($_GET['month_year'] ?? ''));
+$monthStart = null;
+
+if ($selectedMonthYear !== '') {
+    if (!preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $selectedMonthYear)) {
+        die('Invalid month format.');
+    }
+
+    $monthStart = DateTimeImmutable::createFromFormat('!Y-m-d', $selectedMonthYear . '-01');
+    if (!$monthStart) {
+        die('Invalid month value.');
+    }
+}
 
 try {
     // 1. Fetch issuance records filtered by selected month/year if provided
-    if (!empty($selectedMonthYear)) {
-        $stmt = $pdo->prepare("SELECT * FROM transaction_log WHERE DATE_FORMAT(created_at, '%Y-%m') = ? ORDER BY created_at ASC, id ASC");
-        $stmt->execute([$selectedMonthYear]);
+    if ($monthStart instanceof DateTimeImmutable) {
+        $nextMonth = $monthStart->modify('+1 month');
+        $stmt = $pdo->prepare(
+            "SELECT *
+             FROM transaction_log
+             WHERE created_at >= ? AND created_at < ?
+             ORDER BY created_at ASC, id ASC"
+        );
+        $stmt->execute([
+            $monthStart->format('Y-m-d H:i:s'),
+            $nextMonth->format('Y-m-d H:i:s')
+        ]);
     } else {
         $stmt = $pdo->query("SELECT * FROM transaction_log ORDER BY created_at ASC, id ASC");
     }

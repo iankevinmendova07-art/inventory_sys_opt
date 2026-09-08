@@ -1,29 +1,25 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+require_once dirname(__DIR__, 2) . '/auth/auth.php';
 
 header('Content-Type: application/json');
 
-$response = ['success' => false, 'data' => null, 'debug' => ''];
+$response = ['success' => false, 'data' => null];
 
 try {
-    // Exactly three levels up: nonconsumable -> supplies -> controllers -> inventory_sys root -> config/database.php
     $dbPath = __DIR__ . '/../../../config/db.php';
     
     if (!file_exists($dbPath)) {
-        throw new Exception("Database config file not found at: " . $dbPath);
+        throw new RuntimeException('Database configuration is unavailable.');
     }
     
     require_once $dbPath;
 
     if (!isset($pdo)) {
-        throw new Exception("PDO connection variable not set in database.php");
+        throw new RuntimeException('Database connection is unavailable.');
     }
 
     if (isset($_GET['property_number'])) {
         $propertyNumber = trim($_GET['property_number']);
-        $response['debug_query_val'] = $propertyNumber;
-
         $stmt = $pdo->prepare("SELECT * FROM nonconsumable WHERE BINARY property_number = ? LIMIT 1");
         $stmt->execute([$propertyNumber]);
         $item = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -31,11 +27,7 @@ try {
         if ($item) {
             $response['success'] = true;
             $response['data'] = $item;
-        } else {
-            $response['debug'] = "No record found for property number: " . $propertyNumber;
         }
-    } else {
-        $response['debug'] = "No property_number parameter provided in GET request.";
     }
 } catch (Exception $e) {
     $response['success'] = false;

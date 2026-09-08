@@ -15,7 +15,58 @@ function debounce(func, wait) {
 }
 
 const nonconsSearchCache = new Map();
+const MAX_SEARCH_CACHE_ENTRIES = 100;
 let suppliesTable = null;
+let suppliesReloadQueued = false;
+let nonconsSearchController = null;
+let nonconsSearchSequence = 0;
+
+async function requestJson(url, options = {}) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    const abortExternalRequest = () => controller.abort();
+
+    if (options.signal) {
+        if (options.signal.aborted) {
+            controller.abort();
+        } else {
+            options.signal.addEventListener('abort', abortExternalRequest, { once: true });
+        }
+    }
+
+    try {
+        const response = await fetch(url, { ...options, signal: controller.signal });
+        if (!response.ok) {
+            throw new Error(`Request failed with HTTP ${response.status}`);
+        }
+
+        const contentType = response.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+            throw new Error('Server returned a non-JSON response');
+        }
+
+        return await response.json();
+    } finally {
+        clearTimeout(timeoutId);
+        options.signal?.removeEventListener('abort', abortExternalRequest);
+    }
+}
+
+function setSearchCache(key, value) {
+    if (nonconsSearchCache.size >= MAX_SEARCH_CACHE_ENTRIES) {
+        nonconsSearchCache.delete(nonconsSearchCache.keys().next().value);
+    }
+    nonconsSearchCache.set(key, value);
+}
+
+function reloadSuppliesTable() {
+    if (!suppliesTable || suppliesReloadQueued) return;
+
+    suppliesReloadQueued = true;
+    suppliesTable.ajax.reload(() => {
+        suppliesReloadQueued = false;
+    }, false);
+}
 
 document.addEventListener('DOMContentLoaded', function () {
     // 1. Initialize Server-Side DataTable for Non-Consumable Supplies
@@ -131,7 +182,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     });
 
                     if (suppliesTable) {
-                        suppliesTable.ajax.reload(null, false);
+                        reloadSuppliesTable();
                     }
                 } else {
                     Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'Server error', confirmButtonColor: '#0D3B66' });
@@ -215,7 +266,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     });
 
                     if (suppliesTable) {
-                        suppliesTable.ajax.reload(null, false);
+                        reloadSuppliesTable();
                     }
                 } else {
                     Swal.fire({ icon: 'error', title: 'Error', text: data.message, confirmButtonColor: '#0D3B66' });
@@ -256,7 +307,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         nonconsSearchCache.clear();
                         Swal.fire({ icon: 'success', title: 'Deleted!', text: data.message, timer: 1200, showConfirmButton: false }); 
                         if (suppliesTable) {
-                            suppliesTable.ajax.reload(null, false);
+                            reloadSuppliesTable();
                         }
                     } else { 
                         Swal.fire({ icon: 'error', title: 'Error', text: data.message }); 
@@ -286,25 +337,27 @@ $(document).ready(function() {
             return;
         }
 
-        $.ajax({
-            url: 'controllers/supplies/nonconsumable/search_supply.php',
-            type: 'GET',
-            data: { property_number: propertyNumber },
-            dataType: 'json',
-            success: function(response) {
-                if (response.success && response.data) {
-                    nonconsSearchCache.set(propertyNumber, response.data);
-                    populateCartNonconsFields(response.data);
-                } else {
-                    nonconsSearchCache.set(propertyNumber, null);
+        const sequence = ++nonconsSearchSequence;
+        nonconsSearchController?.abort();
+        nonconsSearchController = new AbortController();
+
+        requestJson(
+            `controllers/supplies/nonconsumable/search_supply.php?property_number=${encodeURIComponent(propertyNumber)}`,
+            { signal: nonconsSearchController.signal }
+        )
+            .then(response => {
+                if (sequence !== nonconsSearchSequence) return;
+
+                const item = response.success && response.data ? response.data : null;
+                setSearchCache(propertyNumber, item);
+                item ? populateCartNonconsFields(item) : clearCartModalFields();
+            })
+            .catch(error => {
+                if (error.name !== 'AbortError') {
+                    console.error('Search error:', error);
                     clearCartModalFields();
                 }
-            },
-            error: function(xhr, status, error) {
-                console.error("AJAX Error:", status, error);
-                clearCartModalFields();
-            }
-        });
+            });
     }, 300));
 
     function populateCartNonconsFields(item) {

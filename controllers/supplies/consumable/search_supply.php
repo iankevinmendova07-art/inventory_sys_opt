@@ -1,4 +1,5 @@
 <?php
+require_once dirname(__DIR__, 2) . '/auth/auth.php';
 require_once dirname(__DIR__, 3) . '/config/db.php'; // <-- Added semicolon here
 
 header('Content-Type: application/json');

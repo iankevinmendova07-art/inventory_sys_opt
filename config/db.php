@@ -10,10 +10,17 @@ if (session_status() === PHP_SESSION_NONE) {
 
 // Database configuration settings
 // Automatically reads environment variables if defined on live hosting/cPanel/Docker, or falls back to local defaults
+$appEnv   = strtolower((string)(getenv('APP_ENV') ?: 'local'));
 $host     = getenv('DB_HOST')     ?: 'localhost';
 $db_name  = getenv('DB_NAME')     ?: 'inventory_sys_db';
 $username = getenv('DB_USER')     ?: 'root';
 $password = getenv('DB_PASS') !== false ? getenv('DB_PASS') : '';
+
+if ($appEnv === 'production' && ($username === 'root' || $password === '')) {
+    error_log('Production database configuration is incomplete or uses unsafe defaults.');
+    http_response_code(500);
+    die('Database configuration is incomplete. Please contact the administrator.');
+}
 
 try {
     $pdo = new PDO(

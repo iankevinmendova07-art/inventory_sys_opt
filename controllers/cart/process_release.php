@@ -1,6 +1,6 @@
 <?php
 // controllers/cart/process_release.php
-session_start();
+require_once dirname(__DIR__) . '/auth/auth.php';
 require_once dirname(__DIR__, 2) . '/config/db.php';
 require_once dirname(__DIR__, 2) . '/includes/json_response.php';
 

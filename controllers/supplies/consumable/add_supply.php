@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once dirname(__DIR__, 2) . '/auth/auth.php';
 require_once dirname(__DIR__, 3) . '/config/db.php';
 require_once __DIR__ . '/../../../includes/json_response.php';
 
@@ -23,18 +23,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     };
 
     try {
-        $existingItemsStmt = $pdo->query("SELECT supply_code, supply_name FROM supplies");
-        while ($existingItem = $existingItemsStmt->fetch(PDO::FETCH_ASSOC)) {
-            $existingCode = (string)($existingItem['supply_code'] ?? '');
-            $existingName = (string)($existingItem['supply_name'] ?? '');
+        $normalizedCode = $normalizeValue($supply_code);
+        $normalizedName = $normalizeValue($supply_name);
+        $duplicateStmt = $pdo->prepare(
+            "SELECT supply_code, supply_name
+             FROM supplies
+             WHERE supply_code_normalized = ? OR supply_name_normalized = ?
+             LIMIT 1"
+        );
+        $duplicateStmt->execute([$normalizedCode, $normalizedName]);
+        $duplicate = $duplicateStmt->fetch(PDO::FETCH_ASSOC);
 
-            if ($normalizeValue($existingCode) === $normalizeValue($supply_code)) {
+        if ($duplicate) {
+            if ($normalizeValue((string)$duplicate['supply_code']) === $normalizedCode) {
                 json_error('An item with this Item Code already exists.');
             }
 
-            if ($normalizeValue($existingName) === $normalizeValue($supply_name)) {
-                json_error('An item with this Item Name already exists.');
-            }
+            json_error('An item with this Item Name already exists.');
         }
 
         $pdo->beginTransaction();

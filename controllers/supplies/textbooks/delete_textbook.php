@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once dirname(__DIR__, 2) . '/auth/auth.php';
 require_once '../../../config/db.php';
 require_once __DIR__ . '/../../../includes/json_response.php';
 

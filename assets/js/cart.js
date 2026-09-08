@@ -1,7 +1,7 @@
 (function () {
     const CART_STORAGE_KEY = 'inventory_consumable_cart';
 
-    function readCart() {
+    function loadCart() {
         try {
             const stored = localStorage.getItem(CART_STORAGE_KEY);
             const parsed = stored ? JSON.parse(stored) : [];
@@ -12,7 +12,14 @@
         }
     }
 
+    let cartState = loadCart();
+
+    function readCart() {
+        return cartState;
+    }
+
     function writeCart(items) {
+        cartState = items;
         localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
         updateCartBadge(items.length);
         document.dispatchEvent(new CustomEvent('cartUpdated', { detail: { items } }));
@@ -27,11 +34,11 @@
     }
 
     function getCartCount() {
-        return readCart().length;
+        return cartState.length;
     }
 
     function addItem(item) {
-        const cart = readCart();
+        const cart = [...cartState];
         const existingIndex = cart.findIndex(function (entry) {
             return entry.supplyId === item.supplyId;
         });
@@ -48,7 +55,7 @@
     }
 
     function removeItem(supplyId) {
-        const cart = readCart().filter(function (entry) {
+        const cart = cartState.filter(function (entry) {
             return entry.supplyId !== supplyId;
         });
         writeCart(cart);
@@ -63,14 +70,14 @@
     function renderCartItems(container) {
         if (!container) return;
 
-        const cart = readCart();
-        container.innerHTML = '';
+        const cart = cartState;
 
         if (cart.length === 0) {
             container.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">Your cart is empty.</td></tr>';
             return;
         }
 
+        const fragment = document.createDocumentFragment();
         cart.forEach(function (item) {
             const row = document.createElement('tr');
             row.innerHTML =
@@ -83,20 +90,20 @@
                         '<i class="bi bi-trash"></i>' +
                     '</button>' +
                 '</td>';
-            container.appendChild(row);
+            fragment.appendChild(row);
         });
+        container.replaceChildren(fragment);
     }
 
     function renderRecipients(container, employees, selectedNames) {
         if (!container) return;
-
-        container.innerHTML = '';
 
         if (!employees.length) {
             container.innerHTML = '<p class="text-muted mb-0">No employees found. Add employees in Settings first.</p>';
             return;
         }
 
+        const fragment = document.createDocumentFragment();
         employees.forEach(function (employee) {
             const isChecked = selectedNames.indexOf(employee.emp_name) >= 0;
             const wrapper = document.createElement('div');
@@ -106,8 +113,9 @@
                 '<label class="form-check-label" for="recipient-' + employee.id + '">' +
                     escapeHtml(employee.emp_name) + ' <span class="text-muted">(' + escapeHtml(employee.emp_position) + ')</span>' +
                 '</label>';
-            container.appendChild(wrapper);
+            fragment.appendChild(wrapper);
         });
+        container.replaceChildren(fragment);
     }
 
     function escapeHtml(value) {

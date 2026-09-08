@@ -1,18 +1,18 @@
 document.addEventListener('DOMContentLoaded', function () {
     // 1. Initialize DataTables safely
     if ($.fn.DataTable) {
-        if ($.fn.DataTable.isDataTable('#suppliesTable')) {
-            $('#suppliesTable').DataTable().destroy();
-        }
-        $('#suppliesTable').DataTable({
+        const table = document.querySelector('#suppliesTable');
+        if (table && !$.fn.DataTable.isDataTable(table)) {
+            $(table).DataTable({
             responsive: true,
             pageLength: 5,
-            lengthMenu: [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
+            lengthMenu: [[5, 10, 25, 50], [5, 10, 25, 50]],
             order: [],
             language: {
                 search: "_INPUT_",
                 searchPlaceholder: "Search textbooks..."
             }
+            });
         });
     }
 

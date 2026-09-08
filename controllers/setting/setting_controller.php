@@ -1,6 +1,7 @@
 <?php
 // controllers/setting/setting_controller.php
 
+require_once dirname(__DIR__) . '/auth/auth.php';
 require_once dirname(__DIR__, 2) . '/config/db.php';
 
 // Get admin info from session

@@ -1,6 +1,6 @@
 <?php
 // Ensure no prior output or whitespace exists before session start
-session_start();
+require_once dirname(__DIR__, 2) . '/auth/auth.php';
 require_once dirname(__DIR__, 3) . '/config/db.php';
 require_once __DIR__ . '/../../../includes/json_response.php';
 

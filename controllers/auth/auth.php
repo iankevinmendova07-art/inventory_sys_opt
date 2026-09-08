@@ -9,6 +9,8 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+require_once dirname(__DIR__, 2) . '/includes/csrf.php';
+
 // Check if the admin is logged in
 if (!isset($_SESSION['admin_id'])) {
     // Check if this is an AJAX or JSON request
@@ -38,4 +40,6 @@ if (!isset($_SESSION['admin_id'])) {
     header("Location: " . $redirectUrl);
     exit();
 }
+
+require_csrf();
 ?>

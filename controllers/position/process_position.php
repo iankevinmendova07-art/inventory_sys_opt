@@ -5,7 +5,7 @@ if (ob_get_length()) {
 
 header('Content-Type: application/json; charset=utf-8');
 
-session_start();
+require_once dirname(__DIR__) . '/auth/auth.php';
 
 ini_set('display_errors', 0);
 error_reporting(E_ALL);

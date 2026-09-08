@@ -472,7 +472,8 @@ $adminRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'Administra
                                             echo "<option value=\"\" disabled>No transaction records found</option>";
                                         }
                                     } catch (PDOException $e) {
-                                        echo "<option value=\"\" disabled>Query Error: " . htmlspecialchars($e->getMessage()) . "</option>";
+                                        error_log('consup.php month list query error: ' . $e->getMessage());
+                                        echo '<option value="" disabled>Unable to load transaction months</option>';
                                     }
                                 } else {
                                     echo "<option value=\"\" disabled>Database Connection Failed</option>";

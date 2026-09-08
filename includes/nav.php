@@ -1,4 +1,5 @@
 <?php
+$csrfMetaToken = function_exists('csrf_token') ? csrf_token() : '';
 // Get the current page filename
 $currentPage = basename($_SERVER['PHP_SELF']);
 
@@ -8,6 +9,9 @@ $isSuppliesActive = ($currentPage == 'consup.php' || $currentPage == 'non-consum
 // Check if current page belongs to learning resources submenus
 $isLrActive = ($currentPage == 'lr.php' || $currentPage == 'science_math_eq.php' || $currentPage == 'sciene_math.php' || $currentPage == 'textbooks.php');
 ?>
+<?php if ($csrfMetaToken !== ''): ?>
+    <meta name="csrf-token" content="<?php echo htmlspecialchars($csrfMetaToken, ENT_QUOTES, 'UTF-8'); ?>">
+<?php endif; ?>
 
 <!-- Sidebar Navigation -->
 <nav id="sidebar">

@@ -246,9 +246,13 @@ CREATE TABLE `supplies` (
   `supply_unit` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `supply_qty` int NOT NULL,
   `reference` varchar(255) NOT NULL,
+  `supply_code_normalized` varchar(255) GENERATED ALWAYS AS (lower(trim(regexp_replace(`supply_code`,_utf8mb4'[()\\[\\]{}_\\-_.]+',_utf8mb4' ')))) STORED,
+  `supply_name_normalized` varchar(255) GENERATED ALWAYS AS (lower(trim(regexp_replace(`supply_name`,_utf8mb4'[()\\[\\]{}_\\-_.]+',_utf8mb4' ')))) STORED,
   PRIMARY KEY (`id`),
   UNIQUE KEY `supply_code` (`supply_code`),
-  UNIQUE KEY `supply_name` (`supply_name`)
+  UNIQUE KEY `supply_name` (`supply_name`),
+  UNIQUE KEY `uq_supply_code_normalized` (`supply_code_normalized`),
+  UNIQUE KEY `uq_supply_name_normalized` (`supply_name_normalized`)
 ) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -317,6 +321,29 @@ LOCK TABLES `unit_measure` WRITE;
 INSERT INTO `unit_measure` VALUES (3,'Box'),(4,'Ream'),(5,'Pc'),(6,'Pcs'),(7,'Set'),(8,'Unit');
 /*!40000 ALTER TABLE `unit_measure` ENABLE KEYS */;
 UNLOCK TABLES;
+
+-- Performance indexes for transaction, stock-card, report, and lookup queries.
+ALTER TABLE `employee`
+  ADD KEY `idx_employee_name` (`emp_name`),
+  ADD KEY `idx_employee_position_name` (`emp_position`, `emp_name`);
+
+ALTER TABLE `lr_sme`
+  ADD KEY `idx_lr_sme_type` (`lr_type`);
+
+ALTER TABLE `lr_textbooks`
+  ADD KEY `idx_lr_textbooks_subject` (`lr_subject`),
+  ADD KEY `idx_lr_textbooks_grade_item` (`grade_level`, `lr_item`);
+
+ALTER TABLE `nonconsumable`
+  ADD KEY `idx_nonconsumable_trans_id` (`trans_code`, `id`);
+
+ALTER TABLE `stock_card`
+  ADD KEY `idx_stock_card_supply_date_id` (`supply_code`, `transaction_date`, `id`);
+
+ALTER TABLE `transaction_log`
+  ADD KEY `idx_transaction_code_id` (`trans_code`, `id`),
+  ADD KEY `idx_transaction_created_id` (`created_at`, `id`);
+
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
