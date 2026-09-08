@@ -3,6 +3,7 @@ require_once dirname(__DIR__, 2) . '/auth/auth.php';
 require_once dirname(__DIR__, 3) . '/config/db.php';
 require_once __DIR__ . '/../../../includes/json_response.php';
 
+header('Content-Type: application/json; charset=utf-8');
 
 if (isset($_GET['id'])) {
     $id = intval($_GET['id']);

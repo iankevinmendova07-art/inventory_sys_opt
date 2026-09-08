@@ -35,7 +35,14 @@ async function requestJson(url, options = {}) {
     }
 
     try {
-        const response = await fetch(url, { ...options, signal: controller.signal });
+        const response = await fetch(url, {
+            ...options,
+            headers: {
+                Accept: 'application/json',
+                ...(options.headers || {})
+            },
+            signal: controller.signal
+        });
         if (!response.ok) {
             throw new Error(`Request failed with HTTP ${response.status}`);
         }
