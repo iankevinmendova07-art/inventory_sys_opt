@@ -279,7 +279,10 @@ function renderRows(array $items): void {
                     </div>
                     <div class="mb-3">
                         <label for="lr_unit" class="form-label fw-semibold">Unit</label>
-                        <input type="text" class="form-control" id="lr_unit" name="lr_unit" placeholder="e.g. pc, set, unit">
+                        <select class="form-select" id="lr_unit" name="lr_unit" required>
+                            <option value="" selected disabled>Select unit of measure</option>
+                            <?php include 'includes/partials/item_unit_options.php'; ?>
+                        </select>
                     </div>
                     <div class="mb-3">
                         <label for="lr_type" class="form-label fw-semibold">Type</label>
@@ -361,7 +364,10 @@ function renderRows(array $items): void {
                     </div>
                     <div class="mb-3">
                         <label for="editLrUnit" class="form-label fw-semibold">Unit</label>
-                        <input type="text" class="form-control" id="editLrUnit" name="lr_unit" placeholder="e.g. pc, set, unit">
+                        <select class="form-select" id="editLrUnit" name="lr_unit" required>
+                            <option value="" disabled>Select unit of measure</option>
+                            <?php include 'includes/partials/item_unit_options.php'; ?>
+                        </select>
                     </div>
                     <div class="mb-3">
                         <label for="editLrType" class="form-label fw-semibold">Type</label>
@@ -426,11 +432,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // ── Open Edit Modal ─────────────────────────────────────────────────────
     $(document).on('click', '.edit-btn', function () {
+        const selectedUnit = $(this).attr('data-lr_unit') || '';
+
         $('#editId').val($(this).data('id'));
         $('#editLrCode').val($(this).data('lr_code'));
         $('#editLrItem').val($(this).data('lr_item'));
         $('#editLrQuantity').val($(this).data('lr_qty'));
-        $('#editLrUnit').val($(this).data('lr_unit'));
+        const unitSelect = $('#editLrUnit');
+        unitSelect.val(selectedUnit);
+
+        // Preserve an existing value if it is no longer in unit_measure.
+        if (selectedUnit && !unitSelect.val()) {
+            unitSelect.append(new Option(selectedUnit, selectedUnit, true, true));
+        }
+
         $('#editLrType').val($(this).data('lr_type'));
         $('#editEquipmentModal').modal('show');
     });
