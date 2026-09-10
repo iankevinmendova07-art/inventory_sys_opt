@@ -16,6 +16,7 @@ $adminNameUpper = isset($_SESSION['admin_name']) ? strtoupper($_SESSION['admin_n
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - San Roque Elementary School Inventory System</title>
+    <link rel="icon" type="image/png" href="assets/img/ian.png">
     
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -32,7 +33,7 @@ $adminNameUpper = isset($_SESSION['admin_name']) ? strtoupper($_SESSION['admin_n
     <div class="login-card text-center">
         
         <div class="logo-wrapper">
-            <img src="assets/img/san_roque.png" alt="San Roque ES Logo">
+            <img src="assets/img/ian.png" alt="Project IAN logo">
         </div>
 
         <h1 class="school-title">SAN ROQUE ELEMENTARY SCHOOL</h1>

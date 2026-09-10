@@ -16,7 +16,7 @@ $isLrActive = ($currentPage == 'lr.php' || $currentPage == 'science_math_eq.php'
 <!-- Sidebar Navigation -->
 <nav id="sidebar">
     <div class="sidebar-header">
-        <img src="assets/img/san_roque.png" alt="School Logo" class="sidebar-logo">
+        <img src="assets/img/ian.png" alt="Project IAN logo" class="sidebar-logo">
         <h3>SAN ROQUE ES</h3>
         <p>Project IAN - Inventory and Asset Navigator </p>
     </div>

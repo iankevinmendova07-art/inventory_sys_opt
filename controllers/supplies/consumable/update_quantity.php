@@ -36,8 +36,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $addedQty = $qty - $currentQty;
 
-        $updateStmt = $pdo->prepare("UPDATE supplies SET supply_qty = ? WHERE id = ?");
-        $updateStmt->execute([$qty, $id]);
+        $updateStmt = $pdo->prepare("UPDATE supplies SET supply_qty = ?, reference = ? WHERE id = ?");
+        $updateStmt->execute([$qty, $reference, $id]);
 
         $stockCardStmt = $pdo->prepare(
             "INSERT INTO stock_card (supply_code, item_name, item_unit, transaction_date, transaction_type, qty, reference, recepient, created_at)
