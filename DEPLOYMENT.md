@@ -2,7 +2,7 @@
 
 ## 1. Server requirements
 
-- PHP 8.3+ with PDO MySQL and required PDF extensions.
+- PHP 8.3+ with PDO MySQL, cURL, and required PDF extensions.
 - MySQL 8.0+.
 - Apache with `mod_rewrite`, `mod_headers`, and `.htaccess` support, or equivalent web-server rules.
 - HTTPS enabled.
@@ -17,9 +17,13 @@ DB_HOST=127.0.0.1
 DB_NAME=inventory_sys_db
 DB_USER=inventory_app
 DB_PASS=<strong-unique-password>
+SMS_GATEWAY_URL=https://api.sms-gate.app/3rdparty/v1/message
+SMS_GATEWAY_USERNAME=<sms-gateway-username>
+SMS_GATEWAY_PASSWORD=<sms-gateway-password>
 ```
 
 The application rejects production configuration that uses `root` or an empty database password.
+The SMS variables use the Basic Auth credentials shown by SMS Gateway for Android. Leave them unset to release inventory without sending SMS notifications.
 
 ## 3. Database installation
 
@@ -28,6 +32,12 @@ The application rejects production configuration that uses `root` or an empty da
 3. For an existing installation, apply the additive indexes and generated normalized supply columns from the `supplies`, `transaction_log`, `stock_card`, and related `ALTER TABLE` statements in `database_schema.sql`.
 4. Verify with `SHOW INDEX` and `EXPLAIN` before opening the application to users.
 5. Back up the database before applying schema changes.
+
+For an existing installation, add the mobile number column before using SMS notifications:
+
+```sql
+ALTER TABLE employee ADD COLUMN emp_phone varchar(30) NULL AFTER emp_position;
+```
 
 ## 4. Web-server configuration
 

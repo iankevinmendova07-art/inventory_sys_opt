@@ -54,19 +54,19 @@ CREATE TABLE `employee` (
   `emp_id` varchar(50) NOT NULL,
   `emp_name` varchar(100) NOT NULL,
   `emp_position` varchar(100) NOT NULL,
-  `emp_email` varchar(100) NOT NULL
+  `emp_phone` varchar(30) NOT NULL DEFAULT ''
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `employee`
 --
 
-INSERT INTO `employee` (`id`, `emp_id`, `emp_name`, `emp_position`, `emp_email`) VALUES
-(5, '10', 'Ian Kevin Tuazon', 'Administrative Officer II', 'iankevinmendova@gmail.com'),
-(7, '5', 'Shella Caballero', 'Teacher II', 'shella.caballero@deped.gov.ph'),
-(8, '1', 'Ylona Rizza B. Molito', 'Teacher II', 'ylonarizza.basada@deped.gov.ph'),
-(9, '2', 'Arlene R. Nuevo', 'Teacher III', 'arlene.nuevo@deped.gov.ph'),
-(10, '3', 'Leah B. Balangatan', 'Teacher III', 'leah.balangatan@deped.gov.ph'),
+INSERT INTO `employee` (`id`, `emp_id`, `emp_name`, `emp_position`) VALUES
+(5, '10', 'Ian Kevin Tuazon', 'Administrative Officer II'),
+(7, '5', 'Shella Caballero', 'Teacher II'),
+(8, '1', 'Ylona Rizza B. Molito', 'Teacher II'),
+(9, '2', 'Arlene R. Nuevo', 'Teacher III'),
+(10, '3', 'Leah B. Balangatan', 'Teacher III'),
 (11, '4', 'Ma. Gaudencia P. Mabini', 'Teacher III', 'magaudencia.mabini@deped.gov.ph'),
 (12, '6', 'Diana M. Braga', 'Teacher III', 'diana.braga@deped.gov.ph'),
 (13, '7', 'Mylyn A. Bernales', 'Master Teacher I', 'mylyn.bernales@deped.gov.ph'),

@@ -64,7 +64,7 @@ CREATE TABLE `employee` (
   `emp_id` varchar(50) NOT NULL,
   `emp_name` varchar(100) NOT NULL,
   `emp_position` varchar(100) NOT NULL,
-  `emp_email` varchar(100) NOT NULL,
+  `emp_phone` varchar(30) NOT NULL DEFAULT '',
   PRIMARY KEY (`id`),
   UNIQUE KEY `emp_id` (`emp_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

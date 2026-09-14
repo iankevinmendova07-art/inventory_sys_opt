@@ -222,13 +222,13 @@ document.addEventListener('DOMContentLoaded', function() {
         const empId = $(this).closest('tr').find('td:eq(0)').text().trim();
         const name = $(this).data('name');
         const position = $(this).data('position');
-        const email = $(this).data('email');
+        const empPhone = $(this).data('emp-phone');
 
         $('#editEmpDbId').val(id);
         $('#editEmployeeId').val(empId);
         $('#editEmployeeName').val(name);
         $('#editEmployeePosition').val(position);
-        $('#editEmployeeEmail').val(email);
+        $('#editEmployeePhone').val(empPhone);
 
         const editModal = new bootstrap.Modal(document.getElementById('editEmployeeModal'));
         editModal.show();

@@ -180,11 +180,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     nonconsSearchCache.clear();
 
-                    Swal.fire({ 
-                        icon: 'success', 
-                        title: 'Success!', 
-                        text: data.message, 
-                        timer: 1500,
+                    const smsNotice = data.sms && data.sms.sent
+                        ? '<p class="text-success small mt-2 mb-0"><i class="bi bi-check-circle me-1"></i>SMS notification sent to all recipients.</p>'
+                        : (data.sms && data.sms.enabled
+                            ? '<p class="text-warning small mt-2 mb-0"><i class="bi bi-exclamation-triangle me-1"></i>' + data.sms.message + '</p>'
+                            : '');
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        html: '<p class="mb-0">' + data.message + '</p>' + smsNotice,
+                        timer: data.sms && data.sms.sent ? 2500 : 1500,
                         showConfirmButton: false
                     });
 

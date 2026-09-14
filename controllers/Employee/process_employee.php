@@ -11,12 +11,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $empId   = trim($_POST['employee_id'] ?? '');
     $empName = ucwords(strtolower(trim($_POST['name'] ?? '')));
     $empPos  = trim($_POST['position'] ?? '');
-    $empEmail = trim($_POST['email'] ?? '');
+    $empPhone = trim($_POST['emp_phone'] ?? '');
 
-    if (!empty($empId) && !empty($empName) && !empty($empPos) && !empty($empEmail)) {
+    if (!empty($empId) && !empty($empName) && !empty($empPos) && !empty($empPhone)) {
         try {
-            $stmt = $pdo->prepare("INSERT INTO employee (emp_id, emp_name, emp_position, emp_email) VALUES (?, ?, ?, ?)");
-            $stmt->execute([$empId, $empName, $empPos, $empEmail]);
+            $stmt = $pdo->prepare("INSERT INTO employee (emp_id, emp_name, emp_position, emp_phone) VALUES (?, ?, ?, ?)");
+            $stmt->execute([$empId, $empName, $empPos, $empPhone]);
 
             echo json_encode(['status' => 'success']);
             exit();

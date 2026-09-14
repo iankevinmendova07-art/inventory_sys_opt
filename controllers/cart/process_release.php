@@ -3,6 +3,7 @@
 require_once dirname(__DIR__) . '/auth/auth.php';
 require_once dirname(__DIR__, 2) . '/config/db.php';
 require_once dirname(__DIR__, 2) . '/includes/json_response.php';
+require_once dirname(__DIR__, 2) . '/includes/sms_gateway.php';
 
 if (!isset($_SESSION['admin_id'])) {
     json_error('Unauthorized access.', 401);
@@ -65,13 +66,13 @@ try {
 
     // 2. Fetch all recipient records in ONE query
     $inRecipients = implode(',', array_fill(0, count($recipients), '?'));
-    $stmtEmp = $pdo->prepare("SELECT emp_name, emp_email FROM employee WHERE emp_name IN ($inRecipients)");
+    $stmtEmp = $pdo->prepare("SELECT emp_name, emp_phone FROM employee WHERE emp_name IN ($inRecipients)");
     $stmtEmp->execute($recipients);
     $employeeRows = $stmtEmp->fetchAll(PDO::FETCH_ASSOC);
 
     $employeeMap = [];
     foreach ($employeeRows as $emp) {
-        $employeeMap[$emp['emp_name']] = $emp['emp_email'] ?? '';
+        $employeeMap[$emp['emp_name']] = $emp['emp_phone'] ?? '';
     }
 
     foreach ($recipients as $recipientName) {
@@ -140,7 +141,7 @@ try {
     foreach ($recipients as $recipientName) {
         $transCode = $yearMonth . str_pad((string)$increment++, 3, '0', STR_PAD_LEFT);
         $transCodes[] = $transCode;
-        $empEmail = $employeeMap[$recipientName];
+        $employeePhone = $employeeMap[$recipientName];
 
         foreach ($normalizedItems as $supplyId => $item) {
             $dbItem = $suppliesMap[$supplyId];
@@ -153,7 +154,7 @@ try {
                 $unit,
                 $item['qty'],
                 $recipientName,
-                $empEmail,
+                $employeePhone,
                 $releasedBy
             ]);
 
@@ -181,11 +182,47 @@ try {
 
     $pdo->commit();
 
+    $smsSentCount = 0;
+    $smsEnabled = false;
+    foreach ($recipients as $recipientName) {
+        $smsLines = [
+            'Mam/Sir (' . $recipientName . ')',
+            '',
+            'You can now get the supplies you request in the supplies office',
+            ''
+        ];
+        foreach ($normalizedItems as $supplyId => $item) {
+            $dbItem = $suppliesMap[$supplyId];
+            $unit = $item['unit'] ?: ($dbItem['supply_unit'] ?? 'PIECE');
+            $smsLines[] = $dbItem['supply_name'] . ' - ' . $unit . ' - ' . $item['qty'];
+        }
+        $smsLines[] = '';
+        $smsLines[] = 'Thank you';
+
+        $smsResult = send_release_sms(
+            [$employeeMap[$recipientName]],
+            implode("\n", $smsLines)
+        );
+        $smsEnabled = $smsEnabled || $smsResult['enabled'];
+        if ($smsResult['sent']) {
+            $smsSentCount++;
+        }
+    }
+
+    $smsResult = [
+        'enabled' => $smsEnabled,
+        'sent' => $smsSentCount === $recipientCount,
+        'message' => $smsSentCount === $recipientCount
+            ? 'SMS notification sent to all recipients.'
+            : 'SMS notification sent to ' . $smsSentCount . ' of ' . $recipientCount . ' recipient(s).'
+    ];
+
     echo json_encode([
         'status'      => 'success',
         'message'     => 'Successfully released ' . count($normalizedItems) . ' item type(s) to ' . $recipientCount . ' recipient(s).',
         'trans_codes' => $transCodes,
-        'print_url'   => 'controllers/supplies/consumable/print_ris.php?trans_codes=' . urlencode(implode(',', $transCodes))
+        'print_url'   => 'controllers/supplies/consumable/print_ris.php?trans_codes=' . urlencode(implode(',', $transCodes)),
+        'sms'         => $smsResult
     ]);
 
 } catch (PDOException $e) {

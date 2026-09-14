@@ -14,15 +14,15 @@ require_once __DIR__ . '/../../includes/json_response.php';
         $empId    = trim($_POST['employee_id'] ?? '');
         $empName  = ucwords(strtolower(trim($_POST['name'] ?? '')));
         $empPos   = trim($_POST['position'] ?? '');
-        $empEmail = trim($_POST['email'] ?? '');
+        $empPhone = trim($_POST['emp_phone'] ?? '');
 
-        if (!empty($empId) && !empty($empName) && !empty($empPos) && !empty($empEmail)) {
+        if (!empty($empId) && !empty($empName) && !empty($empPos) && !empty($empPhone)) {
             if (!empty($id)) {
-                $stmt = $pdo->prepare("UPDATE employee SET emp_id = ?, emp_name = ?, emp_position = ?, emp_email = ? WHERE id = ? OR emp_id = ?");
-                $stmt->execute([$empId, $empName, $empPos, $empEmail, $id, $empId]);
+                $stmt = $pdo->prepare("UPDATE employee SET emp_id = ?, emp_name = ?, emp_position = ?, emp_phone = ? WHERE id = ? OR emp_id = ?");
+                $stmt->execute([$empId, $empName, $empPos, $empPhone, $id, $empId]);
             } else {
-                $stmt = $pdo->prepare("UPDATE employee SET emp_name = ?, emp_position = ?, emp_email = ? WHERE emp_id = ?");
-                $stmt->execute([$empName, $empPos, $empEmail, $empId]);
+                $stmt = $pdo->prepare("UPDATE employee SET emp_name = ?, emp_position = ?, emp_phone = ? WHERE emp_id = ?");
+                $stmt->execute([$empName, $empPos, $empPhone, $empId]);
             }
 
             echo json_encode(['status' => 'success']);

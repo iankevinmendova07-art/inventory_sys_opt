@@ -820,7 +820,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         Swal.fire({
                             icon: 'success',
                             title: 'Items Released!',
-                            html: '<p class="mb-0">' + data.message + '</p>',
+                            html: '<p class="mb-0">' + data.message + '</p>' + (data.sms && data.sms.sent ? '<p class="text-success small mt-2 mb-0"><i class="bi bi-check-circle me-1"></i>' + data.sms.message + '</p>' : (data.sms && data.sms.enabled ? '<p class="text-warning small mt-2 mb-0"><i class="bi bi-exclamation-triangle me-1"></i>' + data.sms.message + '</p>' : '')),
                             showCancelButton: true,
                             confirmButtonColor: '#0D3B66',
                             cancelButtonColor: '#6c757d',

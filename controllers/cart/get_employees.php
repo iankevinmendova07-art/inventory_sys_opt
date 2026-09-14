@@ -9,7 +9,7 @@ if (!isset($_SESSION['admin_id'])) {
 }
 
 try {
-    $stmt = $pdo->query("SELECT id, emp_id, emp_name, emp_position, emp_email FROM employee ORDER BY emp_name ASC");
+    $stmt = $pdo->query("SELECT id, emp_id, emp_name, emp_position, emp_phone FROM employee ORDER BY emp_name ASC");
     $employees = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     echo json_encode(['status' => 'success', 'data' => $employees]);

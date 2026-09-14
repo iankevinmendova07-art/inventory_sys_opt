@@ -176,7 +176,7 @@ require_once 'controllers/setting/setting_controller.php';
                                             <th>Employee ID</th>
                                             <th>Name</th>
                                             <th>Position</th>
-                                            <th>Email</th>
+                                            <th>Mobile No.</th>
                                             <th class="text-center">Action</th>
                                         </tr>
                                     </thead>
@@ -187,9 +187,9 @@ require_once 'controllers/setting/setting_controller.php';
                                                     <td class="fw-bold"><?php echo htmlspecialchars($emp['emp_id'] ?? ''); ?></td>
                                                     <td><?php echo htmlspecialchars($emp['emp_name'] ?? ''); ?></td>
                                                     <td><?php echo htmlspecialchars($emp['emp_position'] ?? ''); ?></td>
-                                                    <td><?php echo htmlspecialchars($emp['emp_email'] ?? ''); ?></td>
+                                                    <td><?php echo htmlspecialchars($emp['emp_phone'] ?? ''); ?></td>
                                                     <td class="text-center">
-                                                        <button type="button" class="btn btn-sm btn-outline-primary me-1 edit-employee-btn" data-id="<?php echo htmlspecialchars($emp['id'] ?? $emp['emp_id']); ?>" data-name="<?php echo htmlspecialchars($emp['emp_name'] ?? ''); ?>" data-position="<?php echo htmlspecialchars($emp['emp_position'] ?? ''); ?>" data-email="<?php echo htmlspecialchars($emp['emp_email'] ?? ''); ?>" title="Edit Employee">
+                                                        <button type="button" class="btn btn-sm btn-outline-primary me-1 edit-employee-btn" data-id="<?php echo htmlspecialchars($emp['id'] ?? $emp['emp_id']); ?>" data-name="<?php echo htmlspecialchars($emp['emp_name'] ?? ''); ?>" data-position="<?php echo htmlspecialchars($emp['emp_position'] ?? ''); ?>" data-emp-phone="<?php echo htmlspecialchars($emp['emp_phone'] ?? ''); ?>" title="Edit Employee">
                                                             <i class="bi bi-pencil-square me-1"></i> Edit
                                                         </button>
                                                         <button type="button" class="btn btn-sm btn-outline-danger delete-employee-btn" data-id="<?php echo htmlspecialchars($emp['id'] ?? $emp['emp_id']); ?>" title="Delete Employee">
@@ -320,8 +320,8 @@ require_once 'controllers/setting/setting_controller.php';
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label for="employeeEmail" class="form-label fw-semibold">Email</label>
-                        <input type="email" class="form-control" id="employeeEmail" name="email" required placeholder="Enter email address">
+                        <label for="employeePhone" class="form-label fw-semibold">Mobile No.</label>
+                        <input type="tel" class="form-control" id="employeePhone" name="emp_phone" required placeholder="e.g. +639171234567">
                     </div>
                 </div>
                 <div class="modal-footer bg-light">
@@ -418,8 +418,8 @@ require_once 'controllers/setting/setting_controller.php';
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label for="editEmployeeEmail" class="form-label fw-semibold">Email</label>
-                        <input type="email" class="form-control" id="editEmployeeEmail" name="email" required placeholder="Enter email address">
+                        <label for="editEmployeePhone" class="form-label fw-semibold">Mobile No.</label>
+                        <input type="tel" class="form-control" id="editEmployeePhone" name="emp_phone" required placeholder="e.g. +639171234567">
                     </div>
                 </div>
                 <div class="modal-footer bg-light">

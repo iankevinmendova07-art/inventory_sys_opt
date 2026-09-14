@@ -2,6 +2,7 @@
 require_once dirname(__DIR__, 2) . '/auth/auth.php';
 require_once dirname(__DIR__, 3) . '/config/db.php';
 require_once __DIR__ . '/../../../includes/json_response.php';
+require_once __DIR__ . '/../../../includes/sms_gateway.php';
 
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -49,7 +50,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $execute = $stmt->execute([$trans_code, $property_number, $description, $item_type, $unit_of_measure, $unit_cost, $total_cost, $qty_property_card, $qty_physical_count, $shortage_overage_qty, $shortage_overage_value, $remarks, $recipient]);
 
         if ($execute) {
-            echo json_encode(['status' => 'success', 'message' => 'Item added successfully with code: ' . $trans_code]);
+            $smsResult = [
+                'enabled' => false,
+                'sent' => false,
+                'message' => 'SMS notification was not sent.'
+            ];
+
+            $stmtRecipient = $pdo->prepare('SELECT emp_phone FROM employee WHERE emp_name = ? LIMIT 1');
+            $stmtRecipient->execute([$recipient]);
+            $recipientPhone = $stmtRecipient->fetchColumn();
+
+            if ($recipientPhone !== false) {
+                $smsMessage = implode("\n", [
+                    'Mam/Sir (' . $recipient . ')',
+                    '',
+                    'You can now get the supplies you request in the supplies office',
+                    '',
+                    $description . ' - ' . $unit_of_measure . ' - ' . $qty_physical_count . ' - ' . $item_type . ' - ' . ($remarks ?: 'None'),
+                    '',
+                    'Thank you'
+                ]);
+                $smsResult = send_release_sms([$recipientPhone], $smsMessage);
+            }
+
+            echo json_encode([
+                'status' => 'success',
+                'message' => 'Item added successfully with code: ' . $trans_code,
+                'sms' => $smsResult
+            ]);
         } else {
             json_error('Failed to add item to the database.');
         }
