@@ -24,6 +24,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     try {
+        $duplicateStmt = $pdo->prepare(
+            "SELECT id FROM nonconsumable
+             WHERE LOWER(TRIM(property_number)) = LOWER(TRIM(?))
+             LIMIT 1"
+        );
+        $duplicateStmt->execute([$property_number]);
+        if ($duplicateStmt->fetchColumn()) {
+            json_error('An item with this property number already exists.');
+        }
+
         // 1. Generate the Year - Month - Increment trans_code
         $currentYearMonth = date('Y-m'); // e.g., "2026-08"
         

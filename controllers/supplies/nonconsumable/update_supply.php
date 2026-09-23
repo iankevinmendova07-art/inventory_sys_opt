@@ -26,6 +26,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     try {
+        $duplicateStmt = $pdo->prepare(
+            "SELECT id FROM nonconsumable
+             WHERE LOWER(TRIM(property_number)) = LOWER(TRIM(?))
+               AND id <> ?
+             LIMIT 1"
+        );
+        $duplicateStmt->execute([$property_number, $id]);
+        if ($duplicateStmt->fetchColumn()) {
+            json_error('An item with this property number already exists.');
+        }
+
         $stmt = $pdo->prepare("UPDATE nonconsumable SET property_number = ?, description = ?, item_type = ?, unit_of_measure = ?, unit_cost = ?, total_cost = ?, qty_property_card = ?, qty_physical_count = ?, shortage_overage_qty = ?, shortage_overage_value = ?, remarks = ?, recepient = ? WHERE id = ?");
         $execute = $stmt->execute([$property_number, $description, $item_type, $unit_of_measure, $unit_cost, $total_cost, $qty_property_card, $qty_physical_count, $shortage_overage_qty, $shortage_overage_value, $remarks, $recipient, $id]);
 

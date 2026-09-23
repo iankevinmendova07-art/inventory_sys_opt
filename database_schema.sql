@@ -262,7 +262,7 @@ CREATE TABLE `supplies` (
 
 LOCK TABLES `supplies` WRITE;
 /*!40000 ALTER TABLE `supplies` DISABLE KEYS */;
-INSERT INTO `supplies` VALUES (7,'1','Epson Ink 003','Set',82,'MOOE'),(8,'2','Bond Paper A4','Box',0,'MOOE'),(9,'3','Ballpen - Black','Box',10,'Donation'),(10,'4','Brown Envelope Long','Pcs',327,'MOOE August 2026');
+INSERT INTO `supplies` (`id`, `supply_code`, `supply_name`, `supply_unit`, `supply_qty`, `reference`) VALUES (7,'1','Epson Ink 003','Set',82,'MOOE'),(8,'2','Bond Paper A4','Box',0,'MOOE'),(9,'3','Ballpen - Black','Box',10,'Donation'),(10,'4','Brown Envelope Long','Pcs',327,'MOOE August 2026');
 /*!40000 ALTER TABLE `supplies` ENABLE KEYS */;
 UNLOCK TABLES;
 

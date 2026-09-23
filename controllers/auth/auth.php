@@ -41,5 +41,22 @@ if (!isset($_SESSION['admin_id'])) {
     exit();
 }
 
+// Authenticated accounts with non-admin roles must not reach inventory or
+// configuration pages and actions, all of which include this shared guard.
+$role = strtolower(trim((string)($_SESSION['role'] ?? '')));
+if (!in_array($role, ['admin', 'administrator'], true)) {
+    http_response_code(403);
+    $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
+           || (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false);
+
+    if ($isAjax) {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['status' => 'error', 'message' => 'Administrator access is required.']);
+    } else {
+        echo 'Administrator access is required.';
+    }
+    exit();
+}
+
 require_csrf();
 ?>

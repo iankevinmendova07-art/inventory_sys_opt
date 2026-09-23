@@ -41,20 +41,32 @@ try {
     }
 
     foreach ($tables as $table) {
+        $quotedTable = '`' . str_replace('`', '``', $table) . '`';
+
         fwrite($out, "-- --------------------------------------------------------\n");
         fwrite($out, "-- Table structure for table `{$table}`\n");
         fwrite($out, "-- --------------------------------------------------------\n\n");
-        fwrite($out, "DROP TABLE IF EXISTS `{$table}`;\n");
+        fwrite($out, "DROP TABLE IF EXISTS {$quotedTable};\n");
 
         // Fetch CREATE TABLE schema
-        $createStmt = $pdo->query("SHOW CREATE TABLE `{$table}`");
+        $createStmt = $pdo->query("SHOW CREATE TABLE {$quotedTable}");
         $createRow = $createStmt->fetch(PDO::FETCH_NUM);
         if ($createRow && isset($createRow[1])) {
             fwrite($out, $createRow[1] . ";\n\n");
         }
 
-        // Fetch and export rows
-        $dataStmt = $pdo->query("SELECT * FROM `{$table}`");
+        // Generated values are computed by MySQL and cannot be inserted
+        // explicitly when a backup is restored.
+        $columnStmt = $pdo->query("SHOW COLUMNS FROM {$quotedTable}");
+        $generatedColumns = [];
+        while ($column = $columnStmt->fetch(PDO::FETCH_ASSOC)) {
+            if (stripos((string)($column['Extra'] ?? ''), 'GENERATED') !== false) {
+                $generatedColumns[$column['Field']] = true;
+            }
+        }
+
+        // Export rows without generated columns in INSERT statements.
+        $dataStmt = $pdo->query("SELECT * FROM {$quotedTable}");
         $insertBuffer = [];
         $columns = [];
 
@@ -62,11 +74,14 @@ try {
             if (empty($columns)) {
                 $columns = array_map(function($col) {
                     return "`" . str_replace("`", "``", $col) . "`";
-                }, array_keys($dataRow));
+                }, array_keys(array_diff_key($dataRow, $generatedColumns)));
             }
 
             $values = [];
-            foreach ($dataRow as $val) {
+            foreach ($dataRow as $columnName => $val) {
+                if (isset($generatedColumns[$columnName])) {
+                    continue;
+                }
                 if ($val === null) {
                     $values[] = 'NULL';
                 } else {
@@ -100,4 +115,3 @@ try {
     http_response_code(500);
     die("Error generating database backup. Please try again or contact administrator.");
 }
-

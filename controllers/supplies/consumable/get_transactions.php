@@ -7,8 +7,15 @@ require_once dirname(__DIR__, 3) . '/config/db.php';
 header('Content-Type: application/json');
 
 try {
-    // Grouping by trans_code ensures each transaction code only appears once
-    $stmt = $pdo->prepare("SELECT trans_code, emp_name AS name, created_at AS transaction_date FROM transaction_log GROUP BY trans_code, emp_name, created_at ORDER BY MAX(id) DESC");
+    // Each release can contain several item rows with slightly different
+    // timestamps. Group by transaction and recipient, and show the latest row
+    // timestamp so a multi-item release appears only once.
+    $stmt = $pdo->prepare(
+        "SELECT trans_code, emp_name AS name, MAX(created_at) AS transaction_date
+         FROM transaction_log
+         GROUP BY trans_code, emp_name
+         ORDER BY MAX(id) DESC"
+    );
     $stmt->execute();
     $logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 

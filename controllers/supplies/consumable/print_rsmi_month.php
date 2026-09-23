@@ -12,11 +12,13 @@ $monthStart = null;
 
 if ($selectedMonthYear !== '') {
     if (!preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $selectedMonthYear)) {
+        http_response_code(400);
         die('Invalid month format.');
     }
 
     $monthStart = DateTimeImmutable::createFromFormat('!Y-m-d', $selectedMonthYear . '-01');
     if (!$monthStart) {
+        http_response_code(400);
         die('Invalid month value.');
     }
 }

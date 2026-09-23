@@ -109,9 +109,17 @@ try {
         }
     }
 
-    // 5. Generate Base Transaction Code Sequence
+    // 5. Generate this month's transaction code sequence. Looking up the
+    // latest code globally carries the previous month's counter forward.
     $yearMonth = date('Y-n-');
-    $stmtLastCode = $pdo->query("SELECT trans_code FROM transaction_log WHERE trans_code IS NOT NULL AND trans_code <> '' ORDER BY id DESC LIMIT 1");
+    $stmtLastCode = $pdo->prepare(
+        "SELECT trans_code
+         FROM transaction_log
+         WHERE trans_code LIKE ?
+         ORDER BY id DESC
+         LIMIT 1"
+    );
+    $stmtLastCode->execute([$yearMonth . '%']);
     $lastCodeRow = $stmtLastCode->fetch(PDO::FETCH_ASSOC);
     $increment = 1;
     if ($lastCodeRow && !empty($lastCodeRow['trans_code'])) {
