@@ -49,7 +49,7 @@ try {
     <!-- Shared logout handler -->
     <script src="assets/js/index.js" defer></script>
     <!-- Custom textbooks JS -->
-    <script src="assets/js/textbooks.js" defer></script>
+    <script src="assets/js/textbooks.js?v=<?php echo (int)filemtime(__DIR__ . '/assets/js/textbooks.js'); ?>" defer></script>
 </head>
 <body>
 
@@ -302,7 +302,12 @@ try {
                     </div>
                     <div class="mb-3">
                         <label for="edit_condition" class="form-label fw-semibold">Condition</label>
-                        
+                        <select class="form-select" id="edit_condition" name="condition" required>
+                            <option value="New">New</option>
+                            <option value="Used">Used</option>
+                            <option value="Old">Old</option>
+                            <option value="Damage">Damage</option>
+                        </select>
                     </div>
                 </div>
                 <div class="modal-footer">

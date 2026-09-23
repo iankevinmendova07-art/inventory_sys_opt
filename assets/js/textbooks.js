@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 searchPlaceholder: "Search textbooks..."
             }
             });
-        });
+        }
     }
 
     // 2. Focus input automatically when Add Modal opens
@@ -38,7 +38,10 @@ document.addEventListener('DOMContentLoaded', function () {
         $('#edit_recipient').val($(this).data('recipient'));
         $('#edit_condition').val($(this).attr('data-condition'));
 
-        $('#editTextbookModal').modal('show');
+        const editModalEl = document.getElementById('editTextbookModal');
+        if (editModalEl) {
+            bootstrap.Modal.getOrCreateInstance(editModalEl).show();
+        }
     });
 
     const editModalEl = document.getElementById('editTextbookModal');
@@ -123,10 +126,18 @@ document.addEventListener('DOMContentLoaded', function () {
     // 7. Success SweetAlert Notifications
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('success') === 'added') {
+        const smsStatus = urlParams.get('sms');
+        const smsNotice = smsStatus === 'sent'
+            ? '<p class="text-success small mt-2 mb-0"><i class="bi bi-check-circle me-1"></i>SMS notification sent to the recipient.</p>'
+            : (smsStatus === 'failed'
+                ? '<p class="text-warning small mt-2 mb-0"><i class="bi bi-exclamation-triangle me-1"></i>Textbook saved, but SMS could not be sent. Check the recipient mobile number and SMS gateway.</p>'
+                : (smsStatus === 'disabled'
+                    ? '<p class="text-warning small mt-2 mb-0"><i class="bi bi-exclamation-triangle me-1"></i>Textbook saved, but the SMS gateway is not configured.</p>'
+                    : ''));
         Swal.fire({
             icon: 'success',
             title: 'Successfully Added!',
-            text: 'The textbook has been added to the inventory.',
+            html: '<p class="mb-0">The textbook has been added to the inventory.</p>' + smsNotice,
             timer: 2000,
             showConfirmButton: false
         }).then(() => {

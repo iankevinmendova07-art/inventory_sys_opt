@@ -25,14 +25,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $normalizedCode = $normalizeValue($supply_code);
         $normalizedName = $normalizeValue($supply_name);
-        $duplicateStmt = $pdo->prepare(
-            "SELECT supply_code, supply_name
-             FROM supplies
-             WHERE supply_code_normalized = ? OR supply_name_normalized = ?
-             LIMIT 1"
-        );
-        $duplicateStmt->execute([$normalizedCode, $normalizedName]);
-        $duplicate = $duplicateStmt->fetch(PDO::FETCH_ASSOC);
+        // The live database may not include optional generated columns for
+        // normalized values. Read the stored values and compare in PHP so
+        // duplicate validation works on both old and new database schemas.
+        $duplicateStmt = $pdo->query('SELECT supply_code, supply_name FROM supplies');
+        $duplicate = null;
+        foreach ($duplicateStmt->fetchAll(PDO::FETCH_ASSOC) as $existingSupply) {
+            if (
+                $normalizeValue((string)$existingSupply['supply_code']) === $normalizedCode
+                || $normalizeValue((string)$existingSupply['supply_name']) === $normalizedName
+            ) {
+                $duplicate = $existingSupply;
+                break;
+            }
+        }
 
         if ($duplicate) {
             if ($normalizeValue((string)$duplicate['supply_code']) === $normalizedCode) {

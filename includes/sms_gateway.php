@@ -1,14 +1,26 @@
 <?php
+require_once __DIR__ . '/sms_config_address.php';
 
 function send_release_sms(array $phoneNumbers, string $message): array
 {
-    $endpoint = trim((string)(getenv('SMS_GATEWAY_URL') ?: ''));
-    $username = (string)(getenv('SMS_GATEWAY_USERNAME') ?: '');
-    $password = (string)(getenv('SMS_GATEWAY_PASSWORD') ?: '');
-
-    if ($endpoint !== '' && !preg_match('#/message/?$#', $endpoint)) {
-        $endpoint = rtrim($endpoint, '/') . '/message';
+    try {
+        return attempt_release_sms($phoneNumbers, $message);
+    } catch (Throwable $e) {
+        error_log('SMS gateway error: ' . $e->getMessage());
+        return [
+            'enabled' => true,
+            'sent' => false,
+            'message' => 'SMS notification could not be sent.'
+        ];
     }
+}
+
+function attempt_release_sms(array $phoneNumbers, string $message): array
+{
+    $gateway = sms_gateway_config();
+    $endpoint = trim($gateway['url']);
+    $username = $gateway['username'];
+    $password = $gateway['password'];
 
     if ($endpoint === '' || $username === '' || $password === '') {
         return [
@@ -62,9 +74,13 @@ function send_release_sms(array $phoneNumbers, string $message): array
     ];
 }
 
-function normalize_sms_phone(string $phoneNumber): string
+function normalize_sms_phone(?string $phoneNumber): string
 {
-    $phoneNumber = preg_replace('/[^0-9+]/', '', trim($phoneNumber));
+    $phoneNumber = preg_replace('/[^0-9+]/', '', trim((string)$phoneNumber));
+
+    if ($phoneNumber === '') {
+        return '';
+    }
 
     if (preg_match('/^09\d{9}$/', $phoneNumber)) {
         return '+63' . substr($phoneNumber, 1);

@@ -26,8 +26,14 @@ try {
     $bindings = [];
 
     if ($search !== '') {
-        $whereClauses[] = "(supply_code LIKE :search OR supply_name LIKE :search OR reference LIKE :search)";
-        $bindings[':search'] = '%' . $search . '%';
+        // PDO native prepares require a distinct placeholder for each occurrence.
+        $whereClauses[] = "(supply_code LIKE :search_code OR supply_name LIKE :search_name OR reference LIKE :search_reference)";
+        $searchTerm = '%' . $search . '%';
+        $bindings = [
+            ':search_code' => $searchTerm,
+            ':search_name' => $searchTerm,
+            ':search_reference' => $searchTerm,
+        ];
     }
 
     $whereSql = !empty($whereClauses) ? ' WHERE ' . implode(' AND ', $whereClauses) : '';

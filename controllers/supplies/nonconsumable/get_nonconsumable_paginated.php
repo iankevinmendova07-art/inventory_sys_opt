@@ -22,8 +22,16 @@ try {
     $bindings = [];
 
     if ($search !== '') {
-        $whereClauses[] = "(property_number LIKE :search OR description LIKE :search OR item_type LIKE :search OR recepient LIKE :search OR remarks LIKE :search)";
-        $bindings[':search'] = '%' . $search . '%';
+        // PDO native prepares require a distinct placeholder for each occurrence.
+        $whereClauses[] = "(property_number LIKE :search_property OR description LIKE :search_description OR item_type LIKE :search_type OR recepient LIKE :search_recipient OR remarks LIKE :search_remarks)";
+        $searchTerm = '%' . $search . '%';
+        $bindings = [
+            ':search_property' => $searchTerm,
+            ':search_description' => $searchTerm,
+            ':search_type' => $searchTerm,
+            ':search_recipient' => $searchTerm,
+            ':search_remarks' => $searchTerm,
+        ];
     }
 
     $whereSql = !empty($whereClauses) ? ' WHERE ' . implode(' AND ', $whereClauses) : '';
