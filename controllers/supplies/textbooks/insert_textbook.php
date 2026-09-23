@@ -39,7 +39,11 @@ if (isset($_POST['save_textbook'])) {
                     'Quantity: ' . $lr_qty . ' ' . $lr_unit,
                     'Condition: ' . $condition,
                     '',
-                    'Please contact the supplies office if you have any questions.'
+                    'Please contact the supplies office if you have any questions.',
+                    'Thank you',
+                    '',
+                    'IAN KEVIN T. MENDOVA',
+                    'Admin. Officer II'
                 ]));
             }
         } catch (Throwable $smsError) {

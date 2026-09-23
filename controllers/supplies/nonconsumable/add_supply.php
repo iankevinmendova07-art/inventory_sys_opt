@@ -78,7 +78,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     '',
                     $description . ' - ' . $unit_of_measure . ' - ' . $qty_physical_count . ' - ' . $item_type . ' - ' . ($remarks ?: 'None'),
                     '',
-                    'Thank you'
+                    'Thank you',
+                    '',
+                    'IAN KEVIN T. MENDOVA',
+                    'Admin. Officer II'
                 ]);
                 $smsResult = send_release_sms([$recipientPhone], $smsMessage);
             }

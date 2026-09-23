@@ -321,7 +321,15 @@ require_once 'controllers/setting/setting_controller.php';
                     </div>
                     <div class="mb-3">
                         <label for="employeePhone" class="form-label fw-semibold">Mobile No.</label>
-                        <input type="tel" class="form-control" id="employeePhone" name="emp_phone" required placeholder="e.g. +639171234567">
+                        <div class="input-group">
+                            <span class="input-group-text fw-bold bg-primary text-white border-primary" style="letter-spacing:0.5px;">+63</span>
+                            <input type="tel" class="form-control ph-phone-input" id="employeePhone" name="emp_phone_local"
+                                required maxlength="10" placeholder="9XXXXXXXXX"
+                                pattern="9[0-9]{9}"
+                                title="Enter 10-digit Philippine mobile number starting with 9 (e.g. 9171234567)">
+                            <input type="hidden" id="employeePhoneFull" name="emp_phone">
+                        </div>
+                        <div class="form-text text-muted">Enter the 10-digit number starting with <strong>9</strong> (e.g. <span style="color: #dc3545; font-weight: 600;">9171234567</span>)</div>
                     </div>
                 </div>
                 <div class="modal-footer bg-light">
@@ -419,7 +427,15 @@ require_once 'controllers/setting/setting_controller.php';
                     </div>
                     <div class="mb-3">
                         <label for="editEmployeePhone" class="form-label fw-semibold">Mobile No.</label>
-                        <input type="tel" class="form-control" id="editEmployeePhone" name="emp_phone" required placeholder="e.g. +639171234567">
+                        <div class="input-group">
+                            <span class="input-group-text fw-bold bg-primary text-white border-primary" style="letter-spacing:0.5px;">+63</span>
+                            <input type="tel" class="form-control ph-phone-input" id="editEmployeePhone" name="emp_phone_local"
+                                required maxlength="10" placeholder="9XXXXXXXXX"
+                                pattern="9[0-9]{9}"
+                                title="Enter 10-digit Philippine mobile number starting with 9 (e.g. 9171234567)">
+                            <input type="hidden" id="editEmployeePhoneFull" name="emp_phone">
+                        </div>
+                        <div class="form-text text-muted">Enter the 10-digit number starting with <strong>9</strong> (e.g. <span style="color: #dc3545; font-weight: 600;">9171234567</span>)</div>
                     </div>
                 </div>
                 <div class="modal-footer bg-light">

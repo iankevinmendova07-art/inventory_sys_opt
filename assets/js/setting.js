@@ -216,19 +216,79 @@ document.addEventListener('DOMContentLoaded', function() {
         true
     );
 
+    // -------------------------------------------------------
+    // Philippine Phone Number Auto-Format (+63 prefix logic)
+    // -------------------------------------------------------
+    // For every .ph-phone-input visible field:
+    //   - Allow only digits
+    //   - Auto-strip leading +63 or 0 on paste (so user doesn't need to remove it)
+    //   - Sync the sibling hidden field (emp_phone) with the full +63XXXXXXXXXX value in real time
+    document.querySelectorAll('.ph-phone-input').forEach(function(input) {
+        function getHiddenField(inp) {
+            let sibling = inp.nextElementSibling;
+            while (sibling) {
+                if (sibling.tagName === 'INPUT' && sibling.type === 'hidden') return sibling;
+                sibling = sibling.nextElementSibling;
+            }
+            return null;
+        }
+
+        function syncHidden(inp) {
+            const hiddenField = getHiddenField(inp);
+            if (hiddenField) {
+                hiddenField.value = inp.value.length > 0 ? '+63' + inp.value : '';
+            }
+        }
+
+        function cleanPhoneInput(val) {
+            // Remove all non-digit characters
+            val = val.replace(/\D/g, '');
+            // Strip leading country code 63 (e.g. +639... or 639...)
+            if (val.startsWith('63')) val = val.slice(2);
+            // Strip leading 0 (e.g. 09...)
+            if (val.startsWith('0')) val = val.slice(1);
+            // Limit to 10 digits
+            return val.slice(0, 10);
+        }
+
+        input.addEventListener('input', function() {
+            this.value = cleanPhoneInput(this.value);
+            syncHidden(this);
+        });
+
+        input.addEventListener('paste', function(e) {
+            e.preventDefault();
+            const pasted = (e.clipboardData || window.clipboardData).getData('text');
+            this.value = cleanPhoneInput(pasted);
+            syncHidden(this);
+        });
+
+        input.addEventListener('keyup', function() {
+            syncHidden(this);
+        });
+    });
+
     // Event delegation for Edit Employee Button click
     $(document).on('click', '.edit-employee-btn', function() {
         const id = $(this).data('id');
         const empId = $(this).closest('tr').find('td:eq(0)').text().trim();
         const name = $(this).data('name');
         const position = $(this).data('position');
-        const empPhone = $(this).data('emp-phone');
+        let empPhone = $(this).data('emp-phone') || '';
+
+        // Strip the +63 prefix so only the 10-digit local number is shown in the input
+        let localPhone = empPhone.replace(/\D/g, '');
+        if (localPhone.startsWith('63')) localPhone = localPhone.slice(2);
+        if (localPhone.startsWith('0')) localPhone = localPhone.slice(1);
+        localPhone = localPhone.slice(0, 10);
 
         $('#editEmpDbId').val(id);
         $('#editEmployeeId').val(empId);
         $('#editEmployeeName').val(name);
         $('#editEmployeePosition').val(position);
-        $('#editEmployeePhone').val(empPhone);
+        // Set visible local field and sync hidden full-number field
+        $('#editEmployeePhone').val(localPhone);
+        $('#editEmployeePhoneFull').val(localPhone.length > 0 ? '+63' + localPhone : '');
 
         const editModal = new bootstrap.Modal(document.getElementById('editEmployeeModal'));
         editModal.show();

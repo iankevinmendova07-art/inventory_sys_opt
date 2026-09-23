@@ -206,6 +206,9 @@ try {
         }
         $smsLines[] = '';
         $smsLines[] = 'Thank you';
+        $smsLines[] = '';
+        $smsLines[] = 'IAN KEVIN T. MENDOVA';
+        $smsLines[] = 'Admin. Officer II';
 
         $smsResult = send_release_sms(
             [$employeeMap[$recipientName]],

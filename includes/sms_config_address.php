@@ -37,8 +37,8 @@ if (!function_exists('sms_gateway_config')) {
         }
 
         // Choose 'local' while the computer and phone share Wi-Fi; use 'public' remotely.
-        $localAddress = 'http://192.168.101.7:8000';
-        $publicAddress = 'http://103.224.94.20:8000';
+        $localAddress = 'http://192.168.254.105:8080';
+        $publicAddress = 'http://180.190.126.131:8080';
         $mode = strtolower(trim((string)(getenv('SMS_GATEWAY_ADDRESS_MODE') ?: 'local')));
         $baseAddress = $mode === 'public' ? $publicAddress : $localAddress;
 

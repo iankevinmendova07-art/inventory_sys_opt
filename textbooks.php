@@ -191,7 +191,7 @@ try {
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="lr_qty" class="form-label fw-semibold">Quantity</label>
-                            <input type="number" class="form-control" id="lr_qty" name="lr_qty" value="1" required>
+                            <input type="number" class="form-control" id="lr_qty" name="lr_qty" placeholder="1" required>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="lr_unit" class="form-label fw-semibold">Unit</label>
