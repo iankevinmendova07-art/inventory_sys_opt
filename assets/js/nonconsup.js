@@ -1,5 +1,3 @@
-console.log('nonconsup.js (optimized) loaded');
-
 window.addEventListener('error', function (event) {
     console.error('Global JS error (nonconsup):', event.message, 'at', event.filename + ':' + event.lineno);
 });

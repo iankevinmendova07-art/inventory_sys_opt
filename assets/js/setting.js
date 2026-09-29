@@ -1,6 +1,70 @@
 // assets/js/setting.js
 
 document.addEventListener('DOMContentLoaded', function() {
+    const smsResult = new URLSearchParams(window.location.search).get('sms');
+    if (smsResult === 'activated' || smsResult === 'deactivated') {
+        const isActive = smsResult === 'activated';
+        Swal.fire({
+            icon: 'success',
+            title: 'Updated',
+            text: `SMS notifications are now ${isActive ? 'activated' : 'deactivated'}.`,
+            confirmButtonColor: '#0D3B66'
+        });
+
+        const cleanUrl = new URL(window.location.href);
+        cleanUrl.searchParams.delete('sms');
+        window.history.replaceState({}, '', cleanUrl);
+    }
+
+    const smsToggleForm = document.getElementById('smsToggleForm');
+    if (smsToggleForm) {
+        smsToggleForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const button = document.getElementById('smsToggleButton');
+            const enabledInput = document.getElementById('smsEnabledValue');
+            const statusText = document.getElementById('smsStatusText');
+            button.disabled = true;
+
+            fetch(smsToggleForm.action, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                body: new FormData(smsToggleForm)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status !== 'success') {
+                        throw new Error(data.message || 'Unable to update SMS settings.');
+                    }
+
+                    const enabled = data.enabled;
+                    enabledInput.value = enabled ? '0' : '1';
+                    statusText.textContent = enabled ? 'Active' : 'Inactive';
+                    button.textContent = enabled ? 'Deactivate' : 'Activate';
+                    button.classList.toggle('btn-outline-danger', enabled);
+                    button.classList.toggle('btn-outline-success', !enabled);
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Updated',
+                        text: `SMS notifications are now ${enabled ? 'activated' : 'deactivated'}.`,
+                        confirmButtonColor: '#0D3B66'
+                    });
+                })
+                .catch(error => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: error.message || 'Unable to update SMS settings.',
+                        confirmButtonColor: '#0D3B66'
+                    });
+                })
+                .finally(() => {
+                    button.disabled = false;
+                });
+        });
+    }
+
     // Initialize DataTables via jQuery if available
     if (window.jQuery && $.fn.DataTable) {
         $('#staffTable').DataTable({

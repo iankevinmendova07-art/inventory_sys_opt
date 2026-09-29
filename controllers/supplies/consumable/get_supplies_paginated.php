@@ -1,6 +1,5 @@
 <?php
 // controllers/supplies/consumable/get_supplies_paginated.php
-session_start();
 require_once dirname(__DIR__, 3) . '/controllers/auth/auth.php';
 require_once dirname(__DIR__, 3) . '/config/db.php';
 

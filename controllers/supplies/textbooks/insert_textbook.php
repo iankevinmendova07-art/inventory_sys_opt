@@ -24,7 +24,13 @@ if (isset($_POST['save_textbook'])) {
             $recipientStmt->execute([$recipient]);
             $recipientPhone = $recipientStmt->fetchColumn();
 
-            if (!is_string($recipientPhone) || trim($recipientPhone) === '') {
+            if (!sms_notifications_enabled()) {
+                $smsResult = [
+                    'enabled' => false,
+                    'sent' => false,
+                    'message' => 'SMS notifications are turned off.'
+                ];
+            } elseif (!is_string($recipientPhone) || trim($recipientPhone) === '') {
                 $smsResult = [
                     'enabled' => true,
                     'sent' => false,

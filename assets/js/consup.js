@@ -1,5 +1,3 @@
-console.log('consup.js (optimized) loaded');
-
 // Global error handler
 window.addEventListener('error', function (event) {
     console.error('Global JS error:', event.message, 'at', event.filename + ':' + event.lineno);
@@ -445,7 +443,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (unitField) unitField.value = item.supply_unit;
             if (catField) catField.value = item.supply_category || 'Consumable Supply';
             if (qtyField) {
-                qtyField.value = 1;
+                qtyField.value = '';
                 qtyField.dataset.maxQty = item.supply_qty;
                 qtyField.setAttribute('max', item.supply_qty);
                 qtyField.setAttribute('min', 1);
@@ -514,7 +512,7 @@ document.addEventListener('DOMContentLoaded', function () {
             catField.setAttribute('readonly', 'true');
         }
         if (qtyField) {
-            qtyField.value = 1;
+            qtyField.value = '';
             qtyField.dataset.maxQty = qty;
             qtyField.setAttribute('max', qty);
             qtyField.setAttribute('min', 1);
@@ -542,7 +540,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     text: 'Quantity cannot be zero or negative.',
                     confirmButtonColor: '#0D3B66'
                 }).then(() => {
-                    this.value = !isNaN(maxQty) ? Math.min(1, maxQty) : 1;
+                    this.value = '';
                 });
                 return;
             }

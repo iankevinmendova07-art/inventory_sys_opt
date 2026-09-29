@@ -8,6 +8,22 @@ require_once dirname(__DIR__, 2) . '/config/db.php';
 $adminName = isset($_SESSION['admin_name']) ? strtoupper($_SESSION['admin_name']) : 'ADMIN';
 $adminRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'Administrator';
 
+// Keep SMS availability in the database so the setting applies to every SMS workflow.
+$smsSettingsAvailable = false;
+$smsNotificationsEnabled = false;
+try {
+    $pdo->exec("CREATE TABLE IF NOT EXISTS system_settings (
+        setting_key VARCHAR(100) NOT NULL PRIMARY KEY,
+        setting_value VARCHAR(255) NOT NULL,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $pdo->exec("INSERT IGNORE INTO system_settings (setting_key, setting_value) VALUES ('sms_enabled', '1')");
+    $smsNotificationsEnabled = $pdo->query("SELECT setting_value FROM system_settings WHERE setting_key = 'sms_enabled'")->fetchColumn() !== '0';
+    $smsSettingsAvailable = true;
+} catch (PDOException $e) {
+    error_log('setting_controller.php SMS setting error: ' . $e->getMessage());
+}
+
 // Fetch positions from the database
 try {
     $stmtPos = $pdo->query("SELECT * FROM position ORDER BY id DESC");

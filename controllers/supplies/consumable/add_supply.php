@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // duplicate validation works on both old and new database schemas.
         $duplicateStmt = $pdo->query('SELECT supply_code, supply_name FROM supplies');
         $duplicate = null;
-        foreach ($duplicateStmt->fetchAll(PDO::FETCH_ASSOC) as $existingSupply) {
+        while ($existingSupply = $duplicateStmt->fetch(PDO::FETCH_ASSOC)) {
             if (
                 $normalizeValue((string)$existingSupply['supply_code']) === $normalizedCode
                 || $normalizeValue((string)$existingSupply['supply_name']) === $normalizedName

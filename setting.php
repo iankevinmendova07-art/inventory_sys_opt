@@ -141,6 +141,27 @@ require_once 'controllers/setting/setting_controller.php';
                         </div>
                     </a>
                 </div>
+                <div class="col-md-3">
+                    <div class="card stat-card p-3 border-start border-4 border-secondary shadow-sm h-100">
+                        <div class="d-flex align-items-center justify-content-between gap-3">
+                            <div>
+                                <span class="text-muted fw-semibold text-uppercase" style="font-size: 0.75rem;">Notifications</span>
+                                <h5 class="fw-bold text-dark mb-1">SMS Notifications</h5>
+                                <small id="smsStatusText" class="text-muted"><?php echo !$smsSettingsAvailable ? 'Unavailable' : ($smsNotificationsEnabled ? 'Active' : 'Inactive'); ?></small>
+                            </div>
+                            <form id="smsToggleForm" action="controllers/setting/update_sms_status.php" method="post">
+                                <?php echo csrf_field(); ?>
+                                <input type="hidden" name="enabled" id="smsEnabledValue" value="<?php echo $smsNotificationsEnabled ? '0' : '1'; ?>">
+                                <button type="submit" id="smsToggleButton" class="btn btn-sm <?php echo $smsNotificationsEnabled ? 'btn-outline-danger' : 'btn-outline-success'; ?>" <?php echo $smsSettingsAvailable ? '' : 'disabled'; ?>>
+                                    <?php echo $smsNotificationsEnabled ? 'Deactivate' : 'Activate'; ?>
+                                </button>
+                            </form>
+                        </div>
+                        <?php if (!$smsSettingsAvailable): ?>
+                            <small class="text-danger mt-2">SMS setting could not be loaded.</small>
+                        <?php endif; ?>
+                    </div>
+                </div>
             </div>
             <!-- Nav Tabs for DataTables -->
             <ul class="nav nav-tabs custom-tabs mb-3" id="settingsTab" role="tablist">
@@ -576,7 +597,7 @@ require_once 'controllers/setting/setting_controller.php';
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 <!-- External Custom Setting JS -->
-<script src="assets/js/setting.js"></script>
+<script src="assets/js/setting.js?v=4"></script>
 
 </body>
 </html>

@@ -3,6 +3,14 @@ require_once __DIR__ . '/sms_config_address.php';
 
 function send_release_sms(array $phoneNumbers, string $message): array
 {
+    if (!sms_notifications_enabled()) {
+        return [
+            'enabled' => false,
+            'sent' => false,
+            'message' => 'SMS notifications are turned off.'
+        ];
+    }
+
     try {
         return attempt_release_sms($phoneNumbers, $message);
     } catch (Throwable $e) {
@@ -12,6 +20,25 @@ function send_release_sms(array $phoneNumbers, string $message): array
             'sent' => false,
             'message' => 'SMS notification could not be sent.'
         ];
+    }
+}
+
+function sms_notifications_enabled(): bool
+{
+    global $pdo;
+
+    if (!($pdo instanceof PDO)) {
+        return false;
+    }
+
+    try {
+        $stmt = $pdo->query("SELECT setting_value FROM system_settings WHERE setting_key = 'sms_enabled' LIMIT 1");
+        $setting = $stmt->fetchColumn();
+        return $setting === false || $setting !== '0';
+    } catch (PDOException $e) {
+        // Do not send SMS when the saved global setting cannot be confirmed.
+        error_log('SMS setting lookup failed: ' . $e->getMessage());
+        return false;
     }
 }
 
