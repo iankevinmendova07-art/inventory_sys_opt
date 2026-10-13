@@ -14,7 +14,17 @@ document.addEventListener('DOMContentLoaded', function () {
                 confirmButtonText: 'Yes, Logout'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    window.location.href = 'controllers/login/logout.php';
+                    const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = 'controllers/login/logout.php';
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'csrf_token';
+                    input.value = token;
+                    form.appendChild(input);
+                    document.body.appendChild(form);
+                    form.submit();
                 }
             });
         });

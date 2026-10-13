@@ -27,8 +27,13 @@ try {
 
     $icsNo = !empty($item['trans_code']) ? $item['trans_code'] : (!empty($item['property_number']) ? $item['property_number'] : 'ICS-' . sprintf('%04d', $id));
     $currentDate = date('F d, Y');
-    $receivedFromAdmin = 'IAN KEVIN MENDOVA';
-    $receivedFromPosition = 'Admin. Officer II';
+    $schoolDetails = $pdo->query(
+        'SELECT school_name, school_address, custodian_name, custodian_position FROM school_details ORDER BY id ASC LIMIT 1'
+    )->fetch(PDO::FETCH_ASSOC) ?: [];
+    $schoolName = trim((string) ($schoolDetails['school_name'] ?? ''));
+    $schoolAddress = trim((string) ($schoolDetails['school_address'] ?? ''));
+    $receivedFromAdmin = $schoolDetails['custodian_name'] ?? '';
+    $receivedFromPosition = $schoolDetails['custodian_position'] ?? '';
 
 } catch (PDOException $e) {
     error_log('controllers/supplies/nonconsumable/print_supply.php DB error: ' . $e->getMessage());
@@ -40,7 +45,7 @@ try {
 <head>
     <meta charset="UTF-8">
     <title>Inventory Custodian Slip - <?php echo htmlspecialchars($icsNo); ?></title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../../../assets/vendor/bootstrap/bootstrap.min.css" rel="stylesheet">
     <style>
         @page {
             size: A4;
@@ -76,19 +81,25 @@ try {
         }
         .deped-header .republic {
             font-size: 11px;
-            font-family: "Times New Roman", Times, serif;
+            font-family: "Old English Text MT", "Engravers Old English", "Times New Roman", serif;
             letter-spacing: 0.5px;
         }
         .deped-header .department {
             font-size: 15px;
             font-weight: bold;
-            font-family: "Times New Roman", Times, serif;
+            font-family: "Old English Text MT", "Engravers Old English", "Times New Roman", serif;
             margin: 2px 0;
         }
         .deped-header .region, .deped-header .division, .deped-header .school, .deped-header .address {
             font-size: 11px;
             text-transform: uppercase;
             font-weight: bold;
+        }
+        .deped-header .address {
+            font-size: 10px;
+            font-weight: normal;
+            text-transform: none;
+            margin-top: 2px;
         }
         .header-title {
             text-align: center;
@@ -133,12 +144,12 @@ try {
 
     <div class="deped-header">
         <img src="../../../assets/img/deped.png" alt="DepEd Logo">
-        <div class="republic">Republic of the Philippines</div>
+        <div class="republic">Republika ng Pilipinas</div>
         <div class="department">Department of Education</div>
         <div class="region">Region VIII — Eastern Visayas</div>
         <div class="division">Schools Division of Catbalogan City</div>
-        <div class="school">San Roque Elementary School</div>
-        <div class="address" style="font-size: 10px; font-weight: normal; margin-top: 2px;">Brgy. San Roque, Catbalogan City</div>
+        <div class="school"><?= htmlspecialchars($schoolName, ENT_QUOTES, 'UTF-8') ?></div>
+        <div class="address"><?= htmlspecialchars($schoolAddress, ENT_QUOTES, 'UTF-8') ?></div>
     </div>
 
     <div class="header-title">
@@ -146,7 +157,7 @@ try {
     </div>
 
     <div class="d-flex justify-content-between mb-3 fw-semibold" style="font-size: 12px;">
-        <div>Entity Name: San Roque Elementary School</div>
+        <div>Entity Name: <?= htmlspecialchars($schoolName, ENT_QUOTES, 'UTF-8') ?></div>
         <div>ICS No.: <?php echo htmlspecialchars($icsNo); ?></div>
     </div>
 

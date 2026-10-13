@@ -1,8 +1,6 @@
 <?php
 // controllers/supplies/consumable/print_rsmi_month.php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+require_once dirname(__DIR__, 3) . '/includes/session_security.php';
 require_once dirname(__DIR__, 3) . '/controllers/auth/auth.php';
 require_once dirname(__DIR__, 3) . '/config/db.php';
 
@@ -42,22 +40,14 @@ try {
     }
     $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // 2. Determine Property Custodian / Supply Officer Name dynamically
-    $custodian_name = "IAN KEVIN MENDOVA";
-    
-    $empStmt = $pdo->query("SELECT emp_name, emp_position FROM employee");
-    $employees = $empStmt->fetchAll(PDO::FETCH_ASSOC);
-    foreach ($employees as $emp) {
-        $pos = trim($emp['emp_position'] ?? '');
-        if (stripos($pos, 'Administrative Officer') !== false || stripos($pos, 'Custodian') !== false || stripos($pos, 'Property') !== false) {
-            $custodian_name = strtoupper(trim($emp['emp_name']));
-            break;
-        }
-    }
+    $schoolDetails = $pdo->query(
+        'SELECT school_name, school_address, custodian_name FROM school_details ORDER BY id ASC LIMIT 1'
+    )->fetch(PDO::FETCH_ASSOC) ?: [];
+    $schoolName = trim((string) ($schoolDetails['school_name'] ?? ''));
+    $schoolAddress = trim((string) ($schoolDetails['school_address'] ?? ''));
 
-    if (!empty($items[0]['release_by'])) {
-        $custodian_name = strtoupper(trim($items[0]['release_by']));
-    }
+    // Use the configured supply/property custodian for the certification signature.
+    $custodian_name = (string) ($schoolDetails['custodian_name'] ?? '');
 
     // Determine default date or serial based on selected filter
     if (!empty($selectedMonthYear)) {
@@ -106,6 +96,42 @@ try {
             font-style: italic;
             font-size: 11pt;
             margin-bottom: 8px;
+        }
+        .deped-header {
+            text-align: center;
+            margin-bottom: 14px;
+            line-height: 1.2;
+        }
+        .deped-header img {
+            width: 70px;
+            height: 70px;
+            object-fit: contain;
+            margin-bottom: 5px;
+        }
+        .deped-header .republic {
+            font-size: 11px;
+            font-family: "Old English Text MT", "Engravers Old English", "Times New Roman", serif;
+            letter-spacing: 0.5px;
+        }
+        .deped-header .department {
+            font-size: 15px;
+            font-weight: bold;
+            font-family: "Old English Text MT", "Engravers Old English", "Times New Roman", serif;
+            margin: 2px 0;
+        }
+        .deped-header .region,
+        .deped-header .division,
+        .deped-header .school,
+        .deped-header .address {
+            font-size: 11px;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+        .deped-header .address {
+            font-size: 10px;
+            font-weight: normal;
+            text-transform: none;
+            margin-top: 2px;
         }
         .report-title {
             text-align: center;
@@ -284,6 +310,16 @@ try {
         </div>
     </div>
 
+    <div class="deped-header">
+        <img src="../../../assets/img/deped.png" alt="DepEd Logo">
+        <div class="republic">Republika ng Pilipinas</div>
+        <div class="department">Department of Education</div>
+        <div class="region">Region VIII — Eastern Visayas</div>
+        <div class="division">Schools Division of Catbalogan City</div>
+        <div class="school"><?= htmlspecialchars($schoolName, ENT_QUOTES, 'UTF-8') ?></div>
+        <div class="address"><?= htmlspecialchars($schoolAddress, ENT_QUOTES, 'UTF-8') ?></div>
+    </div>
+
     <!-- Appendix Label -->
     <div class="appendix-tag">Appendix 64</div>
 
@@ -294,7 +330,7 @@ try {
     <table class="header-meta">
         <tr>
             <td style="width: 58%;">
-                <strong>Entity Name:</strong> <span class="meta-line" style="min-width: 220px; font-weight: bold;">San Roque Elementary School</span>
+                <strong>Entity Name:</strong> <span class="meta-line" style="min-width: 220px; font-weight: bold;"><?= htmlspecialchars($schoolName, ENT_QUOTES, 'UTF-8') ?></span>
             </td>
             <td style="width: 42%; text-align: right;">
                 <strong>Serial No. :</strong> <span class="meta-line" style="min-width: 170px;"><?php echo htmlspecialchars($serialNo); ?></span>

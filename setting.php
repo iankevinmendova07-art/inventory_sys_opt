@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/includes/session_security.php';
 // Protect the page using your auth check
 require_once 'controllers/auth/auth.php';
 // Include settings controller logic from controllers/setting
@@ -10,18 +10,18 @@ require_once 'controllers/setting/setting_controller.php';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Supply Inventory Management System - San Roque Elementary School</title>    
+    <title>Supply Inventory Management System - San Roque Elementary School</title>
     <link rel="icon" type="image/png" href="assets/img/ian.png">
     <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">    
+    <link href="assets/vendor/bootstrap/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">    
+    <link rel="stylesheet" href="assets/vendor/bootstrap-icons/font/bootstrap-icons.min.css">
     <!-- FontAwesome CSS (Required for password eye icons) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/vendor/fontawesome/css/all.min.css">
     <!-- SweetAlert2 CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <link rel="stylesheet" href="assets/vendor/sweetalert2/sweetalert2.min.css">
     <!-- DataTables Bootstrap 5 CSS -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="assets/vendor/datatables/dataTables.bootstrap5.min.css">
     <!-- Custom Dashboard Styling -->
     <link href="assets/css/index.css" rel="stylesheet">
     <style>
@@ -129,12 +129,12 @@ require_once 'controllers/setting/setting_controller.php';
                 </div>
                 <!-- Clickable Database Backup Card -->
                 <div class="col-md-3">
-                    <a href="controllers/setting/backup_database.php" class="text-decoration-none" id="btnBackupDb">
+                    <a href="#" class="text-decoration-none" id="btnBackupDb" data-bs-toggle="modal" data-bs-target="#databaseModal">
                         <div class="card stat-card p-3 border-start border-4 border-info shadow-sm h-100 d-flex flex-column justify-content-between clickable-card">
                             <div class="d-flex align-items-center mb-2">
                                 <div class="flex-grow-1">
                                     <span class="text-muted fw-semibold text-uppercase" style="font-size: 0.75rem;">System Maintenance</span>
-                                    <h5 class="fw-bold text-dark mb-0">Database Backup</h5>
+                                    <h5 class="fw-bold text-dark mb-0">Database</h5>
                                 </div>
                                 <div class="fs-1 text-info opacity-50"><i class="bi bi-database-down"></i></div>
                             </div>
@@ -162,7 +162,112 @@ require_once 'controllers/setting/setting_controller.php';
                         <?php endif; ?>
                     </div>
                 </div>
+                <div class="col-md-3">
+                    <div class="card stat-card p-3 border-start border-4 border-danger shadow-sm h-100 clickable-card" role="button" tabindex="0" data-bs-toggle="modal" data-bs-target="#schoolDetailsModal" aria-controls="schoolDetailsModal" aria-label="Edit school details">
+                        <div class="d-flex align-items-start justify-content-between gap-3">
+                            <div class="flex-grow-1">
+                                <span class="text-muted fw-semibold text-uppercase" style="font-size: 0.75rem;">School Profile</span>
+                                <h5 class="fw-bold text-dark mb-0">School Details</h5>
+                            </div>
+                            <div class="text-danger fs-2 opacity-50"><i class="bi bi-building"></i></div>
+                        </div>
+                    </div>
+                </div>
             </div>
+<div class="modal fade" id="databaseModal" tabindex="-1" aria-labelledby="databaseModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="databaseModalLabel"><i class="bi bi-database me-2 text-info"></i>Database Backup &amp; Import</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted">Download a copy of the current database or replace it with a SQL backup.</p>
+                <div class="d-grid gap-2">
+                    <a href="controllers/setting/backup_database.php" class="btn btn-primary" id="downloadDatabaseBackup" data-bs-dismiss="modal"><i class="bi bi-download me-2"></i>Back Up Database</a>
+                    <form id="clearDatabaseForm" action="controllers/setting/clear_database_records.php" method="post">
+                        <?php echo csrf_field(); ?>
+                        <button type="submit" class="btn btn-danger w-100" id="clearDatabaseButton"><i class="bi bi-trash3 me-2"></i>Delete Records</button>
+                        <small class="form-text text-muted">Deletes all records except those in admin, school_details, employee, position, and unit_measure. Table structures are kept.</small>
+                    </form>
+                    <form id="importDatabaseForm" action="controllers/setting/import_database.php" method="post" enctype="multipart/form-data">
+                        <?php echo csrf_field(); ?>
+                        <input type="file" class="form-control mb-2" id="databaseSqlFile" name="database_file" accept=".sql,application/sql" required>
+                        <button type="submit" class="btn btn-outline-danger w-100" id="importDatabaseButton"><i class="bi bi-upload me-2"></i>Import Database</button>
+                        <small class="form-text text-muted">Only .sql files are accepted. Importing replaces the current database contents.</small>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="schoolDetailsModal" tabindex="-1" aria-labelledby="schoolDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <form action="controllers/setting/save_school_details.php" method="post">
+                <?php echo csrf_field(); ?>
+                <div class="modal-header text-white" style="background-color: #0D3B66;">
+                    <h5 class="modal-title fw-bold" id="schoolDetailsModalLabel"><i class="bi bi-building me-2"></i>School Details</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label for="schoolName" class="form-label fw-semibold">School Name</label>
+                        <input type="text" class="form-control" id="schoolName" name="school_name" maxlength="255" value="<?php echo htmlspecialchars($schoolDetails['school_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                    </div>
+                    <div class="mb-3">
+                        <label for="schoolAddress" class="form-label fw-semibold">School Address</label>
+                        <textarea class="form-control" id="schoolAddress" name="school_address" maxlength="255" rows="2"><?php echo htmlspecialchars($schoolDetails['school_address'] ?? '', ENT_QUOTES, 'UTF-8'); ?></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="headName" class="form-label fw-semibold">School Head Name</label>
+                        <select class="form-select" id="headName" name="head_name" required>
+                            <option value="" disabled <?php echo empty($schoolDetails['head_name']) ? 'selected' : ''; ?>>Select a school head</option>
+                            <?php foreach ($employees as $employee): ?>
+                                <option value="<?php echo htmlspecialchars($employee['emp_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" <?php echo ($schoolDetails['head_name'] ?? '') === ($employee['emp_name'] ?? null) ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($employee['emp_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?><?php if (!empty($employee['emp_position'])): ?> — <?php echo htmlspecialchars($employee['emp_position'], ENT_QUOTES, 'UTF-8'); ?><?php endif; ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="headPosition" class="form-label fw-semibold">School Head Position</label>
+                        <select class="form-select" id="headPosition" name="head_position" required>
+                            <option value="" disabled <?php echo empty($schoolDetails['head_position']) ? 'selected' : ''; ?>>Select a position</option>
+                            <?php foreach ($positions as $position): ?>
+                                <option value="<?php echo htmlspecialchars($position['position_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" <?php echo ($schoolDetails['head_position'] ?? '') === ($position['position_name'] ?? null) ? 'selected' : ''; ?>><?php echo htmlspecialchars($position['position_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="custodianName" class="form-label fw-semibold">Property Custodian Name</label>
+                        <select class="form-select" id="custodianName" name="custodian_name" required>
+                            <option value="" disabled <?php echo empty($schoolDetails['custodian_name']) ? 'selected' : ''; ?>>Select a property custodian</option>
+                            <?php foreach ($employees as $employee): ?>
+                                <option value="<?php echo htmlspecialchars($employee['emp_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" <?php echo ($schoolDetails['custodian_name'] ?? '') === ($employee['emp_name'] ?? null) ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($employee['emp_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?><?php if (!empty($employee['emp_position'])): ?> — <?php echo htmlspecialchars($employee['emp_position'], ENT_QUOTES, 'UTF-8'); ?><?php endif; ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="mb-0">
+                        <label for="custodianPosition" class="form-label fw-semibold">Property Custodian Position</label>
+                        <select class="form-select" id="custodianPosition" name="custodian_position" required>
+                            <option value="" disabled <?php echo empty($schoolDetails['custodian_position']) ? 'selected' : ''; ?>>Select a position</option>
+                            <?php foreach ($positions as $position): ?>
+                                <option value="<?php echo htmlspecialchars($position['position_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" <?php echo ($schoolDetails['custodian_position'] ?? '') === ($position['position_name'] ?? null) ? 'selected' : ''; ?>><?php echo htmlspecialchars($position['position_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="background-color: #0D3B66; border: none;"><i class="bi bi-save me-1"></i>Save Details</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
             <!-- Nav Tabs for DataTables -->
             <ul class="nav nav-tabs custom-tabs mb-3" id="settingsTab" role="tablist">
                 <li class="nav-item" role="presentation">
@@ -304,7 +409,7 @@ require_once 'controllers/setting/setting_controller.php';
                         </div>
                     </div>
                 </div>
-            </div>      
+            </div>
         </div>
     </div>
 </div>
@@ -588,16 +693,19 @@ require_once 'controllers/setting/setting_controller.php';
 </div>
 
 <!-- Bootstrap 5 JS Bundle -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="assets/vendor/bootstrap/bootstrap.bundle.min.js"></script>
 <!-- SweetAlert2 JS -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="assets/vendor/sweetalert2/sweetalert2.min.js"></script>
 <!-- jQuery (Required for DataTables) -->
-<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="assets/vendor/jquery/jquery.min.js"></script>
 <!-- DataTables JS & Bootstrap 5 Integration -->
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script src="assets/vendor/datatables/jquery.dataTables.min.js"></script>
+<script src="assets/vendor/datatables/dataTables.bootstrap5.min.js"></script>
+<script>
+    window.schoolDetailsSaveStatus = <?php echo json_encode($schoolDetailsStatus); ?>;
+</script>
 <!-- External Custom Setting JS -->
-<script src="assets/js/setting.js?v=4"></script>
+<script src="assets/js/setting.js?v=8"></script>
 
 </body>
 </html>

@@ -8,7 +8,14 @@
 *.bak
 .vscode/
 .idea/
+tools/installer/stage/
+tools/installer/output/
 
 # OS files
 .DS_Store
 Thumbs.db
+
+
+# Ignore database schema
+database_schema.sql
+

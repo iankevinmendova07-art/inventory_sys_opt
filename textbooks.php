@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/includes/session_security.php';
 // Protect the page using your auth check
 
 require_once __DIR__ . '/config/db.php';
@@ -25,27 +25,27 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Textbook Inventory - San Roque Elementary School</title>
     <link rel="icon" type="image/png" href="assets/img/ian.png">
-        
+
     <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">    
+    <link href="assets/vendor/bootstrap/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">    
+    <link rel="stylesheet" href="assets/vendor/bootstrap-icons/font/bootstrap-icons.min.css">
     <!-- SweetAlert2 CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <link rel="stylesheet" href="assets/vendor/sweetalert2/sweetalert2.min.css">
     <!-- DataTables Bootstrap 5 CSS -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="assets/vendor/datatables/dataTables.bootstrap5.min.css">
     <!-- Custom Dashboard Styling -->
     <link href="assets/css/textbooks.css" rel="stylesheet">
-    
+
     <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="assets/vendor/jquery/jquery.min.js"></script>
     <!-- Bootstrap 5 JS Bundle -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/vendor/bootstrap/bootstrap.bundle.min.js"></script>
     <!-- SweetAlert2 JS -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="assets/vendor/sweetalert2/sweetalert2.min.js"></script>
     <!-- DataTables JS -->
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="assets/vendor/datatables/jquery.dataTables.min.js"></script>
+    <script src="assets/vendor/datatables/dataTables.bootstrap5.min.js"></script>
     <!-- Shared logout handler -->
     <script src="assets/js/index.js" defer></script>
     <!-- Custom textbooks JS -->

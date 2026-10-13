@@ -1,6 +1,6 @@
 <?php
 // controllers/supplies/consumable/print_ris.php
-session_start();
+require_once dirname(__DIR__, 3) . '/includes/session_security.php';
 require_once '../../../controllers/auth/auth.php';
 require_once dirname(__DIR__, 3) . '/config/db.php';
 
@@ -22,9 +22,16 @@ try {
     $empQuery->execute();
     $employees = $empQuery->fetchAll(PDO::FETCH_ASSOC);
 
-    // Fixed names — not pulled from DB
-    $school_head_name   = 'ROSELLE U. GAYAMAT';
-    $admin_officer_name = 'IAN KEVIN MENDOVA';
+    // Use the configured school head and custodian for the signature blocks.
+    $schoolDetails = $pdo->query(
+        'SELECT school_name, school_address, head_name, head_position, custodian_name, custodian_position FROM school_details ORDER BY id ASC LIMIT 1'
+    )->fetch(PDO::FETCH_ASSOC) ?: [];
+    $schoolName = trim((string) ($schoolDetails['school_name'] ?? ''));
+    $schoolAddress = trim((string) ($schoolDetails['school_address'] ?? ''));
+    $school_head_name = $schoolDetails['head_name'] ?? '';
+    $school_head_position = $schoolDetails['head_position'] ?? '';
+    $custodian_name = $schoolDetails['custodian_name'] ?? '';
+    $custodian_position = $schoolDetails['custodian_position'] ?? '';
 
     $employeePositions = [];
     foreach ($employees as $employee) {
@@ -79,7 +86,7 @@ try {
 <head>
     <meta charset="UTF-8">
     <title>Requisition and Issue Slip<?php echo count($transactions) === 1 ? ' - ' . htmlspecialchars($transactions[0]['trans_code']) : 's (' . count($transactions) . ' Recipients)'; ?></title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../../../assets/vendor/bootstrap/bootstrap.min.css" rel="stylesheet">
     <style>
         @page {
             size: portrait;
@@ -145,19 +152,25 @@ try {
         }
         .deped-header .republic {
             font-size: 11px;
-            font-family: "Times New Roman", Times, serif;
+            font-family: "Old English Text MT", "Engravers Old English", "Times New Roman", serif;
             letter-spacing: 0.5px;
         }
         .deped-header .department {
             font-size: 14px;
             font-weight: bold;
-            font-family: "Times New Roman", Times, serif;
+            font-family: "Old English Text MT", "Engravers Old English", "Times New Roman", serif;
             margin: 2px 0;
         }
         .deped-header .region, .deped-header .division, .deped-header .school, .deped-header .address {
             font-size: 10.5px;
             text-transform: uppercase;
             font-weight: bold;
+        }
+        .deped-header .address {
+            font-size: 10px;
+            font-weight: normal;
+            text-transform: none;
+            margin-top: 2px;
         }
         @media screen {
             body {
@@ -209,23 +222,23 @@ foreach ($transactions as $tx):
     $recipient_position = $tx['recipient_position'];
     $items = $tx['items'];
 
-    $render_ris_form = function() use ($trans_code, $transaction_date, $items, $recipient_name, $school_head_name, $admin_officer_name, $recipient_position) {
+    $render_ris_form = function() use ($trans_code, $transaction_date, $items, $recipient_name, $schoolName, $schoolAddress, $school_head_name, $school_head_position, $custodian_name, $custodian_position, $recipient_position) {
     ?>
     <div class="ris-half">
        <div class="deped-header">
         <img src="../../../assets/img/deped.png" alt="DepEd Logo">
-        <div class="republic">Republic of the Philippines</div>
+        <div class="republic">Republika ng Pilipinas</div>
         <div class="department">Department of Education</div>
         <div class="region">Region VIII — Eastern Visayas</div>
         <div class="division">Schools Division of Catbalogan City</div>
-        <div class="school">San Roque Elementary School</div>
-        <div class="address" style="font-size: 10px; font-weight: normal; margin-top: 2px;">Brgy. San Roque, Catbalogan City</div>
+        <div class="school"><?= htmlspecialchars($schoolName, ENT_QUOTES, 'UTF-8') ?></div>
+        <div class="address"><?= htmlspecialchars($schoolAddress, ENT_QUOTES, 'UTF-8') ?></div>
        </div>
 
         <!-- Details Meta -->
         <table class="no-border mb-1" style="font-size: 8.5px;">
             <tr>
-                <td><strong>Entity Name :</strong> San Roque Elementary School</td>
+                <td><strong>Entity Name :</strong> <?= htmlspecialchars($schoolName, ENT_QUOTES, 'UTF-8') ?></td>
                 <td><strong>Fund Cluster :</strong> ___________________</td>
             </tr>
             <tr>
@@ -318,17 +331,17 @@ foreach ($transactions as $tx):
             </tr>
             <tr>
                 <td class="text-start">Printed Name:</td>
-                <td class="fw-bold"><?php echo htmlspecialchars(strtoupper($recipient_name)); ?></td>
-                <td class="fw-bold"><?php echo htmlspecialchars($school_head_name); ?></td>
-                <td class="fw-bold"><?php echo htmlspecialchars($admin_officer_name); ?></td>
-                <td class="fw-bold"><?php echo htmlspecialchars(strtoupper($recipient_name)); ?></td>
+                <td class="fw-bold"><?php echo htmlspecialchars(mb_strtoupper($recipient_name, 'UTF-8'), ENT_QUOTES, 'UTF-8'); ?></td>
+                <td class="fw-bold"><?php echo htmlspecialchars(mb_strtoupper($school_head_name, 'UTF-8'), ENT_QUOTES, 'UTF-8'); ?></td>
+                <td class="fw-bold"><?php echo htmlspecialchars(mb_strtoupper($custodian_name, 'UTF-8'), ENT_QUOTES, 'UTF-8'); ?></td>
+                <td class="fw-bold"><?php echo htmlspecialchars(mb_strtoupper($recipient_name, 'UTF-8'), ENT_QUOTES, 'UTF-8'); ?></td>
             </tr>
             <tr>
                 <td class="text-start">Designation:</td>
-                <td><?php echo htmlspecialchars($recipient_position); ?></td>
-                <td>School Head</td>
-                <td>Admin. Officer II</td>
-                <td><?php echo htmlspecialchars($recipient_position); ?></td>
+                <td><?php echo htmlspecialchars(mb_strtoupper($recipient_position, 'UTF-8'), ENT_QUOTES, 'UTF-8'); ?></td>
+                <td><?php echo htmlspecialchars(mb_strtoupper($school_head_position, 'UTF-8'), ENT_QUOTES, 'UTF-8'); ?></td>
+                <td><?php echo htmlspecialchars(mb_strtoupper($custodian_position, 'UTF-8'), ENT_QUOTES, 'UTF-8'); ?></td>
+                <td><?php echo htmlspecialchars(mb_strtoupper($recipient_position, 'UTF-8'), ENT_QUOTES, 'UTF-8'); ?></td>
             </tr>
             <tr>
                 <td class="text-start">Date:</td>

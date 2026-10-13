@@ -1,6 +1,6 @@
 <?php
 // controllers/supplies/consumable/get_transactions.php
-session_start();
+require_once dirname(__DIR__, 3) . '/includes/session_security.php';
 require_once '../../../controllers/auth/auth.php'; 
 require_once dirname(__DIR__, 3) . '/config/db.php';
 

@@ -8,8 +8,15 @@ $type    = isset($_GET['type']) && in_array($_GET['type'], $allowed) ? $_GET['ty
 
 $scienceItems = [];
 $mathItems    = [];
+$schoolDetails = [];
 
 try {
+    $schoolDetails = $pdo->query(
+        'SELECT school_name, school_address, custodian_name, custodian_position, head_name, head_position FROM school_details ORDER BY id ASC LIMIT 1'
+    )->fetch(PDO::FETCH_ASSOC) ?: [];
+    $schoolName = trim((string) ($schoolDetails['school_name'] ?? ''));
+    $schoolAddress = trim((string) ($schoolDetails['school_address'] ?? ''));
+
     if ($type === 'Science' || $type === 'All') {
         $stmt = $pdo->prepare("SELECT * FROM lr_sme WHERE lr_type = 'Science' ORDER BY CAST(lr_code AS UNSIGNED) ASC");
         $stmt->execute();
@@ -23,6 +30,11 @@ try {
 } catch (PDOException $e) {
     die('Unable to load equipment data.');
 }
+
+$custodianName = $schoolDetails['custodian_name'] ?? '';
+$custodianPosition = $schoolDetails['custodian_position'] ?? '';
+$headName = $schoolDetails['head_name'] ?? '';
+$headPosition = $schoolDetails['head_position'] ?? '';
 
 $reportDate = date('F d, Y');
 $titleMap   = ['Science' => 'Science Equipment', 'Math' => 'Math Equipment', 'All' => 'Science &amp; Math Equipment'];
@@ -106,9 +118,10 @@ function renderSection(array $items, string $label, string $color): void {
             object-fit: contain;
             margin-bottom: 4px;
         }
-        .deped-header .republic  { font-size: 10px; font-family: "Times New Roman", serif; }
-        .deped-header .department{ font-size: 13px; font-weight: bold; font-family: "Times New Roman", serif; margin: 2px 0; }
+        .deped-header .republic  { font-size: 10px; font-family: "Old English Text MT", "Engravers Old English", "Times New Roman", serif; }
+        .deped-header .department{ font-size: 13px; font-weight: bold; font-family: "Old English Text MT", "Engravers Old English", "Times New Roman", serif; margin: 2px 0; }
         .deped-header .sub       { font-size: 10px; font-weight: bold; text-transform: uppercase; }
+        .deped-header .address   { font-size: 9px; font-weight: normal; text-transform: none; margin-top: 2px; }
 
         /* Report title */
         .report-title {
@@ -211,12 +224,12 @@ function renderSection(array $items, string $label, string $color): void {
     <!-- DepEd Header -->
     <div class="deped-header">
         <img src="../../../assets/img/deped.png" alt="DepEd Logo">
-        <div class="republic">Republic of the Philippines</div>
+        <div class="republic">Republika ng Pilipinas</div>
         <div class="department">Department of Education</div>
         <div class="sub">Region VIII — Eastern Visayas</div>
         <div class="sub">Schools Division of Catbalogan City</div>
-        <div class="sub">San Roque Elementary School</div>
-        <div style="font-size:9px; margin-top:2px;">Brgy. San Roque, Catbalogan City</div>
+        <div class="sub"><?= htmlspecialchars($schoolName, ENT_QUOTES, 'UTF-8') ?></div>
+        <div class="address"><?= htmlspecialchars($schoolAddress, ENT_QUOTES, 'UTF-8') ?></div>
     </div>
 
     <!-- Report Title -->
@@ -226,7 +239,7 @@ function renderSection(array $items, string $label, string $color): void {
     <!-- Meta Information -->
     <table class="meta-row">
         <tr>
-            <td><strong>Entity:</strong> San Roque Elementary School</td>
+            <td><strong>Entity:</strong> <?= htmlspecialchars($schoolName, ENT_QUOTES, 'UTF-8') ?></td>
             <td class="right"><strong>Date Generated:</strong> <?php echo $reportDate; ?></td>
         </tr>
         <tr>
@@ -256,15 +269,15 @@ function renderSection(array $items, string $label, string $color): void {
         <tr>
             <td style="width:50%;">
                 <strong>Prepared by:</strong><br><br><br>
-                <strong>IAN KEVIN T. MENDOVA</strong><br>
+                <strong><?php echo htmlspecialchars($custodianName, ENT_QUOTES, 'UTF-8'); ?></strong><br>
                 <div class="sig-line" style="margin-top: 0;"></div><br>
-                Administrative Officer II
+                <?php echo htmlspecialchars($custodianPosition, ENT_QUOTES, 'UTF-8'); ?>
             </td>
             <td style="width:50%; text-align:center;">
                 <strong>Noted by:</strong><br><br><br>
-                <strong>ROSELLE U. GAYAMAT</strong><br>
+                <strong><?php echo htmlspecialchars($headName, ENT_QUOTES, 'UTF-8'); ?></strong><br>
                 <div class="sig-line" style="margin-top: 0;"></div><br>
-                School Head
+                <?php echo htmlspecialchars($headPosition, ENT_QUOTES, 'UTF-8'); ?>
             </td>
         </tr>
     </table>
@@ -275,4 +288,3 @@ function renderSection(array $items, string $label, string $color): void {
 
 </body>
 </html>
-

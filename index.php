@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/includes/session_security.php';
 // Protect the page using your auth check
 require_once 'controllers/auth/auth.php';
 // Include dashboard controller logic from controllers/index
@@ -13,24 +13,24 @@ require_once 'controllers/index/index_controller.php';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Supply Inventory Management System - San Roque Elementary School</title>
     <link rel="icon" type="image/png" href="assets/img/ian.png">
-        
+
     <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">    
+    <link href="assets/vendor/bootstrap/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">    
+    <link rel="stylesheet" href="assets/vendor/bootstrap-icons/font/bootstrap-icons.min.css">
     <!-- SweetAlert2 CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <link rel="stylesheet" href="assets/vendor/sweetalert2/sweetalert2.min.css">
     <!-- Custom Dashboard Styling -->
     <link href="assets/css/index.css" rel="stylesheet">
 
     <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="assets/vendor/jquery/jquery.min.js"></script>
     <!-- Bootstrap 5 JS Bundle -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/vendor/bootstrap/bootstrap.bundle.min.js"></script>
     <!-- SweetAlert2 JS -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="assets/vendor/sweetalert2/sweetalert2.min.js"></script>
     <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="assets/vendor/chartjs/chart.umd.min.js"></script>
     <!-- Dashboard JS Logic -->
     <script src="assets/js/index.js" defer></script>
 </head>
@@ -192,9 +192,9 @@ require_once 'controllers/index/index_controller.php';
                         </div>
                         <div class="card-body">
                             <div style="height: 320px; position: relative;">
-                                <canvas id="suppliesColumnChart" 
-                                    data-with-stock="<?php echo $totalConsumablesWithStock; ?>" 
-                                    data-out-stock="<?php echo $totalConsumablesOutStock; ?>" 
+                                <canvas id="suppliesColumnChart"
+                                    data-with-stock="<?php echo $totalConsumablesWithStock; ?>"
+                                    data-out-stock="<?php echo $totalConsumablesOutStock; ?>"
                                     data-non-consumable="<?php echo $totalNonConsumables; ?>">
                                 </canvas>
                             </div>
@@ -210,8 +210,8 @@ require_once 'controllers/index/index_controller.php';
                         </div>
                         <div class="card-body">
                             <div style="height: 320px; position: relative;">
-                                <canvas id="transactionsColumnChart" 
-                                    data-consumable="<?php echo $totalConsumableTransactions; ?>" 
+                                <canvas id="transactionsColumnChart"
+                                    data-consumable="<?php echo $totalConsumableTransactions; ?>"
                                     data-non-consumable="<?php echo $totalNonConsumableTransactions; ?>">
                                 </canvas>
                             </div>
@@ -227,8 +227,8 @@ require_once 'controllers/index/index_controller.php';
                         </div>
                         <div class="card-body">
                             <div style="height: 320px; position: relative;">
-                                <canvas id="lrSmeColumnChart" 
-                                    data-science="<?php echo $scienceCount; ?>" 
+                                <canvas id="lrSmeColumnChart"
+                                    data-science="<?php echo $scienceCount; ?>"
                                     data-math="<?php echo $mathCount; ?>">
                                 </canvas>
                             </div>
@@ -247,8 +247,8 @@ require_once 'controllers/index/index_controller.php';
                         </div>
                         <div class="card-body">
                             <div style="height: 320px; position: relative;">
-                                <canvas id="textbooksSubjectChart" 
-                                    data-labels='<?php echo json_encode($subjects); ?>' 
+                                <canvas id="textbooksSubjectChart"
+                                    data-labels='<?php echo json_encode($subjects); ?>'
                                     data-values='<?php echo json_encode($subjectCounts); ?>'>
                                 </canvas>
                             </div>
@@ -264,8 +264,8 @@ require_once 'controllers/index/index_controller.php';
                         </div>
                         <div class="card-body">
                             <div style="height: 320px; position: relative;">
-                                <canvas id="textbooksGradeChart" 
-                                    data-labels='<?php echo json_encode($grades); ?>' 
+                                <canvas id="textbooksGradeChart"
+                                    data-labels='<?php echo json_encode($grades); ?>'
                                     data-values='<?php echo json_encode($gradeCounts); ?>'>
                                 </canvas>
                             </div>

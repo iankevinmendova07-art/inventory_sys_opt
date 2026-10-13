@@ -7,7 +7,7 @@ if (!function_exists('csrf_token')) {
     function csrf_token(): string
     {
         if (session_status() !== PHP_SESSION_ACTIVE) {
-            session_start();
+            require_once __DIR__ . '/session_security.php';
         }
 
         if (empty($_SESSION['csrf_token'])) {

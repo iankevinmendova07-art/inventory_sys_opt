@@ -1,5 +1,6 @@
 <?php
-session_start();
+require_once __DIR__ . '/includes/session_security.php';
+require_once __DIR__ . '/includes/csrf.php';
 
 if (isset($_SESSION['admin_id']) && !isset($_GET['success'])) {
     header("Location: index.php");
@@ -19,15 +20,15 @@ $adminNameUpper = isset($_SESSION['admin_name']) ? strtoupper($_SESSION['admin_n
     <link rel="icon" type="image/png" href="assets/img/ian.png">
     
     <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/vendor/bootstrap/bootstrap.min.css" rel="stylesheet">
     
     <!-- SweetAlert2 CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <link rel="stylesheet" href="assets/vendor/sweetalert2/sweetalert2.min.css">
 
     <!-- Custom Branding CSS -->
     <link href="assets/css/login.css" rel="stylesheet">
 </head>
-<body data-admin-name="<?php echo htmlspecialchars($adminNameUpper); ?>">
+<body data-admin-name="<?php echo htmlspecialchars($adminNameUpper, ENT_QUOTES, 'UTF-8'); ?>">
 
 <div class="login-container">
     <div class="login-card text-center">
@@ -40,6 +41,7 @@ $adminNameUpper = isset($_SESSION['admin_name']) ? strtoupper($_SESSION['admin_n
         <p class="system-subtitle">PROJECT IAN <br>Inventory and Asset Navigator </p>
 
         <form id="loginForm" action="controllers/login/login_process.php" method="POST">
+            <?php echo csrf_field(); ?>
             <div class="mb-3 text-start">
                 <label for="username" class="form-label">Username</label>
                 <input type="text" class="form-control" id="username" name="username" required autofocus placeholder="Enter your username">
@@ -64,10 +66,10 @@ $adminNameUpper = isset($_SESSION['admin_name']) ? strtoupper($_SESSION['admin_n
 </div>
 
 <!-- Bootstrap 5 JS Bundle -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="assets/vendor/bootstrap/bootstrap.bundle.min.js"></script>
 
 <!-- SweetAlert2 JS -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="assets/vendor/sweetalert2/sweetalert2.min.js"></script>
 
 <!-- External Custom Login JS -->
 <script src="assets/js/login.js"></script>

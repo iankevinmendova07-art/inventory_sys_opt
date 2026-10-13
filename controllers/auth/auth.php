@@ -1,15 +1,50 @@
 <?php
-// Ensure session is started with secure parameters
-if (session_status() === PHP_SESSION_NONE) {
-    ini_set('session.cookie_httponly', 1);
-    ini_set('session.use_only_cookies', 1);
-    if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
-        ini_set('session.cookie_secure', 1);
-    }
-    session_start();
-}
+require_once dirname(__DIR__, 2) . '/includes/session_security.php';
 
 require_once dirname(__DIR__, 2) . '/includes/csrf.php';
+
+if (isset($_SESSION['admin_id'])) {
+    $idleTimeoutSeconds = 30 * 60;
+    $lastActivity = (int) ($_SESSION['last_activity'] ?? time());
+    if (time() - $lastActivity > $idleTimeoutSeconds) {
+        $_SESSION = [];
+        session_destroy();
+
+        if (ini_get('session.use_cookies')) {
+            $cookie = session_get_cookie_params();
+            setcookie(session_name(), '', [
+                'expires' => time() - 42000,
+                'path' => $cookie['path'],
+                'domain' => $cookie['domain'],
+                'secure' => $cookie['secure'],
+                'httponly' => $cookie['httponly'],
+                'samesite' => $cookie['samesite'] ?? 'Lax',
+            ]);
+        }
+
+        $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
+               || (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false);
+        if ($isAjax) {
+            http_response_code(401);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['status' => 'error', 'message' => 'Your session expired. Please log in again.']);
+        } else {
+            $rootDir = realpath(dirname(__DIR__, 2));
+            $scriptDir = realpath(dirname($_SERVER['SCRIPT_FILENAME'] ?? ''));
+            $redirectUrl = 'login.php?expired=1';
+            if ($rootDir && $scriptDir && strpos($scriptDir, $rootDir) === 0) {
+                $relativePath = trim(str_replace('\\', '/', substr($scriptDir, strlen($rootDir))), '/');
+                if ($relativePath !== '') {
+                    $depth = substr_count($relativePath, '/') + 1;
+                    $redirectUrl = str_repeat('../', $depth) . 'login.php?expired=1';
+                }
+            }
+            header('Location: ' . $redirectUrl, true, 303);
+        }
+        exit;
+    }
+    $_SESSION['last_activity'] = time();
+}
 
 // Check if the admin is logged in
 if (!isset($_SESSION['admin_id'])) {

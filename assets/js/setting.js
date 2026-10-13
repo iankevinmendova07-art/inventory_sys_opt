@@ -1,6 +1,18 @@
 // assets/js/setting.js
 
 document.addEventListener('DOMContentLoaded', function() {
+    if (window.schoolDetailsSaveStatus) {
+        const messages = {
+            saved: { icon: 'success', title: 'Saved', text: 'School details have been saved successfully.' },
+            invalid: { icon: 'error', title: 'Could not save', text: 'Complete the required school head and custodian fields and use no more than 255 characters per field.' },
+            invalid_employee: { icon: 'error', title: 'Could not save', text: 'Select school head and property custodian names from the current employee list.' },
+            invalid_position: { icon: 'error', title: 'Could not save', text: 'Select school head and property custodian positions from the current position list.' },
+            error: { icon: 'error', title: 'Save failed', text: 'School details could not be saved. Check the school_details table and try again.' }
+        };
+        const alert = messages[window.schoolDetailsSaveStatus] || messages.error;
+        Swal.fire({ ...alert, confirmButtonColor: '#0D3B66' });
+    }
+
     const smsResult = new URLSearchParams(window.location.search).get('sms');
     if (smsResult === 'activated' || smsResult === 'deactivated') {
         const isActive = smsResult === 'activated';
@@ -145,7 +157,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 confirmButtonText: 'Yes, Logout'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    window.location.href = 'controllers/login/logout.php';
+                    const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = 'controllers/login/logout.php';
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'csrf_token';
+                    input.value = token;
+                    form.appendChild(input);
+                    document.body.appendChild(form);
+                    form.submit();
                 }
             });
         });
@@ -460,30 +482,85 @@ document.addEventListener('DOMContentLoaded', function() {
     handleDelete('.delete-category-btn', 'controllers/category/process_delete_category.php', 'This unit of measure will be deleted permanently.');
     handleDelete('.delete-position-btn', 'controllers/position/process_delete_position.php', 'This position will be deleted permanently.');
 
-    // Database Backup Confirmation Handler
-    $(document).on('click', '#btnBackupDb', function(e) {
+    $('#importDatabaseForm').on('submit', function(e) {
         e.preventDefault();
-        const backupUrl = $(this).attr('href');
+        const form = this;
+        const file = $('#databaseSqlFile')[0].files[0];
+        if (!file || !/\.sql$/i.test(file.name)) {
+            Swal.fire('SQL file required', 'Choose a file with the .sql extension.', 'warning');
+            return;
+        }
 
         Swal.fire({
-            title: 'Download Database Backup?',
-            text: 'This will export and download the complete inventory database schema and data as a SQL file.',
-            icon: 'info',
+            title: 'Replace the current database?',
+            text: 'This will run the uploaded SQL file against the current database and may replace its tables and data.',
+            icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#0D3B66',
+            confirmButtonColor: '#dc3545',
             cancelButtonColor: '#6c757d',
-            confirmButtonText: '<i class="bi bi-download me-1"></i> Download Backup'
+            confirmButtonText: 'Import Database'
         }).then((result) => {
-            if (result.isConfirmed) {
-                window.location.href = backupUrl;
-                Swal.fire({
-                    title: 'Downloading...',
-                    text: 'Your database backup is being generated and downloaded.',
-                    icon: 'success',
-                    timer: 2500,
-                    showConfirmButton: false
-                });
-            }
+            if (!result.isConfirmed) return;
+            const button = $('#importDatabaseButton');
+            button.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Importing...');
+            $.ajax({
+                url: form.action,
+                method: 'POST',
+                data: new FormData(form),
+                processData: false,
+                contentType: false,
+                dataType: 'json'
+            }).done(function(response) {
+                if (response.status === 'success') {
+                    Swal.fire('Import complete', response.message, 'success').then(() => location.reload());
+                } else {
+                    Swal.fire('Import failed', response.message || 'The SQL file could not be imported.', 'error');
+                }
+            }).fail(function(xhr) {
+                const message = xhr.responseJSON && xhr.responseJSON.message
+                    ? xhr.responseJSON.message
+                    : 'The SQL file could not be imported. Check that it is valid and compatible with this database.';
+                Swal.fire('Import failed', message, 'error');
+            }).always(function() {
+                button.prop('disabled', false).html('<i class="bi bi-upload me-2"></i>Import Database');
+            });
+        });
+    });
+
+    $('#clearDatabaseForm').on('submit', function(e) {
+        e.preventDefault();
+        const form = this;
+        Swal.fire({
+            title: 'Delete all records?',
+            text: 'This permanently deletes records from every table except admin, school_details, employee, position, and unit_measure. Table structures will remain, but this action cannot be undone.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Delete Records'
+        }).then((result) => {
+            if (!result.isConfirmed) return;
+            const button = $('#clearDatabaseButton');
+            button.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Deleting...');
+            $.ajax({
+                url: form.action,
+                method: 'POST',
+                data: $(form).serialize(),
+                dataType: 'json'
+            }).done(function(response) {
+                if (response.status === 'success') {
+                    Swal.fire('Records deleted', response.message, 'success').then(() => location.reload());
+                } else {
+                    Swal.fire('Delete failed', response.message || 'The records could not be deleted.', 'error');
+                }
+            }).fail(function(xhr) {
+                const message = xhr.responseJSON && xhr.responseJSON.message
+                    ? xhr.responseJSON.message
+                    : 'The records could not be deleted. Some data may already have been removed.';
+                Swal.fire('Delete failed', message, 'error');
+            }).always(function() {
+                button.prop('disabled', false).html('<i class="bi bi-trash3 me-2"></i>Delete Records');
+            });
         });
     });
 });

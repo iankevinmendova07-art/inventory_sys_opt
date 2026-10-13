@@ -1,9 +1,16 @@
 <?php
-session_start();
+require_once dirname(__DIR__, 3) . '/includes/session_security.php';
 require_once dirname(__DIR__, 3) . '/controllers/auth/auth.php';
 require_once dirname(__DIR__, 3) . '/config/db.php';
 
+$schoolDetails = [];
 try {
+    $schoolDetails = $pdo->query(
+        'SELECT school_name, school_address, custodian_name, custodian_position, head_name, head_position FROM school_details ORDER BY id ASC LIMIT 1'
+    )->fetch(PDO::FETCH_ASSOC) ?: [];
+    $schoolName = trim((string) ($schoolDetails['school_name'] ?? ''));
+    $schoolAddress = trim((string) ($schoolDetails['school_address'] ?? ''));
+
     $stmt = $pdo->query("SELECT lr_item, grade_level, lr_subject, lr_qty, lr_unit, recipient, `condition`, created_at FROM lr_textbooks ORDER BY grade_level ASC, lr_item ASC");
     $textbooks = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
@@ -16,6 +23,11 @@ try {
         die('A database error occurred while generating this report. Please try again or contact the administrator.');
     }
 }
+
+$custodianName = $schoolDetails['custodian_name'] ?? '';
+$custodianPosition = $schoolDetails['custodian_position'] ?? '';
+$headName = $schoolDetails['head_name'] ?? '';
+$headPosition = $schoolDetails['head_position'] ?? '';
 
 $gradeLevels = ['Kinder', 'Grade I', 'Grade II', 'Grade III', 'Grade IV', 'Grade V', 'Grade VI'];
 $textbooksByGrade = array_fill_keys($gradeLevels, []);
@@ -93,13 +105,13 @@ $reportDate = date('F d, Y');
         }
         .deped-header .republic {
             font-size: 11px;
-            font-family: "Times New Roman", Times, serif;
+            font-family: "Old English Text MT", "Engravers Old English", "Times New Roman", serif;
             letter-spacing: 0.5px;
         }
         .deped-header .department {
             font-size: 14px;
             font-weight: bold;
-            font-family: "Times New Roman", Times, serif;
+            font-family: "Old English Text MT", "Engravers Old English", "Times New Roman", serif;
             margin: 2px 0;
         }
         .deped-header .region,
@@ -109,6 +121,12 @@ $reportDate = date('F d, Y');
             font-size: 10.5px;
             text-transform: uppercase;
             font-weight: bold;
+        }
+        .deped-header .address {
+            font-size: 10px;
+            font-weight: normal;
+            text-transform: none;
+            margin-top: 2px;
         }
         .report-title {
             text-align: center;
@@ -166,20 +184,20 @@ $reportDate = date('F d, Y');
 
 <div class="report-sheet">
     <div class="deped-header">
-        <img src="assets/img/deped.png" onerror="this.src='../../../assets/img/deped.png'" alt="DepEd Logo">
-        <div class="republic">Republic of the Philippines</div>
+        <img src="../../../assets/img/deped.png" alt="DepEd Logo">
+        <div class="republic">Republika ng Pilipinas</div>
         <div class="department">Department of Education</div>
         <div class="region">Region VIII — Eastern Visayas</div>
         <div class="division">Schools Division of Catbalogan City</div>
-        <div class="school">San Roque Elementary School</div>
-        <div class="address" style="font-size: 10px; font-weight: normal; margin-top: 2px;">Brgy. San Roque, Catbalogan City</div>
+        <div class="school"><?= htmlspecialchars($schoolName, ENT_QUOTES, 'UTF-8') ?></div>
+        <div class="address"><?= htmlspecialchars($schoolAddress, ENT_QUOTES, 'UTF-8') ?></div>
     </div>
 
     <div class="report-title">Textbooks Inventory Report</div>
 
     <table class="no-border" style="font-size: 9px; margin-bottom: 6px;">
         <tr>
-            <td><strong>Entity Name :</strong> San Roque Elementary School</td>
+            <td><strong>Entity Name :</strong> <?= htmlspecialchars($schoolName, ENT_QUOTES, 'UTF-8') ?></td>
             <td class="text-end"><strong>Date Generated :</strong> <?php echo htmlspecialchars($reportDate); ?></td>
         </tr>
         <tr>
@@ -250,15 +268,15 @@ $reportDate = date('F d, Y');
         <tr>
             <td style="width: 33%;">
                 Prepared by:<br><br><br>
-                <strong>IAN KEVIN T. MENDOVA</strong><br>
+                <strong><?php echo htmlspecialchars($custodianName, ENT_QUOTES, 'UTF-8'); ?></strong><br>
                 <div class="line"></div>
-                <span style="font-size: 8.5pt; font-weight: normal;">Administrative Officer II</span>
+                <span style="font-size: 8.5pt; font-weight: normal;"><?php echo htmlspecialchars($custodianPosition, ENT_QUOTES, 'UTF-8'); ?></span>
             </td>
             <td style="width: 33%;">
                 Noted by:<br><br><br>                
-                <strong>ROSELLE U. GAYAMAT</strong><br>
+                <strong><?php echo htmlspecialchars($headName, ENT_QUOTES, 'UTF-8'); ?></strong><br>
                 <div class="line"></div>
-                <span style="font-size: 8.5pt; font-weight: normal;">School Head</span>
+                <span style="font-size: 8.5pt; font-weight: normal;"><?php echo htmlspecialchars($headPosition, ENT_QUOTES, 'UTF-8'); ?></span>
             </td>
         </tr>
     </table>

@@ -35,11 +35,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         // 1. Generate the Year - Month - Increment trans_code
+        $currentYear = date('Y');
         $currentYearMonth = date('Y-m'); // e.g., "2026-08"
-        
-        // Find the latest trans_code matching the current year and month
+
+        // Find the latest trans_code matching the current year
         $stmtSeq = $pdo->prepare("SELECT trans_code FROM nonconsumable WHERE trans_code LIKE ? ORDER BY id DESC LIMIT 1");
-        $stmtSeq->execute([$currentYearMonth . '-%']);
+        $stmtSeq->execute([$currentYear . '-%']);
         $lastRow = $stmtSeq->fetch(PDO::FETCH_ASSOC);
 
         if ($lastRow && !empty($lastRow['trans_code'])) {
@@ -48,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $lastIncrement = intval(end($parts));
             $newIncrement = $lastIncrement + 1;
         } else {
-            // Start at 1 if no records exist for this month yet
+            // Start at 1 if no records exist for this year yet
             $newIncrement = 1;
         }
 

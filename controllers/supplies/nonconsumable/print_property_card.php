@@ -21,6 +21,9 @@ try {
         die('Error: Item with ID ' . $id . ' not found in the database.');
     }
 
+    $schoolDetails = $pdo->query('SELECT school_name FROM school_details ORDER BY id ASC LIMIT 1')->fetch(PDO::FETCH_ASSOC) ?: [];
+    $schoolName = trim((string) ($schoolDetails['school_name'] ?? ''));
+
     $recipientName = $item['recepient'] ?? ($item['emp_name'] ?? 'N/A');
     $recipientPosition = $item['recipient_position'] ?? 'Teacher I';
 
@@ -40,7 +43,7 @@ try {
 <head>
     <meta charset="UTF-8">
     <title>Property Card - <?php echo htmlspecialchars($propertyNo); ?></title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../../../assets/vendor/bootstrap/bootstrap.min.css" rel="stylesheet">
     <style>
         @page {
             size: A4 portrait;
@@ -179,7 +182,7 @@ try {
         <div class="department">Department of Education</div>
         <div class="region">Region VIII — Eastern Visayas</div>
         <div class="division">Schools Division of Catbalogan City</div>
-        <div class="school">San Roque Elementary School</div>
+        <div class="school"><?= htmlspecialchars($schoolName, ENT_QUOTES, 'UTF-8') ?></div>
         <div class="address" style="font-size: 9.5px; font-weight: normal; margin-top: 1px;">Brgy. San Roque, Catbalogan City</div>
     </div>
 
@@ -189,7 +192,7 @@ try {
 
     <table class="info-table">
         <tr>
-            <td style="width: 55%;"><strong>Entity Name :</strong> San Roque Elementary School</td>
+            <td style="width: 55%;"><strong>Entity Name :</strong> <?= htmlspecialchars($schoolName, ENT_QUOTES, 'UTF-8') ?></td>
             <td style="width: 45%;"><strong>Fund Cluster:</strong> ______________________</td>
         </tr>
         <tr>

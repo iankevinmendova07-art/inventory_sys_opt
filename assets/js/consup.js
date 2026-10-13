@@ -21,6 +21,28 @@ let suppliesReloadQueued = false;
 let itemSearchController = null;
 let itemSearchSequence = 0;
 
+function getReleaseRequestKey(recipients, items) {
+    const fingerprint = JSON.stringify({ recipients, items });
+    const storageKey = 'inventory_pending_release';
+    try {
+        const pending = JSON.parse(sessionStorage.getItem(storageKey) || 'null');
+        if (pending && pending.fingerprint === fingerprint && /^[a-f0-9]{32}$/.test(pending.key)) {
+            return pending.key;
+        }
+        const key = (crypto.randomUUID
+            ? crypto.randomUUID().replace(/-/g, '')
+            : Array.from(crypto.getRandomValues(new Uint8Array(16)), byte => byte.toString(16).padStart(2, '0')).join(''));
+        sessionStorage.setItem(storageKey, JSON.stringify({ fingerprint, key }));
+        return key;
+    } catch (error) {
+        return Array.from(crypto.getRandomValues(new Uint8Array(16)), byte => byte.toString(16).padStart(2, '0')).join('');
+    }
+}
+
+function clearReleaseRequestKey() {
+    try { sessionStorage.removeItem('inventory_pending_release'); } catch (error) { /* Ignore unavailable storage. */ }
+}
+
 async function requestJson(url, options = {}) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000);
@@ -165,7 +187,17 @@ document.addEventListener('DOMContentLoaded', function () {
                 confirmButtonText: 'Yes, Logout'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    window.location.href = 'controllers/login/logout.php';
+                    const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = 'controllers/login/logout.php';
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'csrf_token';
+                    input.value = token;
+                    form.appendChild(input);
+                    document.body.appendChild(form);
+                    form.submit();
                 }
             });
         });
@@ -795,8 +827,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 fetch('controllers/cart/process_release.php', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                    },
                     body: JSON.stringify({
+                        requestKey: getReleaseRequestKey(recipients, cartItems),
                         recipients: recipients,
                         items: cartItems
                     })
@@ -804,6 +840,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'success') {
+                        clearReleaseRequestKey();
                         window.InventoryCart.clearCart();
                         itemSearchCache.clear();
                         
@@ -832,6 +869,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             reloadSuppliesTable();
                         });
                     } else {
+                        clearReleaseRequestKey();
                         Swal.fire({
                             icon: 'error',
                             title: 'Release Failed',

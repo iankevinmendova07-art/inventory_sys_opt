@@ -12,6 +12,7 @@ if (session_status() === PHP_SESSION_NONE) {
 // Automatically reads environment variables if defined on live hosting/cPanel/Docker, or falls back to local defaults
 $appEnv   = strtolower((string)(getenv('APP_ENV') ?: 'local'));
 $host     = getenv('DB_HOST')     ?: 'localhost';
+$port     = getenv('DB_PORT')     ?: '3306';
 $db_name  = getenv('DB_NAME')     ?: 'inventory_sys_db';
 $username = getenv('DB_USER')     ?: 'root';
 $password = getenv('DB_PASS') !== false ? getenv('DB_PASS') : '';
@@ -24,7 +25,7 @@ if ($appEnv === 'production' && ($username === 'root' || $password === '')) {
 
 try {
     $pdo = new PDO(
-        "mysql:host={$host};dbname={$db_name};charset=utf8mb4",
+        "mysql:host={$host};port={$port};dbname={$db_name};charset=utf8mb4",
         $username,
         $password,
         [

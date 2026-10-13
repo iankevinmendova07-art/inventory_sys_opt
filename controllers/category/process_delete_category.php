@@ -14,12 +14,31 @@ require_once __DIR__ . '/../../includes/json_response.php';
 
         if (!empty($id)) {
             if (is_numeric($id)) {
-                $stmt = $pdo->prepare("DELETE FROM unit_measure WHERE id = ?");
-                $stmt->execute([$id]);
+                $findUnit = $pdo->prepare('SELECT id, unit_name FROM unit_measure WHERE id = ? LIMIT 1');
+                $findUnit->execute([$id]);
             } else {
-                $stmt = $pdo->prepare("DELETE FROM unit_measure WHERE unit_name = ?");
-                $stmt->execute([$id]);
+                $findUnit = $pdo->prepare('SELECT id, unit_name FROM unit_measure WHERE unit_name = ? LIMIT 1');
+                $findUnit->execute([$id]);
             }
+            $unit = $findUnit->fetch(PDO::FETCH_ASSOC);
+            if (!$unit) {
+                json_error('Unit of measure record not found.');
+            }
+
+            $references = $pdo->prepare(
+                'SELECT 1 FROM supplies WHERE supply_unit = ?
+                 UNION ALL SELECT 1 FROM stock_card WHERE item_unit = ?
+                 UNION ALL SELECT 1 FROM lr_sme WHERE lr_unit = ?
+                 UNION ALL SELECT 1 FROM lr_textbooks WHERE lr_unit = ?
+                 UNION ALL SELECT 1 FROM nonconsumable WHERE unit_of_measure = ? LIMIT 1'
+            );
+            $references->execute(array_fill(0, 5, $unit['unit_name']));
+            if ($references->fetchColumn()) {
+                json_error('This unit is used by inventory records and cannot be deleted.');
+            }
+
+            $stmt = $pdo->prepare('DELETE FROM unit_measure WHERE id = ?');
+            $stmt->execute([$unit['id']]);
 
             echo json_encode(['status' => 'success']);
             exit();

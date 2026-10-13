@@ -14,12 +14,25 @@ require_once __DIR__ . '/../../includes/json_response.php';
 
         if (!empty($id)) {
             if (is_numeric($id)) {
-                $stmt = $pdo->prepare("DELETE FROM position WHERE id = ?");
-                $stmt->execute([$id]);
+                $findPosition = $pdo->prepare('SELECT id, position_name FROM position WHERE id = ? LIMIT 1');
+                $findPosition->execute([$id]);
             } else {
-                $stmt = $pdo->prepare("DELETE FROM position WHERE position_name = ?");
-                $stmt->execute([$id]);
+                $findPosition = $pdo->prepare('SELECT id, position_name FROM position WHERE position_name = ? LIMIT 1');
+                $findPosition->execute([$id]);
             }
+            $position = $findPosition->fetch(PDO::FETCH_ASSOC);
+            if (!$position) {
+                json_error('Position record not found.');
+            }
+
+            $references = $pdo->prepare('SELECT 1 FROM employee WHERE emp_position = ? LIMIT 1');
+            $references->execute([$position['position_name']]);
+            if ($references->fetchColumn()) {
+                json_error('This position is assigned to one or more employees and cannot be deleted.');
+            }
+
+            $stmt = $pdo->prepare('DELETE FROM position WHERE id = ?');
+            $stmt->execute([$position['id']]);
 
             echo json_encode(['status' => 'success']);
             exit();

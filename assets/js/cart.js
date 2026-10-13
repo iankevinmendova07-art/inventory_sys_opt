@@ -1,5 +1,6 @@
 (function () {
-    const CART_STORAGE_KEY = 'inventory_consumable_cart';
+    const adminId = document.querySelector('meta[name="admin-id"]')?.content || 'anonymous';
+    const CART_STORAGE_KEY = 'inventory_consumable_cart_' + adminId;
 
     function loadCart() {
         try {

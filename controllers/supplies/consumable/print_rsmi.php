@@ -1,12 +1,13 @@
 <?php
 // controllers/supplies/consumable/print_rsmi.php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+require_once dirname(__DIR__, 3) . '/includes/session_security.php';
 require_once dirname(__DIR__, 3) . '/controllers/auth/auth.php';
 require_once dirname(__DIR__, 3) . '/config/db.php';
 
 try {
+    $schoolDetails = $pdo->query('SELECT school_name FROM school_details ORDER BY id ASC LIMIT 1')->fetch(PDO::FETCH_ASSOC) ?: [];
+    $schoolName = trim((string) ($schoolDetails['school_name'] ?? ''));
+
     // 1. Fetch all issuance records from transaction_log
     $stmt = $pdo->query("SELECT * FROM transaction_log ORDER BY created_at ASC, id ASC");
     $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -260,7 +261,7 @@ try {
     <table class="header-meta">
         <tr>
             <td style="width: 58%;">
-                <strong>Entity Name:</strong> <span class="meta-line" style="min-width: 220px; font-weight: bold;">San Roque Elementary School</span>
+                <strong>Entity Name:</strong> <span class="meta-line" style="min-width: 220px; font-weight: bold;"><?= htmlspecialchars($schoolName, ENT_QUOTES, 'UTF-8') ?></span>
             </td>
             <td style="width: 42%; text-align: right;">
                 <strong>Serial No. :</strong> <span class="meta-line" style="min-width: 170px;"></span>

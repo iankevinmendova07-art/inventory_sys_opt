@@ -1,8 +1,6 @@
 <?php
 // controllers/setting/backup_database.php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+require_once dirname(__DIR__, 2) . '/includes/session_security.php';
 
 require_once dirname(__DIR__, 2) . '/controllers/auth/auth.php';
 require_once dirname(__DIR__, 2) . '/config/db.php';

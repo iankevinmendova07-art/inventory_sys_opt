@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once dirname(__DIR__, 3) . '/includes/session_security.php';
 require_once '../../../controllers/auth/auth.php';
 require_once dirname(__DIR__, 3) . '/config/db.php';
 
@@ -7,6 +7,14 @@ $supplyId = intval($_GET['id'] ?? 0);
 $isAll = isset($_GET['all']) || ($_GET['id'] ?? '') === 'all' || ($supplyId <= 0);
 
 try {
+    $schoolDetails = $pdo->query(
+        'SELECT school_name, school_address, custodian_name, custodian_position FROM school_details ORDER BY id ASC LIMIT 1'
+    )->fetch(PDO::FETCH_ASSOC) ?: [];
+    $schoolName = trim((string) ($schoolDetails['school_name'] ?? ''));
+    $schoolAddress = trim((string) ($schoolDetails['school_address'] ?? ''));
+    $custodianName = $schoolDetails['custodian_name'] ?? '';
+    $custodianPosition = $schoolDetails['custodian_position'] ?? '';
+
     if ($isAll) {
         $supplyStmt = $pdo->query(
             'SELECT id, supply_code, supply_name, supply_unit, reference FROM supplies ORDER BY supply_name ASC'
@@ -98,19 +106,25 @@ try {
         }
         .deped-header .republic {
             font-size: 11px;
-            font-family: "Times New Roman", Times, serif;
+            font-family: "Old English Text MT", "Engravers Old English", "Times New Roman", serif;
             letter-spacing: 0.5px;
         }
         .deped-header .department {
             font-size: 15px;
             font-weight: bold;
-            font-family: "Times New Roman", Times, serif;
+            font-family: "Old English Text MT", "Engravers Old English", "Times New Roman", serif;
             margin: 2px 0;
         }
         .deped-header .region, .deped-header .division, .deped-header .school, .deped-header .address {
             font-size: 11px;
             text-transform: uppercase;
             font-weight: bold;
+        }
+        .deped-header .address {
+            font-size: 10px;
+            font-weight: normal;
+            text-transform: none;
+            margin-top: 2px;
         }
         .signature-table {
             width: 100%;
@@ -165,19 +179,19 @@ try {
     <div class="stock-card-sheet">
         <div class="deped-header">
             <img src="../../../assets/img/deped.png" alt="DepEd Logo">
-            <div class="republic">Republic of the Philippines</div>
+            <div class="republic">Republika ng Pilipinas</div>
             <div class="department">Department of Education</div>
             <div class="region">Region VIII — Eastern Visayas</div>
             <div class="division">Schools Division of Catbalogan City</div>
-            <div class="school">San Roque Elementary School</div>
-            <div class="address" style="font-size: 10px; font-weight: normal; margin-top: 2px;">Brgy. San Roque, Catbalogan City</div>
+            <div class="school"><?= htmlspecialchars($schoolName, ENT_QUOTES, 'UTF-8') ?></div>
+            <div class="address"><?= htmlspecialchars($schoolAddress, ENT_QUOTES, 'UTF-8') ?></div>
         </div>
         <div class="annex">Annex A.1</div>
         <div class="title">STOCK CARD</div>
 
         <table class="details">
             <tr>
-                <td><strong>Entity Name:</strong> San Roque Elementary School</td>
+                <td><strong>Entity Name:</strong> <?= htmlspecialchars($schoolName, ENT_QUOTES, 'UTF-8') ?></td>
                 <td class="right"><strong>Fund Cluster:</strong> ____________________</td>
             </tr>
             <tr>
@@ -252,8 +266,8 @@ try {
                 <td style="width: 50%;">
                     <strong>Prepared by:</strong><br><br><br>
                     <div class="text-center" style="width: 200px;">
-                        <strong class="text-uppercase">IAN KEVIN T. MENDOVA</strong><br>
-                        <span>Admin. Officer II</span>
+                        <strong class="text-uppercase"><?php echo htmlspecialchars(mb_strtoupper($custodianName, 'UTF-8'), ENT_QUOTES, 'UTF-8'); ?></strong><br>
+                        <span><?php echo htmlspecialchars(mb_strtoupper($custodianPosition, 'UTF-8'), ENT_QUOTES, 'UTF-8'); ?></span>
                     </div>
                 </td>
             </tr>

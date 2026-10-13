@@ -1,0 +1,4 @@
+Update Installer if there is change
+
+cd C:\laragon\www\inventory_sys_opt
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\installer\build.ps1

@@ -36,12 +36,16 @@ try {
         }
     }
 
-    // Fixed signatories — not pulled from DB
-    $adminOfficerName = "IAN KEVIN MENDOVA";
-    $adminOfficerPos  = "Admin. Officer II";
-
-    $schoolHeadName = "ROSELLE U. GAYAMAT";
-    $schoolHeadPos  = "School Head";
+    // Load the configured custodian and school head for the signature blocks.
+    $schoolDetails = $pdo->query(
+        'SELECT school_name, school_address, custodian_name, custodian_position, head_name, head_position FROM school_details ORDER BY id ASC LIMIT 1'
+    )->fetch(PDO::FETCH_ASSOC) ?: [];
+    $schoolName = trim((string) ($schoolDetails['school_name'] ?? ''));
+    $schoolAddress = trim((string) ($schoolDetails['school_address'] ?? ''));
+    $custodianName = $schoolDetails['custodian_name'] ?? '';
+    $custodianPosition = $schoolDetails['custodian_position'] ?? '';
+    $schoolHeadName = $schoolDetails['head_name'] ?? '';
+    $schoolHeadPos = $schoolDetails['head_position'] ?? '';
 
 } catch (PDOException $e) {
     error_log('controllers/supplies/nonconsumable/generate_rpcppe_pdf.php DB error: ' . $e->getMessage());
@@ -161,19 +165,25 @@ try {
         }
         .deped-header .republic {
             font-size: 11px;
-            font-family: "Times New Roman", Times, serif;
+            font-family: "Old English Text MT", "Engravers Old English", "Times New Roman", serif;
             letter-spacing: 0.5px;
         }
         .deped-header .department {
             font-size: 15px;
             font-weight: bold;
-            font-family: "Times New Roman", Times, serif;
+            font-family: "Old English Text MT", "Engravers Old English", "Times New Roman", serif;
             margin: 2px 0;
         }
         .deped-header .region, .deped-header .division, .deped-header .school, .deped-header .address {
             font-size: 11px;
             text-transform: uppercase;
             font-weight: bold;
+        }
+        .deped-header .address {
+            font-size: 10px;
+            font-weight: normal;
+            text-transform: none;
+            margin-top: 2px;
         }
         .header-title {
             text-align: center;
@@ -193,12 +203,12 @@ try {
     </div>
         <div class="deped-header">
         <img src="../../../assets/img/deped.png" alt="DepEd Logo">
-        <div class="republic">Republic of the Philippines</div>
+        <div class="republic">Republika ng Pilipinas</div>
         <div class="department">Department of Education</div>
         <div class="region">Region VIII — Eastern Visayas</div>
         <div class="division">Schools Division of Catbalogan City</div>
-        <div class="school">San Roque Elementary School</div>
-        <div class="address" style="font-size: 10px; font-weight: normal; margin-top: 2px;">Brgy. San Roque, Catbalogan City</div>
+        <div class="school"><?= htmlspecialchars($schoolName, ENT_QUOTES, 'UTF-8') ?></div>
+        <div class="address"><?= htmlspecialchars($schoolAddress, ENT_QUOTES, 'UTF-8') ?></div>
     </div>
 
     <div class="header-title">REPORT ON THE PHYSICAL COUNT OF PROPERTY, PLANT AND EQUIPMENT</div>
@@ -321,15 +331,15 @@ try {
         <tr>
             <td style="width: 33%;">
                 Certified Correct:<br><br><br>
-                <strong><?php echo htmlspecialchars($adminOfficerName); ?></strong><br>
+                <strong><?php echo htmlspecialchars($custodianName, ENT_QUOTES, 'UTF-8'); ?></strong><br>
                 <div class="line"></div>
-                <span style="font-size: 8.5pt; font-weight: normal;"><?php echo htmlspecialchars($adminOfficerPos); ?></span>
+                <span style="font-size: 8.5pt; font-weight: normal;"><?php echo htmlspecialchars($custodianPosition, ENT_QUOTES, 'UTF-8'); ?></span>
             </td>
             <td style="width: 33%;">
                 Approved by:<br><br><br>                
-                <strong><?php echo htmlspecialchars($schoolHeadName); ?></strong><br>
+                <strong><?php echo htmlspecialchars($schoolHeadName, ENT_QUOTES, 'UTF-8'); ?></strong><br>
                 <div class="line"></div>
-                <span style="font-size: 8.5pt; font-weight: normal;"><?php echo htmlspecialchars($schoolHeadPos); ?></span>
+                <span style="font-size: 8.5pt; font-weight: normal;"><?php echo htmlspecialchars($schoolHeadPos, ENT_QUOTES, 'UTF-8'); ?></span>
             </td>
             <td style="width: 33%;">
                 Verified by:<br><br><br>

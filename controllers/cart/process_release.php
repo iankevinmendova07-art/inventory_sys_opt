@@ -18,6 +18,13 @@ if (!is_array($payload)) {
     json_error('Invalid request payload.');
 }
 
+$requestKey = strtolower(trim((string) ($payload['requestKey'] ?? '')));
+if (!preg_match('/^[a-f0-9]{32}$/', $requestKey)) {
+    json_error('Invalid or missing checkout request key. Refresh the page and try again.');
+}
+$requestFingerprint = hash('sha256', json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+$adminId = (int) $_SESSION['admin_id'];
+
 $recipients = $payload['recipients'] ?? [];
 $items = $payload['items'] ?? [];
 
@@ -60,9 +67,60 @@ foreach ($items as $item) {
 
 $supplyIds = array_keys($normalizedItems);
 $releasedBy = $_SESSION['admin_name'] ?? 'Administrator';
+$sequenceLockHeld = false;
 
 try {
+    $cachedRequest = $pdo->prepare(
+        'SELECT request_fingerprint, response_json FROM checkout_requests WHERE admin_id = ? AND request_key = ? LIMIT 1'
+    );
+    $cachedRequest->execute([$adminId, $requestKey]);
+    $cached = $cachedRequest->fetch(PDO::FETCH_ASSOC);
+    if ($cached) {
+        if (!hash_equals($cached['request_fingerprint'], $requestFingerprint)) {
+            http_response_code(409);
+            json_error('This checkout request key was already used for different items.');
+        }
+        $cachedResponse = json_decode((string) $cached['response_json'], true);
+        if (is_array($cachedResponse)) {
+            $cachedResponse['sms'] = [
+                'enabled' => false,
+                'sent' => false,
+                'message' => 'This checkout was already processed. SMS was not sent again.'
+            ];
+            echo json_encode($cachedResponse);
+            exit;
+        }
+    }
+
     $pdo->beginTransaction();
+    try {
+        $requestInsert = $pdo->prepare(
+            'INSERT INTO checkout_requests (admin_id, request_key, request_fingerprint) VALUES (?, ?, ?)'
+        );
+        $requestInsert->execute([$adminId, $requestKey, $requestFingerprint]);
+    } catch (PDOException $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        if ($e->getCode() === '23000') {
+            $cachedRequest->execute([$adminId, $requestKey]);
+            $cached = $cachedRequest->fetch(PDO::FETCH_ASSOC);
+            if ($cached && hash_equals($cached['request_fingerprint'], $requestFingerprint)) {
+                $cachedResponse = json_decode((string) $cached['response_json'], true);
+                if (is_array($cachedResponse)) {
+                    $cachedResponse['sms'] = [
+                        'enabled' => false,
+                        'sent' => false,
+                        'message' => 'This checkout was already processed. SMS was not sent again.'
+                    ];
+                    echo json_encode($cachedResponse);
+                    exit;
+                }
+            }
+            json_error('This checkout request was already used or is still being processed. Reload the page and review the transaction log.');
+        }
+        throw $e;
+    }
 
     // 2. Fetch all recipient records in ONE query
     $inRecipients = implode(',', array_fill(0, count($recipients), '?'));
@@ -109,8 +167,16 @@ try {
         }
     }
 
-    // 5. Generate this month's transaction code sequence. Looking up the
-    // latest code globally carries the previous month's counter forward.
+    // Serialize code allocation even when separate supply rows are released concurrently.
+    $lockStmt = $pdo->query("SELECT GET_LOCK('inventory_sys_opt_transaction_code', 10)");
+    if ((int) $lockStmt->fetchColumn() !== 1) {
+        $pdo->rollBack();
+        json_error('Transaction numbering is busy. Please retry the release.');
+    }
+    $sequenceLockHeld = true;
+
+    // 5. Continue the transaction code sequence across months within the year.
+    $yearPrefix = date('Y-');
     $yearMonth = date('Y-n-');
     $stmtLastCode = $pdo->prepare(
         "SELECT trans_code
@@ -119,7 +185,7 @@ try {
          ORDER BY id DESC
          LIMIT 1"
     );
-    $stmtLastCode->execute([$yearMonth . '%']);
+    $stmtLastCode->execute([$yearPrefix . '%']);
     $lastCodeRow = $stmtLastCode->fetch(PDO::FETCH_ASSOC);
     $increment = 1;
     if ($lastCodeRow && !empty($lastCodeRow['trans_code'])) {
@@ -162,7 +228,7 @@ try {
                 $unit,
                 $item['qty'],
                 $recipientName,
-                $employeePhone,
+                '',
                 $releasedBy
             ]);
 
@@ -188,7 +254,22 @@ try {
         }
     }
 
+    $checkoutResponse = [
+        'status' => 'success',
+        'message' => 'Successfully released ' . count($normalizedItems) . ' item type(s) to ' . $recipientCount . ' recipient(s).',
+        'trans_codes' => $transCodes,
+        'print_url' => 'controllers/supplies/consumable/print_ris.php?trans_codes=' . urlencode(implode(',', $transCodes))
+    ];
+    $responseUpdate = $pdo->prepare(
+        'UPDATE checkout_requests SET response_json = ? WHERE admin_id = ? AND request_key = ?'
+    );
+    $responseUpdate->execute([json_encode($checkoutResponse), $adminId, $requestKey]);
+
     $pdo->commit();
+    if ($sequenceLockHeld) {
+        $pdo->query("SELECT RELEASE_LOCK('inventory_sys_opt_transaction_code')");
+        $sequenceLockHeld = false;
+    }
 
     $smsSentCount = 0;
     $smsEnabled = false;
@@ -228,17 +309,19 @@ try {
             : 'SMS notification sent to ' . $smsSentCount . ' of ' . $recipientCount . ' recipient(s).'
     ];
 
-    echo json_encode([
-        'status'      => 'success',
-        'message'     => 'Successfully released ' . count($normalizedItems) . ' item type(s) to ' . $recipientCount . ' recipient(s).',
-        'trans_codes' => $transCodes,
-        'print_url'   => 'controllers/supplies/consumable/print_ris.php?trans_codes=' . urlencode(implode(',', $transCodes)),
-        'sms'         => $smsResult
-    ]);
+    $checkoutResponse['sms'] = $smsResult;
+    echo json_encode($checkoutResponse);
 
 } catch (PDOException $e) {
     if ($pdo->inTransaction()) {
         $pdo->rollBack();
+    }
+    if ($sequenceLockHeld) {
+        try {
+            $pdo->query("SELECT RELEASE_LOCK('inventory_sys_opt_transaction_code')");
+        } catch (Throwable $releaseError) {
+            error_log('Unable to release transaction-code lock: ' . $releaseError->getMessage());
+        }
     }
     error_log('controllers/cart/process_release.php error: ' . $e->getMessage());
     json_error('Database failure occurred while processing release.');

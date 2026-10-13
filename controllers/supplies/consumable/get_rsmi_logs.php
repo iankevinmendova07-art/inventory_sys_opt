@@ -1,8 +1,6 @@
 <?php
 // controllers/supplies/consumable/get_rsmi_logs.php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+require_once dirname(__DIR__, 3) . '/includes/session_security.php';
 require_once dirname(__DIR__, 3) . '/controllers/auth/auth.php';
 require_once dirname(__DIR__, 3) . '/config/db.php';
 
