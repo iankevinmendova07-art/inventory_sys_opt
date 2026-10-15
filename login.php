@@ -16,7 +16,7 @@ $adminNameUpper = isset($_SESSION['admin_name']) ? strtoupper($_SESSION['admin_n
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - San Roque Elementary School Inventory System</title>
+    <title>PROJECT - IAN (Inventory and Assets Navigation)</title>
     <link rel="icon" type="image/png" href="assets/img/ian.png">
     
     <!-- Bootstrap 5 CSS -->
@@ -37,8 +37,7 @@ $adminNameUpper = isset($_SESSION['admin_name']) ? strtoupper($_SESSION['admin_n
             <img src="assets/img/ian.png" alt="Project IAN logo">
         </div>
 
-        <h1 class="school-title">SAN ROQUE ELEMENTARY SCHOOL</h1>
-        <p class="system-subtitle">PROJECT IAN <br>Inventory and Asset Navigator </p>
+        <h1 class="school-title">PROJECT - IAN (Inventory and Assets Navigation)</h1>
 
         <form id="loginForm" action="controllers/login/login_process.php" method="POST">
             <?php echo csrf_field(); ?>
@@ -54,6 +53,8 @@ $adminNameUpper = isset($_SESSION['admin_name']) ? strtoupper($_SESSION['admin_n
             
             <button type="submit" class="btn btn-primary-custom w-100 mb-2">SECURE LOGIN</button>
         </form>
+
+        <button type="button" class="btn btn-link p-0" id="forgotPasswordButton">Forgot password?</button>
         
         <div class="mt-3">
             <small class="text-muted" style="font-size: 0.75rem;">🔒 Authorized Administrative Access Only</small>
@@ -61,7 +62,7 @@ $adminNameUpper = isset($_SESSION['admin_name']) ? strtoupper($_SESSION['admin_n
     </div>
     
     <div class="footer-text">
-        &copy; <?php echo date('Y'); ?> San Roque Elementary School<br>Catbalogan City
+        &copy; <?php echo date('Y'); ?> PROJECT - IAN (Inventory and Assets Navigation)
     </div>
 </div>
 

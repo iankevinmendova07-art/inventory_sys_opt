@@ -59,7 +59,19 @@ internal static class InstallerBootstrap
                 installer.Start();
                 installer.BeginOutputReadLine();
                 installer.BeginErrorReadLine();
-                installer.WaitForExit();
+                if (!installer.WaitForExit(180000))
+                {
+                    installer.Kill();
+                    if (!quiet)
+                    {
+                        MessageBox.Show(
+                            "Setup did not finish within three minutes. Review the application logs before retrying.",
+                            "Inventory System Setup",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Error);
+                    }
+                    return 1;
+                }
                 try { installer.CancelOutputRead(); } catch { }
                 try { installer.CancelErrorRead(); } catch { }
 
@@ -87,10 +99,18 @@ internal static class InstallerBootstrap
                 }
             }
 
+            string desktopShortcutPath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory),
+                "Inventory System.lnk");
+            if (!File.Exists(desktopShortcutPath))
+            {
+                throw new InvalidOperationException("Installation finished, but the Inventory System desktop icon could not be found.");
+            }
+
             if (!quiet)
             {
                 MessageBox.Show(
-                    "Inventory System was installed for the current Windows user. Your database will be stored separately under LocalAppData.",
+                    "Installation complete!\r\n\r\nInventory System is installed and its desktop icon is ready to use.\r\n\r\nYour database is stored separately under LocalAppData.",
                     "Inventory System Setup",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Information);

@@ -6,6 +6,8 @@ Run `InventorySystemSetup.exe` and follow the installer. It installs for the cur
 
 Open **Inventory System** from the desktop or Start Menu. The launcher starts its local services and opens an application window. Close that window to stop the services. If the system opens in your default browser, use **Stop Inventory System** in the Start Menu when finished.
 
+For a step-by-step walkthrough with screen captures and annotated examples, see the [printable Project IAN User Manual](docs/Project-IAN-User-Manual.pdf).
+
 ## Back up and restore
 
 - Choose **Back Up Inventory System** in the Start Menu and select a location for the SQL backup. Store a copy somewhere separate from this PC.
@@ -20,7 +22,7 @@ Uninstall from Windows Settings or the Start Menu. Choose to retain application 
 
 ## Offline use
 
-The local inventory application and its packaged interface assets run without internet access. SMS notifications require the configured gateway/device. No email delivery feature is included.
+The local inventory application and its packaged interface assets run without internet access. No email delivery feature is included.
 
 ## Data and logs
 

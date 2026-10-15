@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Project IAN - User Manual</title>
+<style>
+  :root {
+    --navy: #0d3b66;
+    --deep: #05192d;
+    --gold: #f4d35e;
+    --ink: #213547;
+    --muted: #617486;
+    --line: #dbe3ea;
+    --paper: #fff;
+    --canvas: #f3f6f9;
+    --green: #198754;
+    --blue: #0d6efd;
+    --orange: #fd7e14;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #dce4eb; color: var(--ink); font-family: "Segoe UI", Arial, sans-serif; }
+  body { font-size: 10pt; line-height: 1.42; }
+  .page {
+    width: 8.5in;
+    height: 11in;
+    margin: 18px auto;
+    padding: .48in .55in .44in;
+    position: relative;
+    background: var(--paper);
+    overflow: hidden;
+    box-shadow: 0 2px 18px #102b4430;
+    page-break-after: always;
+    break-after: page;
+  }
+  .page:last-child { page-break-after: auto; break-after: auto; }
+  .eyebrow { color: #66798b; font-size: 8pt; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; }
+  h1, h2, h3, p { margin-top: 0; }
+  h1 { color: var(--navy); font-size: 26pt; line-height: 1.08; margin: 3px 0 8px; }
+  h2 { color: var(--navy); font-size: 19pt; line-height: 1.12; margin: 2px 0 9px; }
+  h3 { color: var(--navy); font-size: 11.5pt; margin: 0 0 4px; }
+  p { margin: 0 0 7px; }
+  .lede { color: var(--muted); font-size: 11pt; max-width: 6.7in; }
+  .page-head { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); padding-bottom: 8px; margin-bottom: 13px; }
+  .brand { display: flex; align-items: center; gap: 8px; color: var(--navy); font-size: 8pt; font-weight: 800; letter-spacing: .35px; }
+  .brand img { width: 30px; height: 30px; object-fit: contain; border: 1px solid var(--gold); border-radius: 50%; }
+  .step { display: inline-grid; place-items: center; width: 25px; height: 25px; margin-right: 6px; border-radius: 50%; background: var(--gold); color: var(--deep); font-size: 10pt; font-weight: 800; vertical-align: 2px; }
+  .shot { border: 1px solid #cbd6df; border-radius: 8px; overflow: hidden; margin: 11px 0 12px; background: white; box-shadow: 0 2px 7px #17334b12; }
+  .shot-label { background: #edf3f7; border-bottom: 1px solid #d7e0e7; color: #42596c; padding: 5px 9px; font-size: 7.2pt; font-weight: 700; letter-spacing: .45px; text-transform: uppercase; }
+  .shot img { display: block; width: 100%; height: auto; }
+  .shot-note { color: #718395; font-size: 7pt; padding: 4px 8px; border-top: 1px solid #e6ebef; }
+  .screen { display: flex; min-height: 2.5in; font-family: "Segoe UI", Arial, sans-serif; font-size: 7.3pt; background: #f4f6f9; }
+  .screen.tall { min-height: 2.82in; }
+  .side { width: 1.54in; flex: 0 0 1.54in; padding: 11px 9px; color: white; background: linear-gradient(180deg, var(--navy), var(--deep)); }
+  .side-brand { border-bottom: 1px solid #ffffff30; padding: 3px 0 10px; margin-bottom: 8px; text-align: center; color: var(--gold); font-size: 6pt; }
+  .side-brand img { display: block; margin: 0 auto 4px; width: 34px; height: 34px; background: white; border: 2px solid var(--gold); border-radius: 50%; }
+  .side-row { border-radius: 5px; margin: 3px 0; padding: 6px 7px; color: #f0f5f9; }
+  .side-row.active { background: var(--gold); color: var(--deep); font-weight: 800; }
+  .side-sub { padding: 4px 5px 4px 15px; color: #d1dfeb; font-size: 6.7pt; }
+  .screen-main { min-width: 0; flex: 1; padding: 0 11px 10px; }
+  .screen-top { height: 33px; margin: 0 -11px 10px; padding: 8px 11px; border-bottom: 1px solid #e2e7eb; background: white; color: #455b6d; font-size: 7pt; font-weight: 700; }
+  .user-tag { float: right; color: #5a6978; font-weight: 500; }
+  .banner { border-radius: 6px; padding: 10px 12px; margin: 0 0 10px; background: linear-gradient(115deg, var(--navy), #1a528a); color: white; }
+  .banner strong { display: block; font-size: 9pt; margin-bottom: 2px; }
+  .banner small { color: #dbe8f3; }
+  .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin: 0 0 9px; }
+  .tiles.four { grid-template-columns: repeat(4, 1fr); }
+  .tile { min-height: 43px; border: 1px solid #dce3e9; border-left: 3px solid var(--blue); border-radius: 5px; background: white; padding: 6px 7px; }
+  .tile.gold { border-left-color: #d8aa1a; }
+  .tile.green { border-left-color: var(--green); }
+  .tile.dark { border-left-color: #40566a; }
+  .tile.red { border-left-color: #dc3545; }
+  .tile small { display: block; color: #6e7f8d; font-size: 5.6pt; font-weight: 700; text-transform: uppercase; }
+  .tile b { display: block; color: #243b4d; font-size: 8pt; margin-top: 3px; }
+  .screen-card { border: 1px solid #e0e6eb; border-radius: 6px; background: white; padding: 8px; }
+  .screen-card-title { color: #2e4659; font-weight: 800; margin-bottom: 5px; font-size: 7.5pt; }
+  .tabs { display: flex; gap: 13px; border-bottom: 1px solid #dce3e9; margin: -2px 0 6px; color: #64788a; }
+  .tabs span { padding: 4px 2px; }
+  .tabs .on { border-bottom: 2px solid var(--navy); color: var(--navy); font-weight: 800; }
+  table.ui { width: 100%; border-collapse: collapse; font-size: 6pt; }
+  table.ui th { background: #f0f4f7; color: #556a7c; text-align: left; text-transform: uppercase; font-size: 5.5pt; }
+  table.ui th, table.ui td { border-bottom: 1px solid #e6ebef; padding: 5px 4px; }
+  .pill { display: inline-block; border-radius: 20px; padding: 2px 6px; background: #e3f3e9; color: #17653d; font-size: 5.7pt; font-weight: 700; }
+  .pill.warn { background: #fff1cf; color: #785700; }
+  .pill.red { background: #fde1e2; color: #9e252b; }
+  .btn-mini { display: inline-block; border-radius: 3px; padding: 3px 6px; background: var(--navy); color: white; font-size: 5.7pt; font-weight: 700; }
+  .btn-mini.light { background: #edf2f6; color: #334d62; }
+  .modal-demo { width: 68%; margin: 7px auto; border: 1px solid #dce3e9; border-radius: 6px; background: white; box-shadow: 0 5px 18px #08244222; }
+  .modal-head { padding: 7px 9px; background: var(--navy); color: white; font-weight: 800; border-radius: 6px 6px 0 0; }
+  .modal-body { padding: 8px 10px; }
+  .field { display: inline-block; width: 48%; margin: 3px 1% 4px 0; vertical-align: top; }
+  .field.full { width: 98%; }
+  .field label { display: block; color: #516779; font-size: 5.8pt; font-weight: 700; margin-bottom: 2px; }
+  .input { border: 1px solid #d3dce3; border-radius: 3px; background: #fff; color: #637586; padding: 4px 5px; font-size: 6pt; }
+  .callout { border-left: 3px solid var(--gold); padding: 6px 9px; margin: 7px 0; background: #fff9e5; color: #514524; font-size: 8.5pt; }
+  .callout.danger { border-color: #dc3545; background: #fff1f0; color: #672a26; }
+  .columns { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .box { border: 1px solid var(--line); border-radius: 7px; padding: 10px 11px; margin: 7px 0; background: #fff; }
+  .box p:last-child, .box ul:last-child { margin-bottom: 0; }
+  ul, ol { padding-left: 18px; margin: 4px 0 9px; }
+  li { margin: 2px 0; }
+  .small { font-size: 8.5pt; }
+  .tiny { color: var(--muted); font-size: 7.5pt; }
+  .folio { position: absolute; bottom: .23in; left: .55in; right: .55in; display: flex; justify-content: space-between; border-top: 1px solid var(--line); padding-top: 5px; color: #778999; font-size: 7pt; }
+  .cover-mark { display: flex; align-items: center; gap: 13px; margin: 4px 0 8px; }
+  .cover-mark img { width: 52px; height: 52px; object-fit: contain; border: 2px solid var(--gold); border-radius: 50%; }
+  .key { display: grid; grid-template-columns: 1fr 1fr; gap: 5px 12px; margin: 8px 0; }
+  .key span { border-bottom: 1px solid #e7edf1; padding: 4px 0; font-size: 8pt; }
+  .key b { color: var(--navy); }
+  .tick { color: var(--green); font-weight: 800; margin-right: 5px; }
+  @page { size: Letter; margin: 0; }
+  @media print {
+    html, body { background: white; }
+    .page { margin: 0; box-shadow: none; }
+  }
+</style>
+</head>
+<body>
+
+<section class="page">
+  <div class="page-head">
+    <div class="brand"><img src="../assets/img/ian.png" alt="">SAN ROQUE ELEMENTARY SCHOOL · PROJECT IAN</div>
+    <div class="eyebrow">New user guide</div>
+  </div>
+  <div class="eyebrow">01 · Start here</div>
+  <h1>Open the system<br>and sign in</h1>
+  <p class="lede">Project IAN (Inventory and Asset Navigator) is the school’s local inventory application. This manual starts with first-time setup and login, then walks through settings, daily inventory work, reports, and safe shutdown.</p>
+
+  <div class="shot">
+    <div class="shot-label">Screenshot 1 · Project IAN login</div>
+    <img src="screenshots/login.png" alt="Project IAN login page, captured from the running application">
+    <div class="shot-note">This is a direct screen capture of the login page. The username and password fields are intentionally blank.</div>
+  </div>
+
+  <div class="columns">
+    <div class="box">
+      <h3><span class="step">1</span>Start the installed app</h3>
+      <p class="small">Open <b>Inventory System</b> from the desktop shortcut or Windows Start Menu. The launcher starts the local web and database services and opens the app window. For the packaged installer, the first launch displays administrator setup before login.</p>
+    </div>
+    <div class="box">
+      <h3><span class="step">2</span>Create the first administrator</h3>
+      <p class="small">On the first-run setup page, enter an administrator name, username, and password twice. The username must be 3–50 characters using letters, numbers, dots, underscores, or hyphens. Choose a private password of at least 12 characters; keep it somewhere secure.</p>
+    </div>
+  </div>
+  <div class="box">
+    <h3><span class="step">3</span>Log in</h3>
+    <ol class="small">
+      <li>Type the administrator username into <b>Username</b>.</li>
+      <li>Type the matching password into <b>Password</b>.</li>
+      <li>Select <b>SECURE LOGIN</b>. A successful login opens the Home dashboard.</li>
+    </ol>
+    <p class="tiny">There is no shared/default password. Ask the system administrator to help recover access; do not guess or share credentials. An inactive session is signed out after about 30 minutes.</p>
+  </div>
+  <div class="callout"><b>Where to start each day:</b> Settings (once, during setup) → Home to review totals → the relevant inventory section to record changes.</div>
+  <div class="folio"><span>Project IAN · User Manual</span><span>01 / 07</span></div>
+</section>
+
+<section class="page">
+  <div class="page-head">
+    <div class="brand"><img src="../assets/img/ian.png" alt="">PROJECT IAN · SETTINGS</div>
+    <div class="eyebrow">Prepare your records</div>
+  </div>
+  <div class="eyebrow">02 · Recommended first visit</div>
+  <h2><span class="step">1</span>Set up Settings</h2>
+  <p class="lede">Select <b>Settings</b> in the left menu. Set up the school profile and reference lists before adding inventory; these lists are used in item forms, recipients, and reports.</p>
+
+  <div class="shot">
+    <div class="shot-label">Screen preview · Settings overview (sample data)</div>
+    <div class="screen tall">
+      <aside class="side">
+        <div class="side-brand"><img src="../assets/img/ian.png" alt="">SAN ROQUE ELEMENTARY SCHOOL<br>PROJECT IAN</div>
+        <div class="side-row">⌂ &nbsp; Home</div><div class="side-row">▣ &nbsp; Supplies</div>
+        <div class="side-row">▤ &nbsp; Learning Resources</div><div class="side-row active">⚙ &nbsp; Settings</div>
+        <div class="side-row">↪ &nbsp; Logout</div>
+      </aside>
+      <div class="screen-main">
+        <div class="screen-top">Settings Overview <span class="user-tag">Administrator</span></div>
+        <div class="banner"><strong>Welcome back, ADMINISTRATOR</strong><small>Manage Staff, Units of Measure, and Positions.</small></div>
+        <div class="tiles four">
+          <div class="tile"><small>Personnel Control</small><b>Staff Management</b></div>
+          <div class="tile gold"><small>Inventory Setup</small><b>Unit of Measure</b></div>
+          <div class="tile green"><small>Organization</small><b>Position Management</b></div>
+          <div class="tile dark"><small>Access Control</small><b>Admin Management</b></div>
+          <div class="tile"><small>Maintenance</small><b>Database</b></div>
+          <div class="tile red"><small>School Profile</small><b>School Details</b></div>
+        </div>
+        <div class="screen-card">
+          <div class="tabs"><span class="on">Staff Management</span><span>Unit of Measure</span><span>Position Management</span></div>
+          <div class="screen-card-title">Staff / Employee Directory</div>
+          <table class="ui"><thead><tr><th>Employee ID</th><th>Name</th><th>Position</th><th>Mobile No.</th><th>Action</th></tr></thead>
+          <tbody><tr><td>EXAMPLE-01</td><td>Sample Staff</td><td>Teacher</td><td>09xx xxx xxxx</td><td><span class="btn-mini light">Edit</span></td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+    <div class="shot-note">Interface preview only. Names and values shown here are fictitious examples, not system records.</div>
+  </div>
+
+  <div class="columns">
+    <div class="box">
+      <h3>Suggested setup order</h3>
+      <ol class="small">
+        <li><b>Positions:</b> add the school’s official position names first.</li>
+        <li><b>Staff Management:</b> add each employee ID, full name, position, and mobile number. Staff entries are used as recipients.</li>
+        <li><b>Unit of Measure:</b> add the standard units staff should select for supplies.</li>
+        <li><b>School Details:</b> enter the school name/address and choose the school head and custodian. These selections depend on your staff and position lists.</li>
+      </ol>
+    </div>
+    <div class="box">
+      <h3>Account and data controls</h3>
+      <ul class="small">
+        <li><b>Admin Management</b> updates the administrator name/username. Enter the current password; provide and confirm a new password only when changing it.</li>
+        <li><b>Database</b> offers a backup download, SQL import, and record deletion.</li>
+        <li>Use <b>Edit</b> for corrections. Delete only after checking that the record is no longer needed.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="callout danger"><b>Careful:</b> Import replaces database contents. Delete Records permanently removes operational records while retaining selected setup/account tables. Make a backup first and use these actions only when authorized.</div>
+  <div class="folio"><span>Project IAN · User Manual</span><span>02 / 07</span></div>
+</section>
+
+<section class="page">
+  <div class="page-head">
+    <div class="brand"><img src="../assets/img/ian.png" alt="">PROJECT IAN · HOME</div>
+    <div class="eyebrow">Your starting point</div>
+  </div>
+  <div class="eyebrow">03 · Home dashboard</div>
+  <h2><span class="step">2</span>Read the overview</h2>
+  <p class="lede">Select <b>Home</b> in the sidebar after logging in. Dashboard tiles summarize current records; charts and tables help you review learning-resource distribution and transaction activity.</p>
+
+  <div class="shot">
+    <div class="shot-label">Screen preview · Home dashboard (sample values)</div>
+    <div class="screen tall">
+      <aside class="side">
+        <div class="side-brand"><img src="../assets/img/ian.png" alt="">SAN ROQUE ELEMENTARY SCHOOL<br>PROJECT IAN</div>
+        <div class="side-row active">⌂ &nbsp; Home</div><div class="side-row">▣ &nbsp; Supplies</div>
+        <div class="side-sub">↳ Consumable Supplies</div><div class="side-sub">↳ Non-Consumable Supplies</div>
+        <div class="side-row">▤ &nbsp; Learning Resources</div><div class="side-row">⚙ &nbsp; Settings</div><div class="side-row">↪ &nbsp; Logout</div>
+      </aside>
+      <div class="screen-main">
+        <div class="screen-top">Dashboard Overview <span class="user-tag">ADMINISTRATOR</span></div>
+        <div class="banner"><strong>Welcome back, ADMINISTRATOR!</strong><small>Overview of inventory supplies, stock status, transactions, and registered personnel.</small></div>
+        <div class="tiles four">
+          <div class="tile"><small>Consumables · with stock</small><b>24 items</b></div>
+          <div class="tile red"><small>Consumables · out of stock</small><b>3 items</b></div>
+          <div class="tile gold"><small>Non-consumable items</small><b>18 items</b></div>
+          <div class="tile green"><small>Consumable transactions</small><b>42</b></div>
+          <div class="tile"><small>Non-consumable transactions</small><b>11</b></div>
+          <div class="tile dark"><small>Registered personnel</small><b>15 staff</b></div>
+          <div class="tile"><small>Science equipment</small><b>7 items</b></div>
+          <div class="tile"><small>Math equipment</small><b>5 items</b></div>
+        </div>
+        <div class="screen-card" style="height:1.02in">
+          <div class="screen-card-title">Inventory and learning-resource overview</div>
+          <div style="display:flex;gap:10px;height:.65in;align-items:end;padding:0 9px 4px;border-bottom:1px solid #e1e8ed">
+            <span style="width:13%;height:55%;background:#2479bb;border-radius:3px 3px 0 0"></span><span style="width:13%;height:78%;background:#42a5d5;border-radius:3px 3px 0 0"></span><span style="width:13%;height:43%;background:#83c4dc;border-radius:3px 3px 0 0"></span><span style="width:13%;height:69%;background:#287d64;border-radius:3px 3px 0 0"></span><span style="width:13%;height:37%;background:#60a88c;border-radius:3px 3px 0 0"></span>
+            <small style="color:#81909b">Illustrative chart</small>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="shot-note">Interface preview only. All counts and chart bars are fictitious examples.</div>
+  </div>
+
+  <div class="columns">
+    <div class="box">
+      <h3>What the tiles mean</h3>
+      <ul class="small">
+        <li>Consumable items are counted separately when quantity is above zero or zero/below.</li>
+        <li>Other tiles summarize non-consumables, recorded transactions, registered employees, and Science/Math equipment.</li>
+        <li>Dashboard totals are a quick overview—not a substitute for checking the item table or official report.</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h3>Use the left menu</h3>
+      <div class="key">
+        <span><b>Home</b> — totals and charts</span><span><b>Supplies</b> — two inventory types</span>
+        <span><b>Learning Resources</b> — equipment and books</span><span><b>Settings</b> — staff and school setup</span>
+      </div>
+      <p class="tiny">Select a menu heading to expand its sub-pages. The name and role at the upper-right identify the signed-in account.</p>
+    </div>
+  </div>
+  <div class="folio"><span>Project IAN · User Manual</span><span>03 / 07</span></div>
+</section>
+
+<section class="page">
+  <div class="page-head">
+    <div class="brand"><img src="../assets/img/ian.png" alt="">PROJECT IAN · CONSUMABLES</div>
+    <div class="eyebrow">Daily stock movement</div>
+  </div>
+  <div class="eyebrow">04 · Supplies</div>
+  <h2><span class="step">3</span>Consumable supplies</h2>
+  <p class="lede">Open <b>Supplies → Consumable Supplies</b>. This section tracks stock items that are used up, such as paper and classroom materials.</p>
+
+  <div class="shot">
+    <div class="shot-label">Screen preview · Consumable supplies table (sample data)</div>
+    <div class="screen">
+      <aside class="side">
+        <div class="side-brand"><img src="../assets/img/ian.png" alt="">SAN ROQUE ELEMENTARY SCHOOL<br>PROJECT IAN</div>
+        <div class="side-row">⌂ &nbsp; Home</div><div class="side-row active">▣ &nbsp; Supplies</div>
+        <div class="side-sub" style="color:#fff">↳ Consumable Supplies</div><div class="side-sub">↳ Non-Consumable Supplies</div>
+        <div class="side-row">▤ &nbsp; Learning Resources</div><div class="side-row">⚙ &nbsp; Settings</div>
+      </aside>
+      <div class="screen-main">
+        <div class="screen-top">Consumable Supplies Overview <span class="user-tag">ADMINISTRATOR · 🛒 Cart (2)</span></div>
+        <div class="banner"><strong>Welcome back, ADMINISTRATOR!</strong><small>Summary of consumable supplies inventory.</small></div>
+        <div class="tiles four">
+          <div class="tile"><small>Inventory control</small><b>Add Item</b></div><div class="tile gold"><small>Stock management</small><b>Update Quantity</b></div>
+          <div class="tile green"><small>Analytics</small><b>Requisition & Issue Slip</b></div><div class="tile"><small>Records</small><b>Stock Card</b></div>
+          <div class="tile gold"><small>Issuance report</small><b>RSMI</b></div>
+        </div>
+        <div class="screen-card">
+          <div class="screen-card-title">Consumable supplies · Search supplies</div>
+          <table class="ui"><thead><tr><th>Item Code</th><th>Item Name</th><th>Unit</th><th>Reference</th><th>Quantity</th><th>Action</th></tr></thead>
+          <tbody><tr><td>EX-001</td><td>Copy paper</td><td>Ream</td><td>Opening stock</td><td><span class="pill">24</span></td><td><span class="btn-mini light">Edit</span> <span class="btn-mini">Cart</span></td></tr>
+          <tr><td>EX-002</td><td>Marker</td><td>Piece</td><td>Opening stock</td><td><span class="pill warn">4 · Low</span></td><td><span class="btn-mini light">Edit</span> <span class="btn-mini">Cart</span></td></tr>
+          <tr><td>EX-003</td><td>Folder</td><td>Piece</td><td>Opening stock</td><td><span class="pill red">0 · Out</span></td><td><span class="btn-mini light">Edit</span></td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+    <div class="shot-note">Interface preview only. Item names, codes, stock levels, and cart count are examples.</div>
+  </div>
+
+  <div class="columns">
+    <div class="box">
+      <h3>Add a supply or record incoming stock</h3>
+      <ol class="small">
+        <li>Select <b>Add Item</b>. Enter item code, item name, unit, quantity, and a useful reference; save.</li>
+        <li>To increase an existing stock balance, select <b>Update Quantity</b>, find the item, and enter the new total quantity and its reference.</li>
+        <li>Search the table to confirm the correct item and balance are shown.</li>
+      </ol>
+    </div>
+    <div class="box">
+      <h3>Release supplies to staff</h3>
+      <ol class="small">
+        <li>Use the row’s cart button to add an item and quantity; repeat for other items.</li>
+        <li>Open the cart icon. Review the cart and select the intended recipient(s). Each selected recipient receives every item in that cart.</li>
+        <li>Select <b>Release Items</b> only after verifying quantities and recipients. Check the transaction/report record afterward.</li>
+      </ol>
+    </div>
+  </div>
+  <div class="callout">The cart is per signed-in administrator and may remain in that browser until cleared. Remove incorrect lines or clear the cart before completing a release.</div>
+  <div class="folio"><span>Project IAN · User Manual</span><span>04 / 07</span></div>
+</section>
+
+<section class="page">
+  <div class="page-head">
+    <div class="brand"><img src="../assets/img/ian.png" alt="">PROJECT IAN · NON-CONSUMABLES</div>
+    <div class="eyebrow">Property and equipment</div>
+  </div>
+  <div class="eyebrow">05 · Supplies</div>
+  <h2><span class="step">4</span>Non-consumable supplies</h2>
+  <p class="lede">Open <b>Supplies → Non-Consumable Supplies</b> to record durable property and equipment. The list shows property number, description, category, costs, quantities, recipient, and remarks.</p>
+
+  <div class="shot">
+    <div class="shot-label">Screen preview · Non-consumable register (sample data)</div>
+    <div class="screen">
+      <aside class="side">
+        <div class="side-brand"><img src="../assets/img/ian.png" alt="">SAN ROQUE ELEMENTARY SCHOOL<br>PROJECT IAN</div>
+        <div class="side-row">⌂ &nbsp; Home</div><div class="side-row active">▣ &nbsp; Supplies</div>
+        <div class="side-sub">↳ Consumable Supplies</div><div class="side-sub" style="color:#fff">↳ Non-Consumable Supplies</div>
+        <div class="side-row">▤ &nbsp; Learning Resources</div><div class="side-row">⚙ &nbsp; Settings</div>
+      </aside>
+      <div class="screen-main">
+        <div class="screen-top">Non-Consumable Supplies Overview <span class="user-tag">ADMINISTRATOR</span></div>
+        <div class="banner"><strong>Welcome back, ADMINISTRATOR!</strong><small>Summary of non-consumable supplies inventory.</small></div>
+        <div class="tiles">
+          <div class="tile"><small>Inventory control</small><b>Add and Release Item</b></div>
+          <div class="tile green"><small>Analytics</small><b>RPCPPE Report</b></div>
+        </div>
+        <div class="screen-card">
+          <div class="screen-card-title">Non-consumable register</div>
+          <table class="ui"><thead><tr><th>Property Number</th><th>Description</th><th>Category</th><th>Unit Cost</th><th>Qty</th><th>Recipient</th><th>Action</th></tr></thead>
+          <tbody><tr><td>EX-ICT-001</td><td>Desktop computer</td><td>ICT Equipment</td><td>₱ 35,000</td><td>1</td><td>Sample Staff</td><td><span class="btn-mini light">Edit</span></td></tr>
+          <tr><td>EX-FUR-002</td><td>Teacher desk</td><td>Furniture & Fixtures</td><td>₱ 4,500</td><td>2</td><td>Sample Staff</td><td><span class="btn-mini light">Edit</span></td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+    <div class="shot-note">Interface preview only. Property details and amounts are fictitious examples; confirm official values from source records.</div>
+  </div>
+
+  <div class="box">
+    <h3>Add or release a property item</h3>
+    <p class="small">Select <b>Add and Release Item</b> and complete the property number, description, unit, category/item type, unit cost and total cost when available, quantity per Property Card, physical count, shortage/overage values, remarks, and recipient. Review the recipient and counts before selecting <b>Add Item</b>.</p>
+    <p class="small">Use <b>Edit</b> to correct an existing row. Treat property-number and count changes as controlled records: verify against the physical item and official property documents before saving.</p>
+  </div>
+  <div class="box">
+    <h3>RPCPPE report</h3>
+    <p class="small">Select <b>RPCPPE Report</b> to open the property report. Check that the school profile, property records, classifications, and quantities are complete before printing. Use the browser’s print dialog to choose printer or Save as PDF.</p>
+  </div>
+  <div class="callout"><b>Good practice:</b> Enter the correct unit of measure and category consistently. An incorrect category or physical count affects review and official reporting.</div>
+  <div class="folio"><span>Project IAN · User Manual</span><span>05 / 07</span></div>
+</section>
+
+<section class="page">
+  <div class="page-head">
+    <div class="brand"><img src="../assets/img/ian.png" alt="">PROJECT IAN · LEARNING RESOURCES</div>
+    <div class="eyebrow">Equipment and textbooks</div>
+  </div>
+  <div class="eyebrow">06 · Learning Resources</div>
+  <h2><span class="step">5</span>Science, Math, and textbooks</h2>
+  <p class="lede">Open <b>Learning Resources</b> in the sidebar and choose a page. Set up staff and units first so recipients and unit lists are available.</p>
+
+  <div class="shot">
+    <div class="shot-label">Screen preview · Science & Math equipment (sample data)</div>
+    <div class="screen">
+      <aside class="side">
+        <div class="side-brand"><img src="../assets/img/ian.png" alt="">SAN ROQUE ELEMENTARY SCHOOL<br>PROJECT IAN</div>
+        <div class="side-row">⌂ &nbsp; Home</div><div class="side-row">▣ &nbsp; Supplies</div>
+        <div class="side-row active">▤ &nbsp; Learning Resources</div><div class="side-sub" style="color:#fff">↳ Science and Math Equipment</div><div class="side-sub">↳ TextBooks</div><div class="side-row">⚙ &nbsp; Settings</div>
+      </aside>
+      <div class="screen-main">
+        <div class="screen-top">Science & Math Equipment Overview <span class="user-tag">ADMINISTRATOR</span></div>
+        <div class="banner"><strong>Science & Math Equipment</strong><small>Review equipment records by learning area.</small></div>
+        <div class="tiles"><div class="tile"><small>Inventory control</small><b>Add Item</b></div><div class="tile green"><small>Reports</small><b>Inventory Report</b></div></div>
+        <div class="screen-card">
+          <div class="tabs"><span class="on">Science</span><span>Math</span></div>
+          <table class="ui"><thead><tr><th>Item Code</th><th>Item Name</th><th>Quantity</th><th>Unit</th><th>Action</th></tr></thead>
+          <tbody><tr><td>EX-S-01</td><td>Microscope</td><td>2</td><td>Piece</td><td><span class="btn-mini light">Edit</span></td></tr>
+          <tr><td>EX-S-02</td><td>Measuring cylinder</td><td>10</td><td>Piece</td><td><span class="btn-mini light">Edit</span></td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+    <div class="shot-note">Interface preview only. All codes, equipment, and quantities are fictitious.</div>
+  </div>
+
+  <div class="columns">
+    <div class="box">
+      <h3>Science & Math equipment</h3>
+      <p class="small">Choose the <b>Science</b> or <b>Math</b> tab. Select <b>Add Item</b> and enter the item code, item name, quantity, unit, and type. Check the selected tab/type before saving. Use row actions to edit or delete; use <b>Inventory Report</b> for a printable report.</p>
+    </div>
+    <div class="box">
+      <h3>TextBooks</h3>
+      <p class="small">Open <b>TextBooks</b>, select <b>Add Textbooks</b>, then enter item name, grade level, subject, quantity, unit, teacher recipient, and condition (New, Used, Old, or Damage). Use the list to review records and the <b>Textbooks Report</b> card to print/export the report.</p>
+    </div>
+  </div>
+  <div class="callout">Only select a teacher recipient after their employee record exists in Settings. Keep condition and quantity aligned with the physical books on hand.</div>
+  <div class="folio"><span>Project IAN · User Manual</span><span>06 / 07</span></div>
+</section>
+
+<section class="page">
+  <div class="page-head">
+    <div class="brand"><img src="../assets/img/ian.png" alt="">PROJECT IAN · PRINT, BACK UP, EXIT</div>
+    <div class="eyebrow">Protect your records</div>
+  </div>
+  <div class="eyebrow">07 · Finish safely</div>
+  <h2>Reports, backups, and logout</h2>
+  <p class="lede">Review records before printing, keep a protected backup, and close the local app when you finish.</p>
+
+  <div class="shot">
+    <div class="shot-label">Screen preview · Consumable reporting actions (sample layout)</div>
+    <div class="screen">
+      <aside class="side">
+        <div class="side-brand"><img src="../assets/img/ian.png" alt="">SAN ROQUE ELEMENTARY SCHOOL<br>PROJECT IAN</div>
+        <div class="side-row">⌂ &nbsp; Home</div><div class="side-row active">▣ &nbsp; Supplies</div>
+        <div class="side-sub" style="color:#fff">↳ Consumable Supplies</div><div class="side-row">▤ &nbsp; Learning Resources</div><div class="side-row">⚙ &nbsp; Settings</div><div class="side-row">↪ &nbsp; Logout</div>
+      </aside>
+      <div class="screen-main">
+        <div class="screen-top">Consumable Supplies Overview <span class="user-tag">ADMINISTRATOR · Cart</span></div>
+        <div class="banner"><strong>Reports and inventory history</strong><small>Confirm period and transaction details before producing official copies.</small></div>
+        <div class="tiles">
+          <div class="tile green"><small>Analytics</small><b>Requisition and Issue Slip</b></div>
+          <div class="tile"><small>Inventory records</small><b>Stock Card</b></div>
+          <div class="tile gold"><small>Issuance report</small><b>RSMI</b></div>
+        </div>
+        <div class="screen-card">
+          <div class="screen-card-title">RSMI · Report of Supplies and Materials Issued</div>
+          <div style="display:flex;gap:6px;align-items:center;margin:7px 0 9px;color:#607487;font-size:6.2pt">Month &amp; Year <span class="input">October 2026 ▾</span> <span class="btn-mini">View / Print</span></div>
+          <table class="ui"><thead><tr><th>Transaction</th><th>Item</th><th>Recipient</th><th>Date</th></tr></thead>
+          <tbody><tr><td>EXAMPLE-TX</td><td>Copy paper</td><td>Sample Staff</td><td>Sample date</td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+    <div class="shot-note">Interface preview only. Names, transactions, and dates are fictional examples.</div>
+  </div>
+
+  <div class="columns">
+    <div class="box">
+      <h3>Print or save a report</h3>
+      <ul class="small">
+        <li>Consumables: <b>Requisition and Issue Slip</b> opens the transaction list; <b>Stock Card</b> shows item history; <b>RSMI</b> is filtered by month/year.</li>
+        <li>Non-consumables: use <b>RPCPPE Report</b>. Learning Resources has separate Science/Math and Textbooks reports.</li>
+        <li>Check the selected period, school details, item names, quantities, and recipients. Choose a printer or <b>Save as PDF</b> in the print dialog.</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h3>Back up and restore</h3>
+      <ul class="small">
+        <li>Recommended: use the Windows Start Menu <b>Back Up Inventory System</b> shortcut. Store the SQL file somewhere separate and protected.</li>
+        <li>Restore with the Start Menu <b>Restore Inventory System</b> shortcut; select a trusted backup and confirm replacement.</li>
+        <li>Settings → Database can also download a backup or import an SQL file. Import replaces current contents.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="box">
+    <h3>Log out and close</h3>
+    <p class="small">Select <b>Logout</b> in the sidebar and confirm. Close the Inventory System window to stop its local services. If the default browser was opened instead of the app window, use <b>Stop Inventory System</b> from the Start Menu.</p>
+  </div>
+  <div class="callout danger"><b>Protect the data:</b> SQL backups contain readable inventory and account data. Store them privately. Do not delete the app’s database files manually or uninstall with the remove-data choice unless you intend to erase the records and backups.</div>
+  <p class="tiny"><b>If startup fails:</b> retry once; check whether another local service is using resources. For the packaged installer, logs are under <code>%LOCALAPPDATA%\InventorySystem\logs</code>. Preserve the data folder and restore a known-good backup only after seeking administrator help.</p>
+  <div class="folio"><span>Project IAN · User Manual · Screen previews use sample data except login screenshot</span><span>07 / 07</span></div>
+</section>
+
+</body>
+</html>

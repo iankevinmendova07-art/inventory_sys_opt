@@ -11,7 +11,7 @@ require_once 'controllers/index/index_controller.php';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Supply Inventory Management System - San Roque Elementary School</title>
+    <title>PROJECT - IAN (Inventory and Assets Navigation)</title>
     <link rel="icon" type="image/png" href="assets/img/ian.png">
 
     <!-- Bootstrap 5 CSS -->

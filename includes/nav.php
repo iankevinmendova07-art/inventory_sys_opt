@@ -3,12 +3,6 @@ require_once __DIR__ . '/../config/db.php';
 
 $csrfMetaToken = function_exists('csrf_token') ? csrf_token() : '';
 $adminId = (string) ($_SESSION['admin_id'] ?? '');
-$schoolName = '';
-try {
-    $schoolName = (string) ($pdo->query('SELECT school_name FROM school_details ORDER BY id ASC LIMIT 1')->fetchColumn() ?: '');
-} catch (PDOException $e) {
-    error_log('nav.php school_details fetch error: ' . $e->getMessage());
-}
 // Get the current page filename
 $currentPage = basename($_SERVER['PHP_SELF']);
 
@@ -27,8 +21,7 @@ $isLrActive = ($currentPage == 'lr.php' || $currentPage == 'science_math_eq.php'
 <nav id="sidebar">
     <div class="sidebar-header">
         <img src="assets/img/ian.png" alt="Project IAN logo" class="sidebar-logo">
-        <h3><?php echo htmlspecialchars($schoolName, ENT_QUOTES, 'UTF-8'); ?></h3>
-        <p>Project IAN - Inventory and Asset Navigator </p>
+        <h3>PROJECT - IAN (Inventory and Assets Navigation)</h3>
     </div>
 
     <ul class="list-unstyled components">

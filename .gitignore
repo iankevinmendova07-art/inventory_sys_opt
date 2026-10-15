@@ -1,6 +1,7 @@
 # Local and deployment secrets
 .env
 .env.*
+env
 !.env.example
 
 # Runtime and editor files
@@ -18,4 +19,3 @@ Thumbs.db
 
 # Ignore database schema
 database_schema.sql
-

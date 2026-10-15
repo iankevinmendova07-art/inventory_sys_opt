@@ -228,7 +228,9 @@ function renderSection(array $items, string $label, string $color): void {
         <div class="department">Department of Education</div>
         <div class="sub">Region VIII — Eastern Visayas</div>
         <div class="sub">Schools Division of Catbalogan City</div>
+        <?php if ($schoolName !== ''): ?>
         <div class="sub"><?= htmlspecialchars($schoolName, ENT_QUOTES, 'UTF-8') ?></div>
+        <?php endif; ?>
         <div class="address"><?= htmlspecialchars($schoolAddress, ENT_QUOTES, 'UTF-8') ?></div>
     </div>
 

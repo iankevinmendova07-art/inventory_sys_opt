@@ -12,7 +12,7 @@ $adminRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'Administra
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Supply Inventory Management System - San Roque Elementary School</title>
+    <title>PROJECT - IAN (Inventory and Assets Navigation)</title>
     <link rel="icon" type="image/png" href="assets/img/ian.png">
 
     <!-- Bootstrap 5 CSS -->
@@ -75,7 +75,7 @@ $adminRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'Administra
             <div class="alert alert-primary border-0 shadow-sm d-flex align-items-center mb-4" style="background: linear-gradient(135deg, #0D3B66 0%, #1a528a 100%); color: white; border-radius: 12px; padding: 1.5rem;">
                 <div>
                     <h4 class="alert-heading fw-bold mb-1">Welcome back, <?php echo htmlspecialchars($adminName); ?>!</h4>
-                    <p class="mb-0 text-white-50" style="font-size: 0.95rem;">Here is the summary of your consumable supplies inventory for San Roque Elementary School.</p>
+                    <p class="mb-0 text-white-50" style="font-size: 0.95rem;">Here is the summary of your consumable supplies inventory.</p>
                 </div>
             </div>
             <!-- Quick Metrics Row -->

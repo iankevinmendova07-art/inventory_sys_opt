@@ -3,7 +3,6 @@
 require_once dirname(__DIR__) . '/auth/auth.php';
 require_once dirname(__DIR__, 2) . '/config/db.php';
 require_once dirname(__DIR__, 2) . '/includes/json_response.php';
-require_once dirname(__DIR__, 2) . '/includes/sms_gateway.php';
 
 if (!isset($_SESSION['admin_id'])) {
     json_error('Unauthorized access.', 401);
@@ -82,11 +81,6 @@ try {
         }
         $cachedResponse = json_decode((string) $cached['response_json'], true);
         if (is_array($cachedResponse)) {
-            $cachedResponse['sms'] = [
-                'enabled' => false,
-                'sent' => false,
-                'message' => 'This checkout was already processed. SMS was not sent again.'
-            ];
             echo json_encode($cachedResponse);
             exit;
         }
@@ -108,11 +102,6 @@ try {
             if ($cached && hash_equals($cached['request_fingerprint'], $requestFingerprint)) {
                 $cachedResponse = json_decode((string) $cached['response_json'], true);
                 if (is_array($cachedResponse)) {
-                    $cachedResponse['sms'] = [
-                        'enabled' => false,
-                        'sent' => false,
-                        'message' => 'This checkout was already processed. SMS was not sent again.'
-                    ];
                     echo json_encode($cachedResponse);
                     exit;
                 }
@@ -271,45 +260,6 @@ try {
         $sequenceLockHeld = false;
     }
 
-    $smsSentCount = 0;
-    $smsEnabled = false;
-    foreach ($recipients as $recipientName) {
-        $smsLines = [
-            'Mam/Sir (' . $recipientName . ')',
-            '',
-            'You can now get the supplies you request in the supplies office',
-            ''
-        ];
-        foreach ($normalizedItems as $supplyId => $item) {
-            $dbItem = $suppliesMap[$supplyId];
-            $unit = $item['unit'] ?: ($dbItem['supply_unit'] ?? 'PIECE');
-            $smsLines[] = $dbItem['supply_name'] . ' - ' . $unit . ' - ' . $item['qty'];
-        }
-        $smsLines[] = '';
-        $smsLines[] = 'Thank you';
-        $smsLines[] = '';
-        $smsLines[] = 'IAN KEVIN T. MENDOVA';
-        $smsLines[] = 'Admin. Officer II';
-
-        $smsResult = send_release_sms(
-            [$employeeMap[$recipientName]],
-            implode("\n", $smsLines)
-        );
-        $smsEnabled = $smsEnabled || $smsResult['enabled'];
-        if ($smsResult['sent']) {
-            $smsSentCount++;
-        }
-    }
-
-    $smsResult = [
-        'enabled' => $smsEnabled,
-        'sent' => $smsSentCount === $recipientCount,
-        'message' => $smsSentCount === $recipientCount
-            ? 'SMS notification sent to all recipients.'
-            : 'SMS notification sent to ' . $smsSentCount . ' of ' . $recipientCount . ' recipient(s).'
-    ];
-
-    $checkoutResponse['sms'] = $smsResult;
     echo json_encode($checkoutResponse);
 
 } catch (PDOException $e) {

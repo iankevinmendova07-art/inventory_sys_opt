@@ -57,7 +57,7 @@ function renderRows(array $items): void {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Science &amp; Math Equipment - San Roque Elementary School</title>
+    <title>PROJECT - IAN (Inventory and Assets Navigation)</title>
     <link rel="icon" type="image/png" href="assets/img/ian.png">
 
     <!-- Bootstrap 5 CSS -->
@@ -147,7 +147,7 @@ function renderRows(array $items): void {
                 <div>
                     <h4 class="alert-heading fw-bold mb-1">Welcome back, <?php echo htmlspecialchars($adminName); ?>!</h4>
                     <p class="mb-0 text-white-50" style="font-size: 0.95rem;">
-                        Here is the summary of Science &amp; Math Equipment inventory for San Roque Elementary School.
+                        Here is the summary of Science &amp; Math Equipment inventory.
                     </p>
                 </div>
             </div>

@@ -2,9 +2,6 @@
 require_once dirname(__DIR__, 2) . '/auth/auth.php';
 require_once dirname(__DIR__, 3) . '/config/db.php';
 require_once __DIR__ . '/../../../includes/json_response.php';
-require_once __DIR__ . '/../../../includes/sms_gateway.php';
-
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $description           = trim($_POST['description'] ?? $_POST['itemName'] ?? '');
     $item_type             = trim($_POST['item_type'] ?? $_POST['category'] ?? '');
@@ -19,8 +16,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $remarks               = trim($_POST['remarks'] ?? '');
     $recipient             = trim($_POST['recipient'] ?? $_POST['recepient'] ?? '');
 
-    if (empty($property_number) || empty($description) || empty($unit_of_measure)) {
-        json_error('Please fill in required fields: property number, description, and unit of measure.');
+    $requiredFields = [
+        'property number' => $property_number,
+        'description' => $description,
+        'category' => $item_type,
+        'unit of measure' => $unit_of_measure,
+        'unit cost' => $_POST['unit_cost'] ?? '',
+        'total cost' => $_POST['total_cost'] ?? '',
+        'quantity per property card' => $_POST['qty_property_card'] ?? '',
+        'quantity per physical count' => $_POST['qty_physical_count'] ?? '',
+        'shortage/overage quantity' => $_POST['shortage_overage_qty'] ?? '',
+        'shortage/overage value' => $_POST['shortage_overage_value'] ?? '',
+        'remarks' => $remarks,
+        'recipient' => $recipient,
+    ];
+    $missingFields = [];
+    foreach ($requiredFields as $label => $value) {
+        if (trim((string) $value) === '') {
+            $missingFields[] = $label;
+        }
+    }
+
+    if ($missingFields) {
+        json_error('Please complete all required fields: ' . implode(', ', $missingFields) . '.');
+    }
+
+    foreach ([
+        'unit cost' => $_POST['unit_cost'],
+        'total cost' => $_POST['total_cost'],
+        'quantity per property card' => $_POST['qty_property_card'],
+        'quantity per physical count' => $_POST['qty_physical_count'],
+        'shortage/overage quantity' => $_POST['shortage_overage_qty'],
+        'shortage/overage value' => $_POST['shortage_overage_value'],
+    ] as $label => $value) {
+        if (!is_numeric($value)) {
+            json_error('Please enter a valid number for ' . $label . '.');
+        }
+    }
+
+    foreach ([
+        'quantity per property card' => $_POST['qty_property_card'],
+        'quantity per physical count' => $_POST['qty_physical_count'],
+        'shortage/overage quantity' => $_POST['shortage_overage_qty'],
+    ] as $label => $value) {
+        if (filter_var($value, FILTER_VALIDATE_INT) === false) {
+            json_error('Please enter a whole number for ' . $label . '.');
+        }
     }
 
     try {
@@ -61,36 +102,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $execute = $stmt->execute([$trans_code, $property_number, $description, $item_type, $unit_of_measure, $unit_cost, $total_cost, $qty_property_card, $qty_physical_count, $shortage_overage_qty, $shortage_overage_value, $remarks, $recipient]);
 
         if ($execute) {
-            $smsResult = [
-                'enabled' => false,
-                'sent' => false,
-                'message' => 'SMS notification was not sent.'
-            ];
-
-            $stmtRecipient = $pdo->prepare('SELECT emp_phone FROM employee WHERE emp_name = ? LIMIT 1');
-            $stmtRecipient->execute([$recipient]);
-            $recipientPhone = $stmtRecipient->fetchColumn();
-
-            if ($recipientPhone !== false) {
-                $smsMessage = implode("\n", [
-                    'Mam/Sir (' . $recipient . ')',
-                    '',
-                    'You can now get the supplies you request in the supplies office',
-                    '',
-                    $description . ' - ' . $unit_of_measure . ' - ' . $qty_physical_count . ' - ' . $item_type . ' - ' . ($remarks ?: 'None'),
-                    '',
-                    'Thank you',
-                    '',
-                    'IAN KEVIN T. MENDOVA',
-                    'Admin. Officer II'
-                ]);
-                $smsResult = send_release_sms([$recipientPhone], $smsMessage);
-            }
-
             echo json_encode([
                 'status' => 'success',
-                'message' => 'Item added successfully with code: ' . $trans_code,
-                'sms' => $smsResult
+                'message' => 'Item added successfully with code: ' . $trans_code
             ]);
         } else {
             json_error('Failed to add item to the database.');

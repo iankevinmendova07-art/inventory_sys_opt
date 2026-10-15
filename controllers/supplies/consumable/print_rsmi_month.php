@@ -290,7 +290,7 @@ try {
         }
     </style>
 </head>
-<body>
+<body onload="window.print()">
 
 <div class="page-container">
     <!-- Non-printable actions bar -->
@@ -316,7 +316,9 @@ try {
         <div class="department">Department of Education</div>
         <div class="region">Region VIII — Eastern Visayas</div>
         <div class="division">Schools Division of Catbalogan City</div>
+        <?php if ($schoolName !== ''): ?>
         <div class="school"><?= htmlspecialchars($schoolName, ENT_QUOTES, 'UTF-8') ?></div>
+        <?php endif; ?>
         <div class="address"><?= htmlspecialchars($schoolAddress, ENT_QUOTES, 'UTF-8') ?></div>
     </div>
 

@@ -70,6 +70,13 @@ if ($remainingRuntimeProcesses.Count -gt 0) {
     throw "The installer could not stop the existing runtime process(es): $processIds. Close the app or restart Windows, then retry."
 }
 
+if (Test-Path $installRoot) {
+    Remove-Item -LiteralPath $installRoot -Recurse -Force
+    if (Test-Path $installRoot) {
+        throw "The existing application files could not be removed from $installRoot. Close the app and retry the installation."
+    }
+}
+
 New-Item -ItemType Directory -Force -Path $installRoot, $startMenuFolder | Out-Null
 Expand-Archive -Path $payloadPath -DestinationPath $installRoot -Force
 
@@ -92,12 +99,16 @@ foreach ($entry in $shortcuts) {
     $shortcut.Save()
 }
 
-$desktopShortcut = $shell.CreateShortcut((Join-Path ([Environment]::GetFolderPath([Environment+SpecialFolder]::DesktopDirectory)) 'Inventory System.lnk'))
+$desktopShortcutPath = Join-Path $desktopFolder 'Inventory System.lnk'
+$desktopShortcut = $shell.CreateShortcut($desktopShortcutPath)
 $desktopShortcut.TargetPath = $powerShellPath
 $desktopShortcut.Arguments = '-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "' + (Join-Path $installRoot 'tools\installer\start-local.ps1') + '"'
 $desktopShortcut.WorkingDirectory = $installRoot
 $desktopShortcut.IconLocation = Join-Path $installRoot 'assets\img\inventory-system.ico'
 $desktopShortcut.Save()
+if (-not (Test-Path $desktopShortcutPath -PathType Leaf)) {
+    throw "The desktop shortcut could not be created at $desktopShortcutPath."
+}
 
 $uninstallKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\InventorySystem'
 New-Item -Path $uninstallKey -Force | Out-Null
@@ -121,7 +132,20 @@ try {
 } catch {
     $startLog = Join-Path $logs 'start.out'
     $startupDetails = if (Test-Path $startLog) { Get-Content $startLog -Raw } else { $_.Exception.Message }
-    throw "The app runtime could not start. $startupDetails Check $logs for details."
+    $diagnosticPaths = @(
+        (Join-Path $logs 'mysql-init.err'),
+        (Join-Path $logs 'mysql.err'),
+        (Join-Path $logs 'php.err'),
+        (Join-Path $logs 'schema-import.log'),
+        (Join-Path $logs 'schema-migration.log'),
+        (Join-Path $logs 'startup-steps.log')
+    )
+    $runtimeDiagnostics = foreach ($diagnosticPath in $diagnosticPaths) {
+        if (Test-Path $diagnosticPath -PathType Leaf) {
+            "`r`n--- $diagnosticPath ---`r`n" + (Get-Content $diagnosticPath -Raw)
+        }
+    }
+    throw "The app runtime could not start. $startupDetails`r`n$($runtimeDiagnostics -join '')`r`nReview the logs in $logs."
 }
 if (-not $NoBrowser) {
     $desktopLaunch = '-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "' + $startScript + '"'

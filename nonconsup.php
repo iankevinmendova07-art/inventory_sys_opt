@@ -12,7 +12,7 @@ $adminRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'Administra
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Non-Consumable Inventory - San Roque Elementary School</title>
+    <title>PROJECT - IAN (Inventory and Assets Navigation)</title>
     <link rel="icon" type="image/png" href="assets/img/ian.png">
 
     <!-- Bootstrap 5 CSS -->
@@ -73,7 +73,7 @@ $adminRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'Administra
             <div class="alert alert-primary border-0 shadow-sm d-flex align-items-center mb-4" style="background: linear-gradient(135deg, #0D3B66 0%, #1a528a 100%); color: white; border-radius: 12px; padding: 1.5rem;">
                 <div>
                     <h4 class="alert-heading fw-bold mb-1">Welcome back, <?php echo htmlspecialchars($adminName); ?>!</h4>
-                    <p class="mb-0 text-white-50" style="font-size: 0.95rem;">Here is the summary of your non-consumable supplies inventory for San Roque Elementary School.</p>
+                    <p class="mb-0 text-white-50" style="font-size: 0.95rem;">Here is the summary of your non-consumable supplies inventory.</p>
                 </div>
             </div>
             <!-- Quick Metrics Row (Inline Buttons) -->
@@ -177,36 +177,36 @@ $adminRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'Administra
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="unitCost" class="form-label fw-semibold">Unit Cost</label>
-                            <input type="text" inputmode="decimal" class="form-control money-input" id="unitCost" name="unit_cost" placeholder="0.00">
+                            <input type="text" inputmode="decimal" class="form-control money-input" id="unitCost" name="unit_cost" placeholder="0.00" required>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="totalCost" class="form-label fw-semibold">Total Cost</label>
-                            <input type="text" inputmode="decimal" class="form-control money-input" id="totalCost" name="total_cost" placeholder="0.00">
+                            <input type="text" inputmode="decimal" class="form-control money-input" id="totalCost" name="total_cost" placeholder="0.00" required>
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="qtyPropertyCard" class="form-label fw-semibold">Qty per Property Card</label>
-                            <input type="number" class="form-control" id="qtyPropertyCard" name="qty_property_card" placeholder="0">
+                            <input type="number" class="form-control" id="qtyPropertyCard" name="qty_property_card" placeholder="0" required>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="qtyPhysicalCount" class="form-label fw-semibold">Qty per Physical Count</label>
-                            <input type="number" class="form-control" id="qtyPhysicalCount" name="qty_physical_count" placeholder="0">
+                            <input type="number" class="form-control" id="qtyPhysicalCount" name="qty_physical_count" placeholder="0" required>
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="shortageOverageQty" class="form-label fw-semibold">Shortage/Overage Qty</label>
-                            <input type="number" class="form-control" id="shortageOverageQty" name="shortage_overage_qty" placeholder="0">
+                            <input type="number" class="form-control" id="shortageOverageQty" name="shortage_overage_qty" placeholder="0" required>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="shortageOverageValue" class="form-label fw-semibold">Shortage/Overage Value</label>
-                            <input type="number" step="0.01" class="form-control" id="shortageOverageValue" name="shortage_overage_value" placeholder="0.00">
+                            <input type="number" step="0.01" class="form-control" id="shortageOverageValue" name="shortage_overage_value" placeholder="0.00" required>
                         </div>
                     </div>
                     <div class="mb-3">
                         <label for="remarks" class="form-label fw-semibold">Remarks</label>
-                        <textarea class="form-control" id="remarks" name="remarks" rows="2" placeholder="Enter remarks"></textarea>
+                        <textarea class="form-control" id="remarks" name="remarks" rows="2" placeholder="Enter remarks" required></textarea>
                     </div>
                     <div class="mb-3">
                         <label for="cartRecipient" class="form-label">Recipient</label>

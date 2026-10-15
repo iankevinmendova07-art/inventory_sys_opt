@@ -10,7 +10,7 @@ require_once 'controllers/setting/setting_controller.php';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Supply Inventory Management System - San Roque Elementary School</title>
+    <title>PROJECT - IAN (Inventory and Assets Navigation)</title>
     <link rel="icon" type="image/png" href="assets/img/ian.png">
     <!-- Bootstrap 5 CSS -->
     <link href="assets/vendor/bootstrap/bootstrap.min.css" rel="stylesheet">
@@ -142,27 +142,6 @@ require_once 'controllers/setting/setting_controller.php';
                     </a>
                 </div>
                 <div class="col-md-3">
-                    <div class="card stat-card p-3 border-start border-4 border-secondary shadow-sm h-100">
-                        <div class="d-flex align-items-center justify-content-between gap-3">
-                            <div>
-                                <span class="text-muted fw-semibold text-uppercase" style="font-size: 0.75rem;">Notifications</span>
-                                <h5 class="fw-bold text-dark mb-1">SMS Notifications</h5>
-                                <small id="smsStatusText" class="text-muted"><?php echo !$smsSettingsAvailable ? 'Unavailable' : ($smsNotificationsEnabled ? 'Active' : 'Inactive'); ?></small>
-                            </div>
-                            <form id="smsToggleForm" action="controllers/setting/update_sms_status.php" method="post">
-                                <?php echo csrf_field(); ?>
-                                <input type="hidden" name="enabled" id="smsEnabledValue" value="<?php echo $smsNotificationsEnabled ? '0' : '1'; ?>">
-                                <button type="submit" id="smsToggleButton" class="btn btn-sm <?php echo $smsNotificationsEnabled ? 'btn-outline-danger' : 'btn-outline-success'; ?>" <?php echo $smsSettingsAvailable ? '' : 'disabled'; ?>>
-                                    <?php echo $smsNotificationsEnabled ? 'Deactivate' : 'Activate'; ?>
-                                </button>
-                            </form>
-                        </div>
-                        <?php if (!$smsSettingsAvailable): ?>
-                            <small class="text-danger mt-2">SMS setting could not be loaded.</small>
-                        <?php endif; ?>
-                    </div>
-                </div>
-                <div class="col-md-3">
                     <div class="card stat-card p-3 border-start border-4 border-danger shadow-sm h-100 clickable-card" role="button" tabindex="0" data-bs-toggle="modal" data-bs-target="#schoolDetailsModal" aria-controls="schoolDetailsModal" aria-label="Edit school details">
                         <div class="d-flex align-items-start justify-content-between gap-3">
                             <div class="flex-grow-1">
@@ -184,7 +163,7 @@ require_once 'controllers/setting/setting_controller.php';
             <div class="modal-body">
                 <p class="text-muted">Download a copy of the current database or replace it with a SQL backup.</p>
                 <div class="d-grid gap-2">
-                    <a href="controllers/setting/backup_database.php" class="btn btn-primary" id="downloadDatabaseBackup" data-bs-dismiss="modal"><i class="bi bi-download me-2"></i>Back Up Database</a>
+                    <a href="controllers/setting/backup_database.php" class="btn btn-primary" id="downloadDatabaseBackup" download><i class="bi bi-download me-2"></i>Back Up Database</a>
                     <form id="clearDatabaseForm" action="controllers/setting/clear_database_records.php" method="post">
                         <?php echo csrf_field(); ?>
                         <button type="submit" class="btn btn-danger w-100" id="clearDatabaseButton"><i class="bi bi-trash3 me-2"></i>Delete Records</button>
@@ -705,7 +684,7 @@ require_once 'controllers/setting/setting_controller.php';
     window.schoolDetailsSaveStatus = <?php echo json_encode($schoolDetailsStatus); ?>;
 </script>
 <!-- External Custom Setting JS -->
-<script src="assets/js/setting.js?v=8"></script>
+<script src="assets/js/setting.js?v=11"></script>
 
 </body>
 </html>

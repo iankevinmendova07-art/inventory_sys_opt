@@ -110,14 +110,13 @@ if ($v2Applied === 0) {
         echo 'Added school_address column to school_details.' . PHP_EOL;
     }
 
-    // 2b. Create system_settings table if missing (SMS toggle and future app flags)
+    // 2b. Create system_settings table if missing for future app flags
     $pdo->exec("CREATE TABLE IF NOT EXISTS system_settings (
         setting_key   VARCHAR(100) NOT NULL,
         setting_value VARCHAR(255) NOT NULL,
         updated_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         PRIMARY KEY (setting_key)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
-    $pdo->exec("INSERT IGNORE INTO system_settings (setting_key, setting_value) VALUES ('sms_enabled', '1')");
 
     // 2c. Create unit_measure table if missing
     $pdo->exec("CREATE TABLE IF NOT EXISTS unit_measure (

@@ -30,7 +30,7 @@ It uses a temporary Windows user-data root and empty database, checks port confl
 
 Run `InventorySystemSetup.exe`. It installs to `%LOCALAPPDATA%\Programs\InventorySystem`, creates a desktop shortcut and Start Menu entries, and creates the data folder `%LOCALAPPDATA%\InventorySystem`. On first launch, create the administrator account on the local setup page.
 
-The setup includes no existing inventory, employee, administrator, or transaction records. Do not copy a production data directory into the test harness. To migrate an existing MySQL installation, use a separate cold backup and a test copy before using the release package.
+The standalone setup targets 64-bit Windows 10 and Windows 11 and declares support for both in its embedded application manifest; it does not require Compatibility Mode. The setup includes no existing inventory, employee, administrator, or transaction records. Do not copy a production data directory into the test harness. To migrate an existing MySQL installation, use a separate cold backup and a test copy before using the release package.
 
 ## Persistent data and security
 
@@ -60,13 +60,14 @@ Uninstall from Windows Apps or the Start Menu. The default choice retains the da
 
 Login, inventory queries and edits, cart/release transactions, personnel and unit management, local reports, and printing use the bundled local services. Bootstrap, jQuery, SweetAlert2, DataTables, Chart.js, Bootstrap Icons, and Font Awesome are packaged under `assets\vendor`.
 
-SMS notifications still need a reachable SMS gateway/device and may use the internet or local network. The project has no email delivery integration. A connection is also required for operating-system or external services outside the application.
+The project has no email delivery integration. A connection is also required for operating-system or external services outside the application.
 
 ## Logs and troubleshooting
 
 Logs are in `%LOCALAPPDATA%\InventorySystem\logs`.
 
 - **Startup reports a database or web-port problem:** the launcher checks the preferred port and chooses a free loopback port. If all local ports are unavailable, close the conflicting local service and retry.
+- **Startup reports a schema import or migration failure:** keep the application data folder and inspect `schema-import.log` or `schema-migration.log` in `%LOCALAPPDATA%\InventorySystem\logs`. An incomplete schema is backed up before repair; the backup remains in `%LOCALAPPDATA%\InventorySystem\backups`. Do not send SQL backups because they may contain private data.
 - **The app window does not appear:** open the Start Menu Inventory System shortcut and inspect `startup-steps.log`, `php.err`, and `mysql.err`. If Edge is unavailable, use the default browser and Stop Inventory System shortcut.
 - **Database startup fails after an unexpected power loss:** launch again and allow MySQL crash recovery to finish; do not delete the `mysql` data directory. Restore the most recent SQL backup if recovery fails.
 - **Forgot the administrator password:** use the existing database recovery procedure in `RECOVERY.md`. Do not expose a password-reset endpoint.

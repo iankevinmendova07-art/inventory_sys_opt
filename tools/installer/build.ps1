@@ -22,6 +22,7 @@ foreach ($requiredPath in @(
     (Join-Path $mysqlOverlayRoot 'lib\plugin\component_reference_cache.dll'),
     (Join-Path $mysqlOverlayRoot 'lib\private\icudt73l'),
     (Join-Path $repositoryRoot 'database_schema.sql'),
+    (Join-Path $installerRoot 'InventorySystemSetup.manifest'),
     (Join-Path $repositoryRoot 'assets\vendor\bootstrap\bootstrap.min.css'),
     (Join-Path $repositoryRoot 'assets\vendor\jquery\jquery.min.js'),
     (Join-Path $repositoryRoot 'assets\img\inventory-system.ico')
@@ -37,7 +38,10 @@ if (Test-Path $stageRoot) {
 New-Item -ItemType Directory -Force -Path $stageRoot | Out-Null
 
 Get-ChildItem $repositoryRoot -Force |
-    Where-Object { $_.Name -notin @('.git', '.vscode', '.idea', 'tools') } |
+    Where-Object {
+        $_.Name -notin @('.git', '.vscode', '.idea', 'tools', 'env', '.env') -and
+        -not $_.Name.StartsWith('.env.')
+    } |
     ForEach-Object { Copy-Item $_.FullName -Destination $stageRoot -Recurse -Force }
 
 $sourceTools = Join-Path $repositoryRoot 'tools'
@@ -146,6 +150,7 @@ try {
             '/nologo'
             '/target:winexe'
             '/platform:x64'
+            "/win32manifest:$(Join-Path $installerRoot 'InventorySystemSetup.manifest')"
             "/out:$setupPath"
             "/win32icon:$(Join-Path $repositoryRoot 'assets\img\inventory-system.ico')"
             "/resource:$payloadPath,InventorySystemPayload.zip"

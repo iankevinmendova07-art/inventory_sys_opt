@@ -13,70 +13,6 @@ document.addEventListener('DOMContentLoaded', function() {
         Swal.fire({ ...alert, confirmButtonColor: '#0D3B66' });
     }
 
-    const smsResult = new URLSearchParams(window.location.search).get('sms');
-    if (smsResult === 'activated' || smsResult === 'deactivated') {
-        const isActive = smsResult === 'activated';
-        Swal.fire({
-            icon: 'success',
-            title: 'Updated',
-            text: `SMS notifications are now ${isActive ? 'activated' : 'deactivated'}.`,
-            confirmButtonColor: '#0D3B66'
-        });
-
-        const cleanUrl = new URL(window.location.href);
-        cleanUrl.searchParams.delete('sms');
-        window.history.replaceState({}, '', cleanUrl);
-    }
-
-    const smsToggleForm = document.getElementById('smsToggleForm');
-    if (smsToggleForm) {
-        smsToggleForm.addEventListener('submit', function(event) {
-            event.preventDefault();
-
-            const button = document.getElementById('smsToggleButton');
-            const enabledInput = document.getElementById('smsEnabledValue');
-            const statusText = document.getElementById('smsStatusText');
-            button.disabled = true;
-
-            fetch(smsToggleForm.action, {
-                method: 'POST',
-                headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                body: new FormData(smsToggleForm)
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status !== 'success') {
-                        throw new Error(data.message || 'Unable to update SMS settings.');
-                    }
-
-                    const enabled = data.enabled;
-                    enabledInput.value = enabled ? '0' : '1';
-                    statusText.textContent = enabled ? 'Active' : 'Inactive';
-                    button.textContent = enabled ? 'Deactivate' : 'Activate';
-                    button.classList.toggle('btn-outline-danger', enabled);
-                    button.classList.toggle('btn-outline-success', !enabled);
-
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Updated',
-                        text: `SMS notifications are now ${enabled ? 'activated' : 'deactivated'}.`,
-                        confirmButtonColor: '#0D3B66'
-                    });
-                })
-                .catch(error => {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: error.message || 'Unable to update SMS settings.',
-                        confirmButtonColor: '#0D3B66'
-                    });
-                })
-                .finally(() => {
-                    button.disabled = false;
-                });
-        });
-    }
-
     // Initialize DataTables via jQuery if available
     if (window.jQuery && $.fn.DataTable) {
         $('#staffTable').DataTable({
@@ -481,6 +417,63 @@ document.addEventListener('DOMContentLoaded', function() {
     handleDelete('.delete-employee-btn', 'controllers/Employee/process_delete_employee.php', 'This employee record will be deleted permanently.');
     handleDelete('.delete-category-btn', 'controllers/category/process_delete_category.php', 'This unit of measure will be deleted permanently.');
     handleDelete('.delete-position-btn', 'controllers/position/process_delete_position.php', 'This position will be deleted permanently.');
+
+    const backupLink = document.getElementById('downloadDatabaseBackup');
+    if (backupLink) {
+        backupLink.addEventListener('click', async function(event) {
+            event.preventDefault();
+            if (backupLink.getAttribute('aria-disabled') === 'true') return;
+
+            const originalContent = backupLink.innerHTML;
+            backupLink.setAttribute('aria-disabled', 'true');
+            backupLink.classList.add('disabled');
+            backupLink.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Preparing backup...';
+
+            try {
+                const response = await fetch(backupLink.href, {
+                    method: 'GET',
+                    credentials: 'same-origin',
+                    cache: 'no-store',
+                    headers: { Accept: 'application/sql' }
+                });
+                const contentType = response.headers.get('Content-Type') || '';
+                if (!response.ok || response.redirected || !contentType.toLowerCase().startsWith('application/sql')) {
+                    throw new Error('The backup could not be generated. Refresh the page, sign in again if needed, and retry.');
+                }
+
+                const backup = await response.blob();
+                const start = await backup.slice(0, 2).text();
+                const end = await backup.slice(Math.max(0, backup.size - 100)).text();
+                if (backup.size === 0 || start !== '--' || !end.includes('-- Backup completed successfully.')) {
+                    throw new Error('The server returned an incomplete SQL backup. No file was downloaded.');
+                }
+
+                const disposition = response.headers.get('Content-Disposition') || '';
+                const filenameMatch = disposition.match(/filename="?([^";]+)"?/i);
+                const filename = filenameMatch && /^[\w.-]+\.sql$/i.test(filenameMatch[1])
+                    ? filenameMatch[1]
+                    : 'inventory_sys_backup.sql';
+                const downloadUrl = URL.createObjectURL(backup);
+                const download = document.createElement('a');
+                download.href = downloadUrl;
+                download.download = filename;
+                document.body.appendChild(download);
+                download.click();
+                download.remove();
+                window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
+
+                const modal = bootstrap.Modal.getInstance(document.getElementById('databaseModal'));
+                if (modal) modal.hide();
+                Swal.fire('Backup downloaded', filename, 'success');
+            } catch (error) {
+                Swal.fire('Backup failed', error.message || 'The database backup could not be downloaded.', 'error');
+            } finally {
+                backupLink.innerHTML = originalContent;
+                backupLink.classList.remove('disabled');
+                backupLink.removeAttribute('aria-disabled');
+            }
+        });
+    }
 
     $('#importDatabaseForm').on('submit', function(e) {
         e.preventDefault();

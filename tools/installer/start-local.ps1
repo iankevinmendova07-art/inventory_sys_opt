@@ -1,8 +1,18 @@
 param([switch]$NoBrowser,[switch]$QuietErrors)
 
 $ErrorActionPreference = 'Stop'
+$appRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
+$localAppData = if ($env:LOCALAPPDATA) { $env:LOCALAPPDATA } else { [Environment]::GetFolderPath('LocalApplicationData') }
+if (-not $localAppData) { throw 'Could not locate the current Windows user data directory.' }
+$dataRoot = Join-Path $localAppData 'InventorySystem'
 $sid = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value
-$instanceMutex = [System.Threading.Mutex]::new($false,"Local\InventorySystem_$sid")
+$mutexHasher = [Security.Cryptography.SHA256]::Create()
+try {
+    $dataRootHash = [BitConverter]::ToString($mutexHasher.ComputeHash([Text.Encoding]::UTF8.GetBytes([IO.Path]::GetFullPath($dataRoot).ToUpperInvariant()))).Replace('-','')
+} finally {
+    $mutexHasher.Dispose()
+}
+$instanceMutex = [System.Threading.Mutex]::new($false,"Local\InventorySystem_${sid}_$dataRootHash")
 $ownsInstance = $instanceMutex.WaitOne(0)
 if (-not $ownsInstance) {
     if (-not $QuietErrors) {
@@ -13,10 +23,6 @@ if (-not $ownsInstance) {
     exit 2
 }
 try {
-$appRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
-$localAppData = if ($env:LOCALAPPDATA) { $env:LOCALAPPDATA } else { [Environment]::GetFolderPath('LocalApplicationData') }
-if (-not $localAppData) { throw 'Could not locate the current Windows user data directory.' }
-$dataRoot = Join-Path $localAppData 'InventorySystem'
 $mysqlRoot = Join-Path $appRoot 'runtime\mysql'
 $mysqlExe = Join-Path $mysqlRoot 'bin\mysql.exe'
 $mysqlAdminExe = Join-Path $mysqlRoot 'bin\mysqladmin.exe'
@@ -82,6 +88,15 @@ function Get-OwnedProcess([string]$Name,[string]$Executable,[string[]]$Markers) 
         if ($sameExe -and $matches) { return Get-Process -Id $proc.ProcessId -ErrorAction SilentlyContinue }
     }
     return $null
+}
+
+function Test-AppBrowserWindow([string]$BrowserName,[string]$Profile) {
+    foreach ($proc in Get-CimInstance Win32_Process -Filter "Name='$BrowserName'" -ErrorAction SilentlyContinue) {
+        if (-not $proc.CommandLine -or $proc.CommandLine.IndexOf($Profile,[StringComparison]::OrdinalIgnoreCase) -lt 0) { continue }
+        $browserProcess = Get-Process -Id $proc.ProcessId -ErrorAction SilentlyContinue
+        if ($browserProcess -and $browserProcess.MainWindowHandle -ne [IntPtr]::Zero) { return $true }
+    }
+    return $false
 }
 
 $ports = if (Test-Path $portsPath) { Get-Content $portsPath -Raw | ConvertFrom-Json } else { $null }
@@ -176,9 +191,47 @@ $freshDatabase = ([int]$tables -eq 0)
 Write-StartupStage "database inspected; tables=$tables"
 if ($freshDatabase) {
     Invoke-RootMysql @("--execute=CREATE DATABASE $databaseName CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci")
-    $source = 'source "' + $schemaPath.Replace('\','/') + '"'
-    & $mysqlExe @client "--database=$databaseName" "--execute=$source"
-    if ($LASTEXITCODE -ne 0) { throw 'Could not import the initial inventory schema. The database was left in place for recovery.' }
+}
+
+$requiredTables = @('admin','employee','lr_sme','lr_textbooks','nonconsumable','position','stock_card','supplies','school_details','system_settings','checkout_requests','transaction_log','unit_measure')
+$existingTables = @(& $mysqlExe @client "--database=$databaseName" --batch --skip-column-names --execute='SHOW TABLES')
+if ($LASTEXITCODE -ne 0) { throw 'Could not inspect the local inventory database tables.' }
+$missingTables = @($requiredTables | Where-Object { $_ -notin $existingTables })
+if ($missingTables.Count -gt 0) {
+    if (-not $freshDatabase) {
+        $backupName = 'pre-schema-repair-' + (Get-Date -Format 'yyyyMMdd-HHmmss-fff') + '.sql'
+        $backupPath = Join-Path $backupRoot $backupName
+        $dumpArgs = @("--defaults-extra-file=$rootClientFile",'--protocol=TCP','--host=127.0.0.1',"--port=$mysqlPort",'--single-transaction','--routines','--triggers','--databases',$databaseName)
+        $dumpError = Join-Path $logRoot 'pre-schema-repair-backup.err'
+        $dumpProcess = Start-Process -FilePath $mysqlDumpExe -ArgumentList $dumpArgs -PassThru -Wait -WindowStyle Hidden -RedirectStandardOutput $backupPath -RedirectStandardError $dumpError
+        if ($dumpProcess.ExitCode -ne 0 -or -not (Test-Path $backupPath) -or (Get-Item $backupPath).Length -lt 100) {
+            throw "The incomplete schema backup could not be verified; schema repair was not started. Review $dumpError"
+        }
+    }
+
+    $schemaImportLog = Join-Path $logRoot 'schema-import.log'
+    $schemaImportPath = Join-Path ([IO.Path]::GetTempPath()) ('inventory-schema-' + [Guid]::NewGuid().ToString('N') + '.sql')
+    $schemaSql = [Regex]::Replace((Get-Content $schemaPath -Raw),'(?m)^CREATE TABLE `','CREATE TABLE IF NOT EXISTS `')
+    [IO.File]::WriteAllText($schemaImportPath,$schemaSql,[Text.UTF8Encoding]::new($false))
+    try {
+        $source = 'source "' + $schemaImportPath.Replace('\','/') + '"'
+        & $mysqlExe @client "--database=$databaseName" "--execute=$source" *> $schemaImportLog
+        $schemaImportExitCode = $LASTEXITCODE
+    } finally {
+        Remove-Item -LiteralPath $schemaImportPath -Force -ErrorAction Stop
+    }
+    $existingTables = @(& $mysqlExe @client "--database=$databaseName" --batch --skip-column-names --execute='SHOW TABLES')
+    if ($LASTEXITCODE -ne 0) { throw 'Could not verify the imported inventory schema.' }
+    $missingTables = @($requiredTables | Where-Object { $_ -notin $existingTables })
+    if ($schemaImportExitCode -ne 0 -or $missingTables.Count -gt 0) {
+        $importOutput = if (Test-Path $schemaImportLog -PathType Leaf) {
+            (Get-Content $schemaImportLog -Tail 20) -join "`r`n"
+        } else {
+            'No schema import output was captured.'
+        }
+        $missingTableList = if ($missingTables.Count -gt 0) { $missingTables -join ', ' } else { 'none' }
+        throw "The inventory schema could not be completed (exit code $schemaImportExitCode). Missing tables: $missingTableList. Review $schemaImportLog. The database was left in place for recovery.`r`n$importOutput"
+    }
 }
 
 $migrationVersion = (& $mysqlExe @client --batch --skip-column-names --execute="SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='$databaseName' AND table_name='schema_migrations'").Trim()
@@ -201,8 +254,17 @@ if ($migrationNeeded) {
     $env:DB_USER='root'
     $rootText = Get-Content $rootClientFile -Raw
     $env:DB_PASS = ([Regex]::Match($rootText,'(?m)^password=([^\r\n]*)')).Groups[1].Value
-    & $phpExe $migrationPath
-    if ($LASTEXITCODE -ne 0) { throw 'The inventory schema migration failed. The automatic pre-migration SQL backup is in the application backups folder.' }
+    $migrationLog = Join-Path $logRoot 'schema-migration.log'
+    & $phpExe $migrationPath *> $migrationLog
+    $migrationExitCode = $LASTEXITCODE
+    if ($migrationExitCode -ne 0) {
+        $migrationOutput = if (Test-Path $migrationLog -PathType Leaf) {
+            (Get-Content $migrationLog -Tail 20) -join "`r`n"
+        } else {
+            'No migration output was captured.'
+        }
+        throw "The inventory schema migration failed (exit code $migrationExitCode). Review $migrationLog. The pre-migration SQL backup, if created, remains in $backupRoot.`r`n$migrationOutput"
+    }
 }
 Write-StartupStage 'schema migration ready'
 
@@ -247,6 +309,7 @@ Write-StartupStage 'HTTP application ready'
 $adminCount = (& $mysqlExe "--defaults-extra-file=$appClientFile" --protocol=TCP --host=127.0.0.1 "--port=$mysqlPort" --database=$databaseName --batch --skip-column-names --execute='SELECT COUNT(*) FROM admin').Trim()
 $targetUrl = if ([int]$adminCount -eq 0) { "${url}setup_admin.php" } else { "${url}login.php" }
 if (-not $NoBrowser) {
+    $browser = $null
     $edgeCandidates = @(
         (Join-Path ${env:ProgramFiles(x86)} 'Microsoft\Edge\Application\msedge.exe'),
         (Join-Path $env:ProgramFiles 'Microsoft\Edge\Application\msedge.exe'),
@@ -256,10 +319,7 @@ if (-not $NoBrowser) {
     if ($edge) {
         $profile = Join-Path $dataRoot 'browser-profile'
         $browser = Start-Process -FilePath $edge -ArgumentList @('--no-first-run','--no-default-browser-check',"--user-data-dir=`"$profile`"","--app=$targetUrl") -PassThru
-        [IO.File]::WriteAllText((Join-Path $dataRoot 'browser.pid'),[string]$browser.Id)
-        $browser.WaitForExit()
-        Remove-Item (Join-Path $dataRoot 'browser.pid') -Force -ErrorAction SilentlyContinue
-        & (Join-Path $PSScriptRoot 'stop-local.ps1')
+        $browserName = 'msedge.exe'
     } else {
         # Fallback: try Chrome app mode, then open with explorer (guaranteed on all Windows)
         $chromeCandidates = @(
@@ -271,14 +331,37 @@ if (-not $NoBrowser) {
         if ($chrome) {
             $profile = Join-Path $dataRoot 'browser-profile'
             $browser = Start-Process -FilePath $chrome -ArgumentList @('--no-first-run','--no-default-browser-check',"--user-data-dir=`"$profile`"","--app=$targetUrl") -PassThru
-            [IO.File]::WriteAllText((Join-Path $dataRoot 'browser.pid'),[string]$browser.Id)
-            $browser.WaitForExit()
-            Remove-Item (Join-Path $dataRoot 'browser.pid') -Force -ErrorAction SilentlyContinue
-            & (Join-Path $PSScriptRoot 'stop-local.ps1')
+            $browserName = 'chrome.exe'
         } else {
             # Generic fallback: use explorer.exe which is always available and opens default browser
             Start-Process -FilePath "$env:WINDIR\explorer.exe" -ArgumentList $targetUrl
         }
+    }
+
+    if ($browser) {
+        [IO.File]::WriteAllText((Join-Path $dataRoot 'browser.pid'),[string]$browser.Id)
+        $windowOpened = $false
+        $windowDeadline = [DateTime]::UtcNow.AddSeconds(60)
+        while (-not $windowOpened -and [DateTime]::UtcNow -lt $windowDeadline) {
+            $windowOpened = Test-AppBrowserWindow $browserName $profile
+            if (-not $windowOpened) { Start-Sleep -Milliseconds 250 }
+        }
+        if (-not $windowOpened) { throw 'The desktop app window did not become available.' }
+
+        $noWindowSince = $null
+        while ($true) {
+            if (Test-AppBrowserWindow $browserName $profile) {
+                $noWindowSince = $null
+            } elseif (-not $noWindowSince) {
+                $noWindowSince = [DateTime]::UtcNow
+            } elseif (([DateTime]::UtcNow - $noWindowSince).TotalSeconds -ge 10) {
+                break
+            }
+            Start-Sleep -Seconds 1
+        }
+
+        Remove-Item (Join-Path $dataRoot 'browser.pid') -Force -ErrorAction SilentlyContinue
+        & (Join-Path $PSScriptRoot 'stop-local.ps1')
     }
 }
 } catch {

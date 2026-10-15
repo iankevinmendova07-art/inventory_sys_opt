@@ -13,7 +13,7 @@ The setup file was rebuilt from the current source at `tools/installer/output/In
 - PHP uses PDO MySQL and native prepared statements. The bundled runtime includes `pdo_mysql`, `curl`, `fileinfo`, `gd`, `mbstring`, `mysqli`, `openssl`, and `zip`.
 - The schema has 13 application tables, all InnoDB; no foreign keys, triggers, or stored procedures were declared. `schema_migrations` records migration version 1. The additive migration creates school details/checkout tables and indexes.
 - PHP sessions use strict mode, HTTP-only cookies, and SameSite=Lax. The app and MySQL bind to loopback. User data and plaintext client secret files are outside the install and web directories, with current-Windows-user-only NTFS ACLs.
-- Bootstrap, jQuery, SweetAlert2, DataTables, Chart.js, Bootstrap Icons, and Font Awesome are pinned and served locally. No UI CDN references remain in application pages. SMS still needs its configured gateway/device; no email delivery integration was found.
+- Bootstrap, jQuery, SweetAlert2, DataTables, Chart.js, Bootstrap Icons, and Font Awesome are pinned and served locally. No UI CDN references remain in application pages.
 - Routine inventory operations are offline-capable in architecture. This run verified local assets and services, but did not exercise every function with the internet physically disconnected.
 
 ## Test report
@@ -51,5 +51,5 @@ The setup file was rebuilt from the current source at `tools/installer/output/In
 - Database passwords are stored in protected per-user files, not encrypted with DPAPI. SQL backups are plain text and should be stored privately.
 - The local PHP built-in server is used to avoid bundling a separate web server. Keep it bound to loopback.
 - App-level SQL import/schema-migration features require database-scoped CREATE/DROP/ALTER/INDEX grants in addition to row access. The account has no global grants.
-- SMS is not offline. If Edge is unavailable, the default-browser fallback does not detect browser close; use the Stop shortcut.
+- If Edge is unavailable, the default-browser fallback does not detect browser close; use the Stop shortcut.
 - Installer is unsigned. MySQL component/runtime redistribution notices are included, but legal release clearance is still required.
