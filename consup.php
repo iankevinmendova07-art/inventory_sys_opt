@@ -26,7 +26,7 @@ $adminRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'Administra
     <!-- Custom Dashboard Styling -->
     <link href="assets/css/consup.css" rel="stylesheet">
     <script src="assets/js/cart.js" defer></script>
-    <script src="assets/js/consup.js" defer></script>
+    <script src="assets/js/consup.js?v=<?= (int) filemtime(__DIR__ . '/assets/js/consup.js') ?>" defer></script>
     <!-- jQuery (Must be loaded before scripts that use $)[cite: 1] -->
     <script src="assets/vendor/jquery/jquery.min.js"></script>
     <!-- Bootstrap 5 JS Bundle -->
@@ -303,7 +303,7 @@ $adminRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'Administra
                         </div>
                         <div class="mb-3">
                             <label for="cartQty" class="form-label fw-semibold">Quantity</label>
-                            <input type="number" class="form-control" id="cartQty" name="qty" placeholder="Enter quantity" required readonly>
+                            <input type="number" class="form-control" id="cartQty" name="qty" placeholder="Enter quantity" min="1" step="1" inputmode="numeric" pattern="[0-9]*" required readonly>
                         </div>
                     </form>
             </div>

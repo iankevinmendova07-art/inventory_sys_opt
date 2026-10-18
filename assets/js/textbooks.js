@@ -4,14 +4,36 @@ document.addEventListener('DOMContentLoaded', function () {
         const table = document.querySelector('#suppliesTable');
         if (table && !$.fn.DataTable.isDataTable(table)) {
             $(table).DataTable({
-            responsive: true,
-            pageLength: 5,
-            lengthMenu: [[5, 10, 25, 50], [5, 10, 25, 50]],
-            order: [],
-            language: {
-                search: "_INPUT_",
-                searchPlaceholder: "Search textbooks..."
-            }
+                processing: true,
+                serverSide: true,
+                responsive: true,
+                pageLength: 5,
+                lengthMenu: [[5, 10, 25, 50, 100], [5, 10, 25, 50, 100]],
+                order: [],
+                ajax: 'controllers/supplies/textbooks/get_textbooks_paginated.php',
+                columns: [
+                    { data: 'lr_item', render: $.fn.dataTable.render.text() },
+                    { data: 'grade_level', render: $.fn.dataTable.render.text() },
+                    { data: 'lr_subject', render: $.fn.dataTable.render.text() },
+                    { data: 'lr_qty', render: $.fn.dataTable.render.text() },
+                    { data: 'lr_unit', render: $.fn.dataTable.render.text() },
+                    { data: 'recipient', render: $.fn.dataTable.render.text() },
+                    { data: 'condition', render: $.fn.dataTable.render.text() },
+                    { data: 'created_at', render: $.fn.dataTable.render.text() },
+                    {
+                        data: null,
+                        orderable: false,
+                        searchable: false,
+                        render: function (data, type, row) {
+                            if (type !== 'display') return '';
+                            const attr = value => $('<div>').text(value == null ? '' : String(value)).html().replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                            return '<button class="btn btn-sm btn-primary edit-btn" data-id="' + Number(row.id) + '" data-item="' + attr(row.lr_item) + '" data-grade="' + attr(row.grade_level) + '" data-subject="' + attr(row.lr_subject) + '" data-qty="' + attr(row.lr_qty) + '" data-unit="' + attr(row.lr_unit) + '" data-recipient="' + attr(row.recipient) + '" data-condition="' + attr(row.condition) + '"><i class="bi bi-pencil-square"></i></button> ' +
+                                '<button class="btn btn-sm btn-danger delete-btn" data-id="' + Number(row.id) + '"><i class="bi bi-trash"></i></button> ' +
+                                '<button class="btn btn-sm btn-secondary print-btn" data-id="' + Number(row.id) + '" title="Print"><i class="bi bi-printer"></i></button>';
+                        }
+                    }
+                ],
+                language: { search: '_INPUT_', searchPlaceholder: 'Search textbooks...' }
             });
         }
     }

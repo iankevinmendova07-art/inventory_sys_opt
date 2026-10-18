@@ -40,7 +40,7 @@ try {
 
     $placeholders = implode(',', array_fill(0, count($transCodes), '?'));
     $stmt = $pdo->prepare(
-        "SELECT *
+        "SELECT trans_code, supply_code, supply_name, supply_unit, supply_qty, emp_name, created_at
          FROM transaction_log
          WHERE trans_code IN ($placeholders)
          ORDER BY trans_code ASC, id ASC"
@@ -207,7 +207,7 @@ try {
         }
     </style>
 </head>
-<body onload="window.print()">
+<body>
 
 <div class="print-btn-container text-end mb-2">
     <button onclick="window.print()" class="btn btn-primary btn-sm"><i class="bi bi-printer"></i> Print RIS<?php echo count($transactions) > 1 ? ' (' . count($transactions) . ' Slips)' : ''; ?></button>

@@ -130,9 +130,7 @@ try {
                                     <th>Action</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <?php include 'controllers/supplies/textbooks/display_textbook.php'; ?>
-                            </tbody>
+                            <tbody></tbody>
                         </table>
                     </div>
                 </div>

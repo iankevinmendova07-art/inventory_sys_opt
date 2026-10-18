@@ -22,7 +22,22 @@ if (!preg_match('/^[a-f0-9]{32}$/', $requestKey)) {
     json_error('Invalid or missing checkout request key. Refresh the page and try again.');
 }
 $requestFingerprint = hash('sha256', json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
-$adminId = (int) $_SESSION['admin_id'];
+
+// Use the authenticated PHP session for retry protection so this endpoint does
+// not depend on an extra database table. PHP's session lock serializes requests
+// from the same browser session while a release is being processed.
+if (!isset($_SESSION['checkout_requests']) || !is_array($_SESSION['checkout_requests'])) {
+    $_SESSION['checkout_requests'] = [];
+}
+$cachedRequest = $_SESSION['checkout_requests'][$requestKey] ?? null;
+if (is_array($cachedRequest) && isset($cachedRequest['fingerprint'], $cachedRequest['response'])) {
+    if (!hash_equals((string) $cachedRequest['fingerprint'], $requestFingerprint)) {
+        http_response_code(409);
+        json_error('This checkout request key was already used for different items.');
+    }
+    echo json_encode($cachedRequest['response']);
+    exit;
+}
 
 $recipients = $payload['recipients'] ?? [];
 $items = $payload['items'] ?? [];
@@ -44,10 +59,11 @@ if ($recipientCount === 0) {
 $normalizedItems = [];
 foreach ($items as $item) {
     $supplyId = (int)($item['supplyId'] ?? 0);
-    $qty = (int)($item['qty'] ?? 0);
+    $rawQty = $item['qty'] ?? null;
+    $qty = filter_var($rawQty, FILTER_VALIDATE_INT);
     $unit = trim($item['unit'] ?? 'PIECE');
 
-    if ($supplyId <= 0 || $qty <= 0) {
+    if ($supplyId <= 0 || $qty === false || $qty <= 0) {
         json_error('Invalid cart item detected.');
     }
 
@@ -69,47 +85,7 @@ $releasedBy = $_SESSION['admin_name'] ?? 'Administrator';
 $sequenceLockHeld = false;
 
 try {
-    $cachedRequest = $pdo->prepare(
-        'SELECT request_fingerprint, response_json FROM checkout_requests WHERE admin_id = ? AND request_key = ? LIMIT 1'
-    );
-    $cachedRequest->execute([$adminId, $requestKey]);
-    $cached = $cachedRequest->fetch(PDO::FETCH_ASSOC);
-    if ($cached) {
-        if (!hash_equals($cached['request_fingerprint'], $requestFingerprint)) {
-            http_response_code(409);
-            json_error('This checkout request key was already used for different items.');
-        }
-        $cachedResponse = json_decode((string) $cached['response_json'], true);
-        if (is_array($cachedResponse)) {
-            echo json_encode($cachedResponse);
-            exit;
-        }
-    }
-
     $pdo->beginTransaction();
-    try {
-        $requestInsert = $pdo->prepare(
-            'INSERT INTO checkout_requests (admin_id, request_key, request_fingerprint) VALUES (?, ?, ?)'
-        );
-        $requestInsert->execute([$adminId, $requestKey, $requestFingerprint]);
-    } catch (PDOException $e) {
-        if ($pdo->inTransaction()) {
-            $pdo->rollBack();
-        }
-        if ($e->getCode() === '23000') {
-            $cachedRequest->execute([$adminId, $requestKey]);
-            $cached = $cachedRequest->fetch(PDO::FETCH_ASSOC);
-            if ($cached && hash_equals($cached['request_fingerprint'], $requestFingerprint)) {
-                $cachedResponse = json_decode((string) $cached['response_json'], true);
-                if (is_array($cachedResponse)) {
-                    echo json_encode($cachedResponse);
-                    exit;
-                }
-            }
-            json_error('This checkout request was already used or is still being processed. Reload the page and review the transaction log.');
-        }
-        throw $e;
-    }
 
     // 2. Fetch all recipient records in ONE query
     $inRecipients = implode(',', array_fill(0, count($recipients), '?'));
@@ -249,12 +225,19 @@ try {
         'trans_codes' => $transCodes,
         'print_url' => 'controllers/supplies/consumable/print_ris.php?trans_codes=' . urlencode(implode(',', $transCodes))
     ];
-    $responseUpdate = $pdo->prepare(
-        'UPDATE checkout_requests SET response_json = ? WHERE admin_id = ? AND request_key = ?'
-    );
-    $responseUpdate->execute([json_encode($checkoutResponse), $adminId, $requestKey]);
-
     $pdo->commit();
+    $_SESSION['checkout_requests'][$requestKey] = [
+        'fingerprint' => $requestFingerprint,
+        'response' => $checkoutResponse,
+        'created_at' => time(),
+    ];
+    // Keep the session cache bounded; recent release retries remain idempotent.
+    if (count($_SESSION['checkout_requests']) > 20) {
+        uasort($_SESSION['checkout_requests'], static function ($a, $b) {
+            return ((int) ($a['created_at'] ?? 0)) <=> ((int) ($b['created_at'] ?? 0));
+        });
+        $_SESSION['checkout_requests'] = array_slice($_SESSION['checkout_requests'], -20, null, true);
+    }
     if ($sequenceLockHeld) {
         $pdo->query("SELECT RELEASE_LOCK('inventory_sys_opt_transaction_code')");
         $sequenceLockHeld = false;

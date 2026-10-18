@@ -22,24 +22,6 @@ if ($selectedMonthYear !== '') {
 }
 
 try {
-    // 1. Fetch issuance records filtered by selected month/year if provided
-    if ($monthStart instanceof DateTimeImmutable) {
-        $nextMonth = $monthStart->modify('+1 month');
-        $stmt = $pdo->prepare(
-            "SELECT *
-             FROM transaction_log
-             WHERE created_at >= ? AND created_at < ?
-             ORDER BY created_at ASC, id ASC"
-        );
-        $stmt->execute([
-            $monthStart->format('Y-m-d H:i:s'),
-            $nextMonth->format('Y-m-d H:i:s')
-        ]);
-    } else {
-        $stmt = $pdo->query("SELECT * FROM transaction_log ORDER BY created_at ASC, id ASC");
-    }
-    $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
     $schoolDetails = $pdo->query(
         'SELECT school_name, school_address, custodian_name FROM school_details ORDER BY id ASC LIMIT 1'
     )->fetch(PDO::FETCH_ASSOC) ?: [];
@@ -54,10 +36,24 @@ try {
         $formattedDate = date('F Y', strtotime($selectedMonthYear . '-01'));
         $serialNo = $selectedMonthYear . '-001';
     } else {
-        $latestDate = !empty($items) ? end($items)['created_at'] : date('Y-m-d');
+        $latestLog = $pdo->query("SELECT created_at FROM transaction_log ORDER BY created_at DESC, id DESC LIMIT 1")->fetch(PDO::FETCH_ASSOC) ?: [];
+        $latestDate = $latestLog['created_at'] ?? date('Y-m-d');
         $formattedDate = date('F d, Y', strtotime($latestDate));
         $serialNo = date('Y-m', strtotime($latestDate)) . '-001';
     }
+
+    // Stream every matching row so the report remains complete without fetchAll().
+    $select = 'SELECT trans_code, emp_name, supply_code, supply_name, supply_unit, supply_qty, created_at FROM transaction_log';
+    $pdo->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
+    if ($monthStart instanceof DateTimeImmutable) {
+        $nextMonth = $monthStart->modify('+1 month');
+        $stmt = $pdo->prepare($select . ' WHERE created_at >= ? AND created_at < ? ORDER BY created_at ASC, id ASC');
+        $stmt->execute([$monthStart->format('Y-m-d H:i:s'), $nextMonth->format('Y-m-d H:i:s')]);
+    } else {
+        $stmt = $pdo->query($select . ' ORDER BY created_at ASC, id ASC');
+    }
+    $currentLog = $stmt->fetch(PDO::FETCH_ASSOC);
+    $hasLogs = $currentLog !== false;
 
 } catch (Exception $e) {
     error_log('controllers/supplies/consumable/print_rsmi_month.php DB error: ' . $e->getMessage());
@@ -290,7 +286,7 @@ try {
         }
     </style>
 </head>
-<body onload="window.print()">
+<body>
 
 <div class="page-container">
     <!-- Non-printable actions bar -->
@@ -369,8 +365,8 @@ try {
         <tbody>
             <?php 
             $rowCount = 0;
-            if (!empty($items)): 
-                foreach ($items as $row): 
+            if ($hasLogs):
+                while ($row = $currentLog):
                     $rowCount++;
             ?>
                 <tr>
@@ -384,7 +380,8 @@ try {
                     <td class="text-center"></td>
                 </tr>
             <?php 
-                endforeach; 
+                    $currentLog = $stmt->fetch(PDO::FETCH_ASSOC);
+                endwhile;
             endif; 
             
             // Pad empty rows to maintain full page appearance matching official template

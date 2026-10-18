@@ -9,8 +9,7 @@ if (!isset($pdo)) {
 
 try {
     // 1. Fetch non-consumable items ordered by item_type and description
-    $stmt = $pdo->query("SELECT * FROM nonconsumable ORDER BY item_type ASC, description ASC");
-    $itemsRaw = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $stmt = $pdo->query("SELECT item_type, description, property_number, unit_of_measure, unit_cost, total_cost, qty_property_card, qty_physical_count, shortage_overage_qty, shortage_overage_value, remarks FROM nonconsumable ORDER BY item_type ASC, description ASC");
 
     // 2. Define the exact standard categories in order (matching your official template)
     $categories = [
@@ -27,7 +26,7 @@ try {
         "MEDICAL EQUIPMENT" => []
     ];
 
-    foreach ($itemsRaw as $row) {
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         $itemType = strtoupper(trim($row['item_type'] ?? ($row['category'] ?? '')));
         if (isset($categories[$itemType])) {
             $categories[$itemType][] = $row;
@@ -195,7 +194,7 @@ try {
         }
     </style>
 </head>
-<body onload="window.print()">
+<body>
 
 <div class="page-container">
     <div class="no-print" style="margin-bottom: 15px; text-align: right;">

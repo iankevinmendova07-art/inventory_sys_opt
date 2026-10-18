@@ -1,6 +1,15 @@
 <?php
 require_once __DIR__ . '/../config/db.php';
 
+$schoolName = '';
+try {
+    $schoolName = trim((string) $pdo->query(
+        'SELECT school_name FROM school_details ORDER BY id ASC LIMIT 1'
+    )->fetchColumn());
+} catch (PDOException $e) {
+    error_log('includes/nav.php school name lookup failed: ' . $e->getMessage());
+}
+
 $csrfMetaToken = function_exists('csrf_token') ? csrf_token() : '';
 $adminId = (string) ($_SESSION['admin_id'] ?? '');
 // Get the current page filename
@@ -21,7 +30,10 @@ $isLrActive = ($currentPage == 'lr.php' || $currentPage == 'science_math_eq.php'
 <nav id="sidebar">
     <div class="sidebar-header">
         <img src="assets/img/ian.png" alt="Project IAN logo" class="sidebar-logo">
-        <h3>PROJECT - IAN (Inventory and Assets Navigation)</h3>
+        <?php if ($schoolName !== ''): ?>
+            <p class="sidebar-school-name" style="font-size: 0.95rem;"><?php echo htmlspecialchars($schoolName, ENT_QUOTES, 'UTF-8'); ?></p>
+        <?php endif; ?>
+        <h3 style="font-size: 0.75rem;">PROJECT - IAN (Inventory and Assets Navigation)</h3>
     </div>
 
     <ul class="list-unstyled components">

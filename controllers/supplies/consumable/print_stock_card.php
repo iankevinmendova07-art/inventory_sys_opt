@@ -25,16 +25,6 @@ try {
             die('No supply items found.');
         }
 
-        $historyStmt = $pdo->query(
-            "SELECT id, supply_code, transaction_date, transaction_type, qty, reference, recepient, item_unit
-             FROM stock_card
-             ORDER BY transaction_date ASC, id ASC"
-        );
-        $allHistory = $historyStmt->fetchAll(PDO::FETCH_ASSOC);
-        $historyByCode = [];
-        foreach ($allHistory as $row) {
-            $historyByCode[$row['supply_code']][] = $row;
-        }
     } else {
         $supplyStmt = $pdo->prepare(
             'SELECT id, supply_code, supply_name, supply_unit, reference FROM supplies WHERE id = ? LIMIT 1'
@@ -47,17 +37,51 @@ try {
         }
         $supplies = [$supply];
 
-        $historyStmt = $pdo->prepare(
-            "SELECT id, supply_code, transaction_date, transaction_type, qty, reference, recepient, item_unit
-             FROM stock_card
-             WHERE supply_code = ?
-             ORDER BY transaction_date ASC, id ASC"
-        );
-        $historyStmt->execute([$supply['supply_code']]);
-        $historyByCode = [$supply['supply_code'] => $historyStmt->fetchAll(PDO::FETCH_ASSOC)];
+    }
+
+    // Keep the full history for every selected stock card without retaining
+    // 100,000+ rows as nested PHP arrays. A temporary file is scoped to this request.
+    $historyFile = tmpfile();
+    if ($historyFile === false) {
+        throw new RuntimeException('Unable to create temporary stock-card storage.');
+    }
+    $historyRanges = [];
+    $historyCounts = [];
+    $historySql = 'SELECT id, supply_code, transaction_date, transaction_type, qty, reference, recepient, item_unit FROM stock_card';
+    $historyCodes = array_column($supplies, 'supply_code');
+    $pdo->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
+    if (!$isAll) {
+        $historyStmt = $pdo->prepare($historySql . ' WHERE supply_code = ? ORDER BY transaction_date ASC, id ASC');
+        $historyStmt->execute([$historyCodes[0]]);
+    } else {
+        $historyStmt = $pdo->query($historySql . ' ORDER BY BINARY supply_code ASC, transaction_date ASC, id ASC');
+    }
+
+    $activeKey = null;
+    while ($row = $historyStmt->fetch(PDO::FETCH_ASSOC)) {
+        $key = 'code:' . (string) $row['supply_code'];
+        if ($key !== $activeKey) {
+            if ($activeKey !== null) {
+                $historyRanges[$activeKey]['end'] = ftell($historyFile);
+            }
+            $activeKey = $key;
+            $historyRanges[$activeKey] = ['start' => ftell($historyFile), 'end' => null];
+            $historyCounts[$activeKey] = 0;
+        }
+        $line = json_encode($row, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE) . "\n";
+        if (fwrite($historyFile, $line) !== strlen($line)) {
+            throw new RuntimeException('Unable to write temporary stock-card history.');
+        }
+        $historyCounts[$activeKey]++;
+    }
+    if ($activeKey !== null) {
+        $historyRanges[$activeKey]['end'] = ftell($historyFile);
     }
 } catch (PDOException $e) {
     error_log('controllers/supplies/consumable/print_stock_card.php DB error: ' . $e->getMessage());
+    die('Unable to load stock card data.');
+} catch (Throwable $e) {
+    error_log('controllers/supplies/consumable/print_stock_card.php history error: ' . $e->getMessage());
     die('Unable to load stock card data.');
 }
 ?>
@@ -167,13 +191,18 @@ try {
         }
     </style>
 </head>
-<body onload="window.print()">
+<body>
     <div class="print-actions">
         <button type="button" onclick="window.print()">Save as PDF / Print <?php echo $isAll ? 'All Stock Cards' : 'Stock Card'; ?></button>
     </div>
 
-    <?php foreach ($supplies as $supply): 
-        $history = $historyByCode[$supply['supply_code']] ?? [];
+    <?php foreach ($supplies as $supply):
+        $historyKey = 'code:' . (string) $supply['supply_code'];
+        $historyRange = $historyRanges[$historyKey] ?? null;
+        $historyCount = $historyCounts[$historyKey] ?? 0;
+        if ($historyRange !== null) {
+            fseek($historyFile, $historyRange['start']);
+        }
         $balance = 0;
     ?>
     <div class="stock-card-sheet">
@@ -239,8 +268,9 @@ try {
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($history as $entry): ?>
+                <?php while ($historyRange !== null && ftell($historyFile) < $historyRange['end'] && ($historyLine = fgets($historyFile)) !== false): ?>
                     <?php
+                        $entry = json_decode($historyLine, true) ?: [];
                         $quantity = (int) $entry['qty'];
                         $isIn = strtoupper($entry['transaction_type']) === 'IN';
                         $balance += $isIn ? $quantity : -$quantity;
@@ -257,8 +287,8 @@ try {
                         <td class="center"><?php echo $balance; ?></td>
                         <td><?php echo $isIn ? 'IN - ' . htmlspecialchars($entry['recepient'] ?? '') : 'OUT'; ?></td>
                     </tr>
-                <?php endforeach; ?>
-                <?php for ($row = count($history); $row < 12; $row++): ?>
+                <?php endwhile; ?>
+                <?php for ($row = $historyCount; $row < 12; $row++): ?>
                     <tr class="empty-row"><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
                 <?php endfor; ?>
             </tbody>

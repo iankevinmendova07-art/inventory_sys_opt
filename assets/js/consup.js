@@ -558,35 +558,23 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // 8. Add to Cart Quantity Validation
+    // 8. Keep requested quantities to positive whole numbers within current stock.
     const cartQtyInput = document.getElementById('cartQty');
     if (cartQtyInput) {
         cartQtyInput.addEventListener('input', function() {
-            const maxQty = parseInt(this.dataset.maxQty, 10);
-            const enteredQty = parseInt(this.value, 10);
-
-            if (this.value !== "" && enteredQty <= 0) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Invalid Quantity',
-                    text: 'Quantity cannot be zero or negative.',
-                    confirmButtonColor: '#0D3B66'
-                }).then(() => {
-                    this.value = '';
-                });
-                return;
+            // A number input can still accept exponent/sign characters in some browsers.
+            if (this.value.startsWith('-') || this.value.includes('.')) {
+                this.value = '';
             }
+            const digitsOnly = this.value.replace(/\D/g, '');
+            if (this.value !== digitsOnly) this.value = digitsOnly;
 
-            if (!isNaN(maxQty) && !isNaN(enteredQty) && enteredQty > maxQty) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Insufficient Stock',
-                    text: `You cannot exceed the available stock of ${maxQty}.`,
-                    confirmButtonColor: '#0D3B66'
-                }).then(() => {
-                    this.value = maxQty;
-                });
+            const maxQty = Number.parseInt(this.dataset.maxQty, 10);
+            const enteredQty = Number.parseInt(this.value, 10);
+            if (this.value !== '' && Number.isFinite(maxQty) && maxQty > 0 && enteredQty > maxQty) {
+                this.value = String(maxQty);
             }
+            this.setCustomValidity('');
         });
     }
 
@@ -944,9 +932,11 @@ $(document).ready(function() {
         if (!reportTable) {
             reportTable = $('#transactionReportTable').DataTable({
                 processing: true,
-                serverSide: false,
-                ajax: 'controllers/supplies/consumable/get_transactions.php',
+                serverSide: true,
+                pageLength: 10,
+                lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
                 order: [],
+                ajax: 'controllers/supplies/consumable/get_transactions.php',
                 columns: [
                     { data: 'trans_code' },
                     { data: 'name' },
@@ -971,9 +961,11 @@ $(document).ready(function() {
         if (!rsmiTable) {
             rsmiTable = $('#rsmiTable').DataTable({
                 processing: true,
-                serverSide: false,
-                ajax: 'controllers/supplies/consumable/get_rsmi_logs.php',
+                serverSide: true,
+                pageLength: 10,
+                lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
                 order: [],
+                ajax: 'controllers/supplies/consumable/get_rsmi_logs.php',
                 columns: [
                     { data: 'trans_code' },
                     { data: 'emp_name' },
