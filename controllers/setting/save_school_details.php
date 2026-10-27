@@ -9,7 +9,26 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
     exit;
 }
 
-$fields = ['school_name', 'school_address', 'head_name', 'head_position', 'custodian_name', 'custodian_position'];
+$fields = ['Region', 'Division', 'school_name', 'school_address', 'head_name', 'head_position', 'custodian_name', 'custodian_position'];
+$philippineRegions = [
+    'NCR - National Capital Region',
+    'CAR - Cordillera Administrative Region',
+    'Region I - Ilocos Region',
+    'Region II - Cagayan Valley',
+    'Region III - Central Luzon',
+    'Region IV-A - CALABARZON',
+    'MIMAROPA Region',
+    'Region V - Bicol Region',
+    'Region VI - Western Visayas',
+    'Region VII - Central Visayas',
+    'Region VIII - Eastern Visayas',
+    'Region IX - Zamboanga Peninsula',
+    'Region X - Northern Mindanao',
+    'Region XI - Davao Region',
+    'Region XII - SOCCSKSARGEN',
+    'Region XIII - Caraga',
+    'BARMM - Bangsamoro Autonomous Region in Muslim Mindanao'
+];
 $values = [];
 foreach ($fields as $field) {
     $value = trim((string)($_POST[$field] ?? ''));
@@ -22,9 +41,17 @@ foreach ($fields as $field) {
     $values[$field] = $value;
 }
 
+if (!in_array($values['Region'], $philippineRegions, true)) {
+    $_SESSION['school_details_status'] = 'invalid';
+    header('Location: ../../setting.php');
+    exit;
+}
+
 try {
     $pdo->exec("CREATE TABLE IF NOT EXISTS school_details (
         id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+        Region VARCHAR(255) NOT NULL DEFAULT '',
+        Division VARCHAR(255) NOT NULL DEFAULT '',
         school_name VARCHAR(255) NOT NULL DEFAULT '',
         school_address VARCHAR(255) NOT NULL DEFAULT '',
         head_name VARCHAR(255) NOT NULL,
@@ -54,11 +81,11 @@ try {
 
     $existingId = $pdo->query('SELECT id FROM school_details ORDER BY id ASC LIMIT 1')->fetchColumn();
     if ($existingId !== false) {
-        $stmt = $pdo->prepare('UPDATE school_details SET school_name = :school_name, school_address = :school_address, head_name = :head_name, head_position = :head_position, custodian_name = :custodian_name, custodian_position = :custodian_position WHERE id = :id');
+        $stmt = $pdo->prepare('UPDATE school_details SET Region = :Region, Division = :Division, school_name = :school_name, school_address = :school_address, head_name = :head_name, head_position = :head_position, custodian_name = :custodian_name, custodian_position = :custodian_position WHERE id = :id');
         $values['id'] = (int)$existingId;
         $stmt->execute($values);
     } else {
-        $stmt = $pdo->prepare('INSERT INTO school_details (school_name, school_address, head_name, head_position, custodian_name, custodian_position) VALUES (:school_name, :school_address, :head_name, :head_position, :custodian_name, :custodian_position)');
+        $stmt = $pdo->prepare('INSERT INTO school_details (Region, Division, school_name, school_address, head_name, head_position, custodian_name, custodian_position) VALUES (:Region, :Division, :school_name, :school_address, :head_name, :head_position, :custodian_name, :custodian_position)');
         $stmt->execute($values);
     }
     $_SESSION['school_details_status'] = 'saved';

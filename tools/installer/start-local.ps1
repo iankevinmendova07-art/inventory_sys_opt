@@ -237,7 +237,7 @@ if ($missingTables.Count -gt 0) {
 $migrationVersion = (& $mysqlExe @client --batch --skip-column-names --execute="SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='$databaseName' AND table_name='schema_migrations'").Trim()
 $migrationNeeded = ([int]$migrationVersion -eq 0)
 if (-not $migrationNeeded) {
-    $migrationDone = (& $mysqlExe @client "--database=$databaseName" --batch --skip-column-names --execute='SELECT COUNT(*) FROM schema_migrations WHERE version=2').Trim()
+    $migrationDone = (& $mysqlExe @client "--database=$databaseName" --batch --skip-column-names --execute='SELECT COUNT(*) FROM schema_migrations WHERE version=3').Trim()
     $migrationNeeded = ([int]$migrationDone -eq 0)
 }
 if ($migrationNeeded -and -not $freshDatabase) {

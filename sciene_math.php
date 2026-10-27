@@ -7,50 +7,6 @@ require_once 'controllers/auth/auth.php';
 $adminName = isset($_SESSION['admin_name']) ? strtoupper($_SESSION['admin_name']) : 'ADMIN';
 $adminRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'Administrator';
 
-// Fetch Science and Math data separately
-require_once 'config/db.php';
-
-$scienceItems = [];
-$mathItems    = [];
-
-try {
-    $stmt = $pdo->prepare("SELECT * FROM lr_sme WHERE lr_type = ? ORDER BY CAST(lr_code AS UNSIGNED) ASC");
-    $stmt->execute(['Science']);
-    $scienceItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    $stmt->execute(['Math']);
-    $mathItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
-} catch (PDOException $e) {
-    // silently fail; tables will show empty
-}
-
-function renderRows(array $items): void {
-    if (empty($items)) {
-        return;
-    }
-    foreach ($items as $row) {
-        echo '<tr>
-            <td>' . htmlspecialchars($row['lr_code']) . '</td>
-            <td>' . htmlspecialchars($row['lr_item']) . '</td>
-            <td>' . htmlspecialchars($row['lr_qty']) . '</td>
-            <td>' . htmlspecialchars($row['lr_unit'] ?? '') . '</td>
-            <td>
-                <button class="btn btn-sm btn-primary edit-btn me-1"
-                    data-id="'       . $row['id'] . '"
-                    data-lr_code="'  . htmlspecialchars($row['lr_code'],         ENT_QUOTES) . '"
-                    data-lr_item="'  . htmlspecialchars($row['lr_item'],         ENT_QUOTES) . '"
-                    data-lr_qty="'   . htmlspecialchars($row['lr_qty'],          ENT_QUOTES) . '"
-                    data-lr_unit="'  . htmlspecialchars($row['lr_unit'] ?? '',   ENT_QUOTES) . '"
-                    data-lr_type="'  . htmlspecialchars($row['lr_type'] ?? '',   ENT_QUOTES) . '">
-                    <i class="bi bi-pencil-square"></i> Edit
-                </button>
-                <button class="btn btn-sm btn-danger delete-btn" data-id="' . $row['id'] . '">
-                    <i class="bi bi-trash"></i> Delete
-                </button>
-            </td>
-        </tr>';
-    }
-}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -221,9 +177,7 @@ function renderRows(array $items): void {
                                             <th>Action</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-                                        <?php renderRows($scienceItems); ?>
-                                    </tbody>
+                                    <tbody></tbody>
                                 </table>
                             </div>
                         </div>
@@ -241,9 +195,7 @@ function renderRows(array $items): void {
                                             <th>Action</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-                                        <?php renderRows($mathItems); ?>
-                                    </tbody>
+                                    <tbody></tbody>
                                 </table>
                             </div>
                         </div>
@@ -394,10 +346,34 @@ document.addEventListener('DOMContentLoaded', function () {
     function initTable(id) {
         if ($.fn.DataTable && !$.fn.DataTable.isDataTable('#' + id)) {
             $('#' + id).DataTable({
+                processing: true,
+                serverSide: true,
                 responsive: true,
                 pageLength: 10,
-                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, 'All']],
+                lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
                 order: [],
+                searchDelay: 350,
+                ajax: {
+                    url: 'controllers/supplies/science_math/get_sme_paginated.php',
+                    data: { type: id === 'scienceTable' ? 'Science' : 'Math' }
+                },
+                columns: [
+                    { data: 'lr_code', render: $.fn.dataTable.render.text() },
+                    { data: 'lr_item', render: $.fn.dataTable.render.text() },
+                    { data: 'lr_qty', render: $.fn.dataTable.render.text() },
+                    { data: 'lr_unit', render: $.fn.dataTable.render.text() },
+                    {
+                        data: null,
+                        orderable: false,
+                        searchable: false,
+                        render: function (data, type, row) {
+                            if (type !== 'display') return '';
+                            const attr = value => $('<div>').text(value == null ? '' : String(value)).html().replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                            return '<button class="btn btn-sm btn-primary edit-btn me-1" data-id="' + Number(row.id) + '" data-lr_code="' + attr(row.lr_code) + '" data-lr_item="' + attr(row.lr_item) + '" data-lr_qty="' + attr(row.lr_qty) + '" data-lr_unit="' + attr(row.lr_unit) + '" data-lr_type="' + attr(row.lr_type) + '"><i class="bi bi-pencil-square"></i> Edit</button>' +
+                                '<button class="btn btn-sm btn-danger delete-btn" data-id="' + Number(row.id) + '"><i class="bi bi-trash"></i> Delete</button>';
+                        }
+                    }
+                ],
                 language: {
                     emptyTable: 'No items found.',
                     search: '_INPUT_',

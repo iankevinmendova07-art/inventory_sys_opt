@@ -8,8 +8,10 @@ $isAll = isset($_GET['all']) || ($_GET['id'] ?? '') === 'all' || ($supplyId <= 0
 
 try {
     $schoolDetails = $pdo->query(
-        'SELECT school_name, school_address, custodian_name, custodian_position FROM school_details ORDER BY id ASC LIMIT 1'
+        'SELECT Region, Division, school_name, school_address, custodian_name, custodian_position FROM school_details ORDER BY id ASC LIMIT 1'
     )->fetch(PDO::FETCH_ASSOC) ?: [];
+    $schoolRegion = trim((string) ($schoolDetails['Region'] ?? ''));
+    $schoolDivision = trim((string) ($schoolDetails['Division'] ?? ''));
     $schoolName = trim((string) ($schoolDetails['school_name'] ?? ''));
     $schoolAddress = trim((string) ($schoolDetails['school_address'] ?? ''));
     $custodianName = $schoolDetails['custodian_name'] ?? '';
@@ -189,11 +191,16 @@ try {
             }
             .print-actions { display: none; }
         }
+        .print-actions { position: fixed; top: 16px; right: 16px; z-index: 1000; text-align: right; margin: 0; }
+        .print-actions button { padding: 6px 10px; border: 0; border-radius: 4px; color: #fff; font-size: 14px; line-height: 1.5; cursor: pointer; }
+        .print-actions .print-button { background: #0d6efd; }
+        .print-actions .close-button { background: #6c757d; }
     </style>
 </head>
 <body>
     <div class="print-actions">
-        <button type="button" onclick="window.print()">Save as PDF / Print <?php echo $isAll ? 'All Stock Cards' : 'Stock Card'; ?></button>
+        <button type="button" class="print-button" onclick="window.print()">Print <?php echo $isAll ? 'All Stock Cards' : 'Stock Card'; ?></button>
+        <button type="button" class="close-button" onclick="window.close()">Close</button>
     </div>
 
     <?php foreach ($supplies as $supply):
@@ -210,8 +217,8 @@ try {
             <img src="../../../assets/img/deped.png" alt="DepEd Logo">
             <div class="republic">Republika ng Pilipinas</div>
             <div class="department">Department of Education</div>
-            <div class="region">Region VIII — Eastern Visayas</div>
-            <div class="division">Schools Division of Catbalogan City</div>
+            <div class="region"><?= htmlspecialchars($schoolRegion ?? '', ENT_QUOTES, 'UTF-8') ?></div>
+            <div class="division"><?= htmlspecialchars($schoolDivision ?? '', ENT_QUOTES, 'UTF-8') ?></div>
             <?php if ($schoolName !== ''): ?>
             <div class="school"><?= htmlspecialchars($schoolName, ENT_QUOTES, 'UTF-8') ?></div>
             <?php endif; ?>

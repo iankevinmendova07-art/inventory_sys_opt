@@ -17,15 +17,24 @@ if (empty($transCodes)) {
 }
 
 try {
-    // 1. Fetch all employees to find exact designation from emp_position
-    $empQuery = $pdo->prepare("SELECT emp_name, emp_position FROM employee");
-    $empQuery->execute();
-    $employees = $empQuery->fetchAll(PDO::FETCH_ASSOC);
+    // Fetch only the selected recipients' designations instead of scanning all employees.
+    $codePlaceholders = implode(',', array_fill(0, count($transCodes), '?'));
+    $recipientStmt = $pdo->prepare("SELECT DISTINCT emp_name FROM transaction_log WHERE trans_code IN ($codePlaceholders)");
+    $recipientStmt->execute($transCodes);
+    $recipientNames = $recipientStmt->fetchAll(PDO::FETCH_COLUMN);
+    $employees = [];
+    if ($recipientNames) {
+        $empQuery = $pdo->prepare('SELECT emp_name, emp_position FROM employee WHERE emp_name IN (' . implode(',', array_fill(0, count($recipientNames), '?')) . ')');
+        $empQuery->execute($recipientNames);
+        $employees = $empQuery->fetchAll(PDO::FETCH_ASSOC);
+    }
 
     // Use the configured school head and custodian for the signature blocks.
     $schoolDetails = $pdo->query(
-        'SELECT school_name, school_address, head_name, head_position, custodian_name, custodian_position FROM school_details ORDER BY id ASC LIMIT 1'
+        'SELECT Region, Division, school_name, school_address, head_name, head_position, custodian_name, custodian_position FROM school_details ORDER BY id ASC LIMIT 1'
     )->fetch(PDO::FETCH_ASSOC) ?: [];
+    $schoolRegion = trim((string) ($schoolDetails['Region'] ?? ''));
+    $schoolDivision = trim((string) ($schoolDetails['Division'] ?? ''));
     $schoolName = trim((string) ($schoolDetails['school_name'] ?? ''));
     $schoolAddress = trim((string) ($schoolDetails['school_address'] ?? ''));
     $school_head_name = $schoolDetails['head_name'] ?? '';
@@ -38,7 +47,7 @@ try {
         $employeePositions[strtolower(trim($employee['emp_name']))] = trim($employee['emp_position']);
     }
 
-    $placeholders = implode(',', array_fill(0, count($transCodes), '?'));
+    $placeholders = $codePlaceholders;
     $stmt = $pdo->prepare(
         "SELECT trans_code, supply_code, supply_name, supply_unit, supply_qty, emp_name, created_at
          FROM transaction_log
@@ -205,6 +214,7 @@ try {
             }
             .ris-half { border: 1.5px solid #000; }
         }
+        .print-btn-container { position: fixed; top: 16px; right: 16px; z-index: 1000; margin: 0 !important; }
     </style>
 </head>
 <body>
@@ -222,15 +232,15 @@ foreach ($transactions as $tx):
     $recipient_position = $tx['recipient_position'];
     $items = $tx['items'];
 
-    $render_ris_form = function() use ($trans_code, $transaction_date, $items, $recipient_name, $schoolName, $schoolAddress, $school_head_name, $school_head_position, $custodian_name, $custodian_position, $recipient_position) {
+    $render_ris_form = function() use ($trans_code, $transaction_date, $items, $recipient_name, $schoolRegion, $schoolDivision, $schoolName, $schoolAddress, $school_head_name, $school_head_position, $custodian_name, $custodian_position, $recipient_position) {
     ?>
     <div class="ris-half">
        <div class="deped-header">
         <img src="../../../assets/img/deped.png" alt="DepEd Logo">
         <div class="republic">Republika ng Pilipinas</div>
         <div class="department">Department of Education</div>
-        <div class="region">Region VIII — Eastern Visayas</div>
-        <div class="division">Schools Division of Catbalogan City</div>
+        <div class="region"><?= htmlspecialchars($schoolRegion ?? '', ENT_QUOTES, 'UTF-8') ?></div>
+        <div class="division"><?= htmlspecialchars($schoolDivision ?? '', ENT_QUOTES, 'UTF-8') ?></div>
         <?php if ($schoolName !== ''): ?>
         <div class="school"><?= htmlspecialchars($schoolName, ENT_QUOTES, 'UTF-8') ?></div>
         <?php endif; ?>
@@ -244,7 +254,7 @@ foreach ($transactions as $tx):
                 <td><strong>Fund Cluster :</strong> ___________________</td>
             </tr>
             <tr>
-                <td><strong>Division :</strong> Catbalogan City</td>
+                <td><strong>Division :</strong> <?= htmlspecialchars($schoolDivision, ENT_QUOTES, 'UTF-8') ?></td>
                 <td><strong>RIS No :</strong> <?php echo htmlspecialchars($trans_code); ?></td>
             </tr>
             <tr>

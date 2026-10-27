@@ -28,8 +28,10 @@ try {
 
     $currentDate = date('F d, Y');
     $schoolDetails = $pdo->query(
-        'SELECT school_name, school_address, custodian_name, custodian_position FROM school_details ORDER BY id ASC LIMIT 1'
+        'SELECT Region, Division, school_name, school_address, custodian_name, custodian_position FROM school_details ORDER BY id ASC LIMIT 1'
     )->fetch(PDO::FETCH_ASSOC) ?: [];
+    $schoolRegion = trim((string) ($schoolDetails['Region'] ?? ''));
+    $schoolDivision = trim((string) ($schoolDetails['Division'] ?? ''));
     $schoolName = trim((string) ($schoolDetails['school_name'] ?? ''));
     $schoolAddress = trim((string) ($schoolDetails['school_address'] ?? ''));
     $receivedFromAdmin = $schoolDetails['custodian_name'] ?? '';
@@ -132,6 +134,8 @@ try {
                 max-width: none;
             }
         }
+        .ics-container > .no-print { position: fixed; top: 16px; right: 16px; z-index: 1000; text-align: right; margin: 0 !important; }
+        .position-text { color: #000; font-size: 0.85rem; font-style: italic; }
     </style>
 </head>
 <body onload="window.print()">
@@ -139,15 +143,15 @@ try {
 <div class="ics-container">
     <div class="text-end mb-3 no-print">
         <button onclick="window.print()" class="btn btn-sm btn-primary">Print Slip</button>
-        <button onclick="window.close()" class="btn btn-sm btn-secondary">Close Tab</button>
+        <button onclick="window.close()" class="btn btn-sm btn-secondary">Close</button>
     </div>
 
     <div class="deped-header">
         <img src="../../../assets/img/deped.png" alt="DepEd Logo">
         <div class="republic">Republika ng Pilipinas</div>
         <div class="department">Department of Education</div>
-        <div class="region">Region VIII — Eastern Visayas</div>
-        <div class="division">Schools Division of Catbalogan City</div>
+        <div class="region"><?= htmlspecialchars($schoolRegion ?? '', ENT_QUOTES, 'UTF-8') ?></div>
+        <div class="division"><?= htmlspecialchars($schoolDivision ?? '', ENT_QUOTES, 'UTF-8') ?></div>
         <?php if ($schoolName !== ''): ?>
         <div class="school"><?= htmlspecialchars($schoolName, ENT_QUOTES, 'UTF-8') ?></div>
         <?php endif; ?>
@@ -191,7 +195,7 @@ try {
                 <strong>Received By:</strong><br><br>
                 <div class="text-center">
                     <span class="fw-bold text-uppercase"><?php echo htmlspecialchars($recipientName); ?></span><br>
-                    <span class="text-muted" style="font-size: 0.85rem;"><?php echo htmlspecialchars($recipientPosition); ?></span><br>
+                    <span class="position-text"><?php echo htmlspecialchars($recipientPosition); ?></span><br>
                     <span style="font-size: 0.8rem;">Date: <?php echo htmlspecialchars($currentDate); ?></span>
                 </div>
             </td>
@@ -199,7 +203,7 @@ try {
                 <strong>Received From:</strong><br><br>
                 <div class="text-center">
                     <span class="fw-bold text-uppercase"><?php echo htmlspecialchars($receivedFromAdmin); ?></span><br>
-                    <span class="text-muted" style="font-size: 0.85rem;"><?php echo htmlspecialchars($receivedFromPosition); ?></span><br>
+                    <span class="position-text"><?php echo htmlspecialchars($receivedFromPosition); ?></span><br>
                     <span style="font-size: 0.8rem;">Date: <?php echo htmlspecialchars($currentDate); ?></span>
                 </div>
             </td>

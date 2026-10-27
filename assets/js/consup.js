@@ -896,7 +896,10 @@ $(document).ready(function() {
         if (!stockCardItemsTable) {
             stockCardItemsTable = $('#stockCardItemsTable').DataTable({
                 processing: true,
-                serverSide: false,
+                serverSide: true,
+                pageLength: 10,
+                lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
+                searchDelay: 300,
                 ajax: 'controllers/supplies/consumable/get_stock_card_items.php',
                 order: [[0, 'asc']],
                 columns: [
@@ -992,7 +995,10 @@ $(document).ready(function() {
         if (!quantityTable) {
             quantityTable = $('#quantityTable').DataTable({
                 processing: true,
-                serverSide: false,
+                serverSide: true,
+                pageLength: 10,
+                lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
+                searchDelay: 300,
                 ajax: 'controllers/supplies/consumable/get_quantity_list.php',
                 order: [],
                 columns: [

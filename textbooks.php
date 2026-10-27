@@ -12,7 +12,7 @@ $adminRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'Administra
 // Fetch teachers from employee table
 $teachers = [];
 try {
-    $teacherStmt = $pdo->query("SELECT * FROM employee WHERE emp_position LIKE '%teacher%' ORDER BY emp_name ASC");
+    $teacherStmt = $pdo->query("SELECT id, emp_name, emp_position FROM employee WHERE emp_position LIKE '%teacher%' ORDER BY emp_name ASC LIMIT 500");
     $teachers = $teacherStmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     // Handle error gracefully if needed

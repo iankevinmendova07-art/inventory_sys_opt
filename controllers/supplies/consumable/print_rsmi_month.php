@@ -23,8 +23,10 @@ if ($selectedMonthYear !== '') {
 
 try {
     $schoolDetails = $pdo->query(
-        'SELECT school_name, school_address, custodian_name FROM school_details ORDER BY id ASC LIMIT 1'
+        'SELECT Region, Division, school_name, school_address, custodian_name FROM school_details ORDER BY id ASC LIMIT 1'
     )->fetch(PDO::FETCH_ASSOC) ?: [];
+    $schoolRegion = trim((string) ($schoolDetails['Region'] ?? ''));
+    $schoolDivision = trim((string) ($schoolDetails['Division'] ?? ''));
     $schoolName = trim((string) ($schoolDetails['school_name'] ?? ''));
     $schoolAddress = trim((string) ($schoolDetails['school_address'] ?? ''));
 
@@ -270,6 +272,11 @@ try {
         .close-btn:hover {
             background-color: #475569;
         }
+        .action-toolbar { position: fixed; top: 16px; right: 16px; z-index: 1000; justify-content: flex-end; margin: 0; padding: 0; background: transparent; box-shadow: none; }
+        .action-toolbar > div:first-child { display: none; }
+        .action-btn, .close-btn { padding: 6px 10px; border-radius: 4px; font-size: 14px; line-height: 1.5; }
+        .action-btn { background: #0d6efd; }
+        .close-btn { background: #6c757d; }
 
         @media print {
             .action-toolbar {
@@ -310,8 +317,8 @@ try {
         <img src="../../../assets/img/deped.png" alt="DepEd Logo">
         <div class="republic">Republika ng Pilipinas</div>
         <div class="department">Department of Education</div>
-        <div class="region">Region VIII — Eastern Visayas</div>
-        <div class="division">Schools Division of Catbalogan City</div>
+        <div class="region"><?= htmlspecialchars($schoolRegion ?? '', ENT_QUOTES, 'UTF-8') ?></div>
+        <div class="division"><?= htmlspecialchars($schoolDivision ?? '', ENT_QUOTES, 'UTF-8') ?></div>
         <?php if ($schoolName !== ''): ?>
         <div class="school"><?= htmlspecialchars($schoolName, ENT_QUOTES, 'UTF-8') ?></div>
         <?php endif; ?>

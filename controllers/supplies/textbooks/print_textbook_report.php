@@ -6,8 +6,10 @@ require_once dirname(__DIR__, 3) . '/config/db.php';
 $schoolDetails = [];
 try {
     $schoolDetails = $pdo->query(
-        'SELECT school_name, school_address, custodian_name, custodian_position, head_name, head_position FROM school_details ORDER BY id ASC LIMIT 1'
+        'SELECT Region, Division, school_name, school_address, custodian_name, custodian_position, head_name, head_position FROM school_details ORDER BY id ASC LIMIT 1'
     )->fetch(PDO::FETCH_ASSOC) ?: [];
+    $schoolRegion = trim((string) ($schoolDetails['Region'] ?? ''));
+    $schoolDivision = trim((string) ($schoolDetails['Division'] ?? ''));
     $schoolName = trim((string) ($schoolDetails['school_name'] ?? ''));
     $schoolAddress = trim((string) ($schoolDetails['school_address'] ?? ''));
 
@@ -174,11 +176,15 @@ $reportDate = date('F d, Y');
                 box-shadow: none;
             }
         }
+        .print-btn-container { position: fixed; top: 16px; right: 16px; z-index: 1000; text-align: right; margin: 0 !important; }
+        .print-btn-container button { padding: 6px 10px; border: 0; border-radius: 4px; color: #fff; font-size: 14px; line-height: 1.5; cursor: pointer; }
+        .print-btn-container button:first-child { background: #0d6efd; }
+        .print-btn-container button:last-child { background: #6c757d; }
     </style>
 </head>
 <body>
 <div class="print-btn-container text-end" style="margin-bottom: 8px;">
-    <button onclick="window.print()">Print / Save as PDF</button>
+    <button onclick="window.print()">Print</button>
     <button onclick="window.close()">Close</button>
 </div>
 
@@ -187,8 +193,8 @@ $reportDate = date('F d, Y');
         <img src="../../../assets/img/deped.png" alt="DepEd Logo">
         <div class="republic">Republika ng Pilipinas</div>
         <div class="department">Department of Education</div>
-        <div class="region">Region VIII — Eastern Visayas</div>
-        <div class="division">Schools Division of Catbalogan City</div>
+        <div class="region"><?= htmlspecialchars($schoolRegion ?? '', ENT_QUOTES, 'UTF-8') ?></div>
+        <div class="division"><?= htmlspecialchars($schoolDivision ?? '', ENT_QUOTES, 'UTF-8') ?></div>
         <?php if ($schoolName !== ''): ?>
         <div class="school"><?= htmlspecialchars($schoolName, ENT_QUOTES, 'UTF-8') ?></div>
         <?php endif; ?>
@@ -203,7 +209,7 @@ $reportDate = date('F d, Y');
             <td class="text-end"><strong>Date Generated :</strong> <?php echo htmlspecialchars($reportDate); ?></td>
         </tr>
         <tr>
-            <td><strong>Division :</strong> Catbalogan City</td>
+            <td><strong>Division :</strong> <?= htmlspecialchars($schoolDivision ?? '', ENT_QUOTES, 'UTF-8') ?></td>
             <td class="text-end"><strong>Total Records :</strong> <?php echo $textbookCount; ?></td>
         </tr>
     </table>

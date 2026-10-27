@@ -6,11 +6,34 @@ require_once dirname(__DIR__, 3) . '/config/db.php';
 header('Content-Type: application/json');
 
 try {
-    $stmt = $pdo->query("SELECT id, supply_code, supply_name, supply_unit, supply_qty FROM supplies ORDER BY id DESC");
-    $supplies = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $draw = max(0, (int)($_GET['draw'] ?? 1));
+    $start = max(0, (int)($_GET['start'] ?? 0));
+    $length = (int)($_GET['length'] ?? 10);
+    $length = ($length >= 1 && $length <= 100) ? $length : 10;
+    $search = trim((string)($_GET['search']['value'] ?? ''));
+    $where = '';
+    $bindings = [];
+    if ($search !== '') {
+        $where = ' WHERE supply_code LIKE :code OR supply_name LIKE :name OR supply_unit LIKE :unit';
+        $term = '%' . $search . '%';
+        $bindings = [':code' => $term, ':name' => $term, ':unit' => $term];
+    }
+    $total = (int)$pdo->query('SELECT COUNT(*) FROM supplies')->fetchColumn();
+    if ($where === '') {
+        $filtered = $total;
+    } else {
+        $count = $pdo->prepare('SELECT COUNT(*) FROM supplies' . $where);
+        $count->execute($bindings);
+        $filtered = (int)$count->fetchColumn();
+    }
+    $stmt = $pdo->prepare('SELECT id, supply_code, supply_name, supply_unit, supply_qty FROM supplies' . $where . ' ORDER BY id DESC LIMIT :offset, :limit');
+    foreach ($bindings as $key => $value) $stmt->bindValue($key, $value, PDO::PARAM_STR);
+    $stmt->bindValue(':offset', $start, PDO::PARAM_INT);
+    $stmt->bindValue(':limit', $length, PDO::PARAM_INT);
+    $stmt->execute();
 
     $data = [];
-    foreach ($supplies as $row) {
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         $qty = (int)$row['supply_qty'];
         $badgeClass = 'bg-success';
         $stockStatus = 'In Stock';
@@ -53,9 +76,9 @@ try {
         ];
     }
 
-    echo json_encode(['data' => $data]);
+    echo json_encode(['draw' => $draw, 'recordsTotal' => $total, 'recordsFiltered' => $filtered, 'data' => $data]);
 } catch (Exception $e) {
     error_log('controllers/supplies/consumable/get_quantity_list.php error: ' . $e->getMessage());
-    echo json_encode(['data' => [], 'error' => 'A server error occurred. Please try again.']);
+    echo json_encode(['draw' => max(0, (int)($_GET['draw'] ?? 1)), 'recordsTotal' => 0, 'recordsFiltered' => 0, 'data' => [], 'error' => 'A server error occurred. Please try again.']);
 }
 ?>

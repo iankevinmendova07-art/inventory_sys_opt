@@ -17,6 +17,8 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS schema_migrations (
 
 $pdo->exec("CREATE TABLE IF NOT EXISTS school_details (
     id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    Region VARCHAR(255) NOT NULL DEFAULT '',
+    Division VARCHAR(255) NOT NULL DEFAULT '',
     school_name VARCHAR(255) NOT NULL,
     head_name VARCHAR(255) NOT NULL,
     head_position VARCHAR(255) NOT NULL,
@@ -45,12 +47,15 @@ $indexes = [
     ],
     'lr_textbooks' => [
         'idx_lr_textbooks_grade_item' => 'grade_level, lr_item',
+        'idx_lr_textbooks_grade_qty'  => 'grade_level, lr_qty',
+        'idx_lr_textbooks_subject_qty' => 'lr_subject, lr_qty',
         'idx_lr_textbooks_recipient'  => 'recipient',
     ],
     'nonconsumable' => [
         'idx_nonconsumable_type'      => 'item_type',
         'idx_nonconsumable_recipient' => 'recepient',
         'idx_nonconsumable_unit'      => 'unit_of_measure',
+        'idx_nonconsumable_qty_id'    => 'qty_property_card, id',
     ],
     'stock_card' => [
         'idx_stock_card_supply_date' => 'supply_code, transaction_date, id',
@@ -59,9 +64,12 @@ $indexes = [
     ],
     'supplies' => [
         'idx_supplies_unit' => 'supply_unit',
+        'idx_supplies_name_id' => 'supply_name, id',
+        'idx_supplies_qty_id' => 'supply_qty, id',
     ],
     'transaction_log' => [
         'idx_transaction_log_code_id'    => 'trans_code, id',
+        'idx_transaction_log_code_employee' => 'trans_code, emp_name, id',
         'idx_transaction_log_created_id' => 'created_at, id',
         'idx_transaction_log_employee'   => 'emp_name',
     ],
@@ -127,6 +135,29 @@ if ($v2Applied === 0) {
 
     $pdo->exec('INSERT IGNORE INTO schema_migrations (version) VALUES (2)');
     echo 'Migration version 2 applied.' . PHP_EOL;
+}
+
+// Migration version 3 adds school jurisdiction fields used by Settings and reports.
+$v3Applied = (int) $pdo->query('SELECT COUNT(*) FROM schema_migrations WHERE version = 3')->fetchColumn();
+if ($v3Applied === 0) {
+    $schoolDetailColumns = [
+        'Region' => 'AFTER id',
+        'Division' => 'AFTER Region',
+    ];
+    foreach ($schoolDetailColumns as $columnName => $position) {
+        $columnCheck = $pdo->prepare(
+            'SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = ? AND column_name = ?'
+        );
+        $columnCheck->execute(['school_details', $columnName]);
+        if ((int) $columnCheck->fetchColumn() === 0) {
+            $quotedColumn = '`' . str_replace('`', '``', $columnName) . '`';
+            $pdo->exec("ALTER TABLE school_details ADD COLUMN {$quotedColumn} VARCHAR(255) NOT NULL DEFAULT '' {$position}");
+            echo "Added {$columnName} column to school_details." . PHP_EOL;
+        }
+    }
+
+    $pdo->exec('INSERT IGNORE INTO schema_migrations (version) VALUES (3)');
+    echo 'Migration version 3 applied.' . PHP_EOL;
 }
 
 echo 'Additive inventory schema migration completed.' . PHP_EOL;

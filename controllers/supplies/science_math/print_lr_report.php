@@ -12,8 +12,10 @@ $schoolDetails = [];
 
 try {
     $schoolDetails = $pdo->query(
-        'SELECT school_name, school_address, custodian_name, custodian_position, head_name, head_position FROM school_details ORDER BY id ASC LIMIT 1'
+        'SELECT Region, Division, school_name, school_address, custodian_name, custodian_position, head_name, head_position FROM school_details ORDER BY id ASC LIMIT 1'
     )->fetch(PDO::FETCH_ASSOC) ?: [];
+    $schoolRegion = trim((string) ($schoolDetails['Region'] ?? ''));
+    $schoolDivision = trim((string) ($schoolDetails['Division'] ?? ''));
     $schoolName = trim((string) ($schoolDetails['school_name'] ?? ''));
     $schoolAddress = trim((string) ($schoolDetails['school_address'] ?? ''));
 
@@ -92,18 +94,23 @@ function renderSection(array $items, string $label, string $color): void {
 
         /* Print button */
         .print-actions {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            z-index: 1000;
             text-align: right;
-            margin-bottom: 10px;
+            margin: 0;
         }
         .print-actions button {
-            padding: 6px 16px;
+            padding: 6px 10px;
             border: none;
             border-radius: 4px;
-            background: #0D3B66;
+            background: #0d6efd;
             color: #fff;
-            font-size: 12px;
+            font-size: 14px;
             cursor: pointer;
         }
+        .print-actions .close-button { background: #6c757d; margin-left: 4px; }
         @media print { .print-actions { display: none; } }
 
         /* DepEd header */
@@ -218,7 +225,8 @@ function renderSection(array $items, string $label, string $color): void {
 <body onload="window.print()">
 
     <div class="print-actions">
-        <button onclick="window.print()">🖨 Save as PDF / Print</button>
+        <button onclick="window.print()">Print</button>
+        <button class="close-button" onclick="window.close()">Close</button>
     </div>
 
     <!-- DepEd Header -->
@@ -226,8 +234,8 @@ function renderSection(array $items, string $label, string $color): void {
         <img src="../../../assets/img/deped.png" alt="DepEd Logo">
         <div class="republic">Republika ng Pilipinas</div>
         <div class="department">Department of Education</div>
-        <div class="sub">Region VIII — Eastern Visayas</div>
-        <div class="sub">Schools Division of Catbalogan City</div>
+        <div class="sub"><?= htmlspecialchars($schoolRegion ?? '', ENT_QUOTES, 'UTF-8') ?></div>
+        <div class="sub"><?= htmlspecialchars($schoolDivision ?? '', ENT_QUOTES, 'UTF-8') ?></div>
         <?php if ($schoolName !== ''): ?>
         <div class="sub"><?= htmlspecialchars($schoolName, ENT_QUOTES, 'UTF-8') ?></div>
         <?php endif; ?>

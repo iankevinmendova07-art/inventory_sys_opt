@@ -37,8 +37,10 @@ try {
 
     // Load the configured custodian and school head for the signature blocks.
     $schoolDetails = $pdo->query(
-        'SELECT school_name, school_address, custodian_name, custodian_position, head_name, head_position FROM school_details ORDER BY id ASC LIMIT 1'
+        'SELECT Region, Division, school_name, school_address, custodian_name, custodian_position, head_name, head_position FROM school_details ORDER BY id ASC LIMIT 1'
     )->fetch(PDO::FETCH_ASSOC) ?: [];
+    $schoolRegion = trim((string) ($schoolDetails['Region'] ?? ''));
+    $schoolDivision = trim((string) ($schoolDetails['Division'] ?? ''));
     $schoolName = trim((string) ($schoolDetails['school_name'] ?? ''));
     $schoolAddress = trim((string) ($schoolDetails['school_address'] ?? ''));
     $custodianName = $schoolDetails['custodian_name'] ?? '';
@@ -151,6 +153,10 @@ try {
             body { margin: 0; padding: 0; }
             .page-container { width: 100%; max-width: none; border: none; }
         }
+        .print-actions { position: fixed; top: 16px; right: 16px; z-index: 1000; text-align: right; margin: 0; }
+        .print-actions button { padding: 6px 10px; border: 0; border-radius: 4px; color: #fff; font-size: 14px; line-height: 1.5; cursor: pointer; }
+        .print-actions .print-button { background: #0d6efd; }
+        .print-actions .close-button { background: #6c757d; }
         .deped-header {
             text-align: center;
             margin-bottom: 20px;
@@ -197,15 +203,16 @@ try {
 <body>
 
 <div class="page-container">
-    <div class="no-print" style="margin-bottom: 15px; text-align: right;">
-        <button onclick="window.print();" style="padding: 8px 16px; background: #0D3B66; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Print / Save A4 Landscape PDF</button>
+    <div class="no-print print-actions">
+        <button class="print-button" onclick="window.print();">Print</button>
+        <button class="close-button" onclick="window.close();">Close</button>
     </div>
         <div class="deped-header">
         <img src="../../../assets/img/deped.png" alt="DepEd Logo">
         <div class="republic">Republika ng Pilipinas</div>
         <div class="department">Department of Education</div>
-        <div class="region">Region VIII — Eastern Visayas</div>
-        <div class="division">Schools Division of Catbalogan City</div>
+        <div class="region"><?= htmlspecialchars($schoolRegion ?? '', ENT_QUOTES, 'UTF-8') ?></div>
+        <div class="division"><?= htmlspecialchars($schoolDivision ?? '', ENT_QUOTES, 'UTF-8') ?></div>
         <?php if ($schoolName !== ''): ?>
         <div class="school"><?= htmlspecialchars($schoolName, ENT_QUOTES, 'UTF-8') ?></div>
         <?php endif; ?>

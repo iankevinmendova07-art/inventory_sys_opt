@@ -9,6 +9,25 @@ $adminName = isset($_SESSION['admin_name']) ? strtoupper($_SESSION['admin_name']
 $adminRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'Administrator';
 $schoolDetailsStatus = $_SESSION['school_details_status'] ?? '';
 unset($_SESSION['school_details_status']);
+$philippineRegions = [
+    'NCR - National Capital Region',
+    'CAR - Cordillera Administrative Region',
+    'Region I - Ilocos Region',
+    'Region II - Cagayan Valley',
+    'Region III - Central Luzon',
+    'Region IV-A - CALABARZON',
+    'MIMAROPA Region',
+    'Region V - Bicol Region',
+    'Region VI - Western Visayas',
+    'Region VII - Central Visayas',
+    'Region VIII - Eastern Visayas',
+    'Region IX - Zamboanga Peninsula',
+    'Region X - Northern Mindanao',
+    'Region XI - Davao Region',
+    'Region XII - SOCCSKSARGEN',
+    'Region XIII - Caraga',
+    'BARMM - Bangsamoro Autonomous Region in Muslim Mindanao'
+];
 
 // Fetch positions from the database
 try {
@@ -20,7 +39,7 @@ try {
 
 // Fetch employees from the database
 try {
-    $stmtEmp = $pdo->query("SELECT * FROM employee ORDER BY id DESC");
+    $stmtEmp = $pdo->query("SELECT * FROM employee ORDER BY id DESC LIMIT 500");
     $employees = $stmtEmp->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     error_log('setting_controller.php employee fetch error: ' . $e->getMessage());
@@ -49,6 +68,8 @@ try {
 try {
     $pdo->exec("CREATE TABLE IF NOT EXISTS school_details (
         id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+        Region VARCHAR(255) NOT NULL DEFAULT '',
+        Division VARCHAR(255) NOT NULL DEFAULT '',
         school_name VARCHAR(255) NOT NULL DEFAULT '',
         school_address VARCHAR(255) NOT NULL DEFAULT '',
         head_name VARCHAR(255) NOT NULL,
@@ -56,7 +77,7 @@ try {
         custodian_name VARCHAR(255) NOT NULL,
         custodian_position VARCHAR(255) NOT NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
-    $schoolDetails = $pdo->query("SELECT id, school_name, school_address, head_name, head_position, custodian_name, custodian_position FROM school_details ORDER BY id ASC LIMIT 1")->fetch(PDO::FETCH_ASSOC) ?: [];
+    $schoolDetails = $pdo->query("SELECT id, Region, Division, school_name, school_address, head_name, head_position, custodian_name, custodian_position FROM school_details ORDER BY id ASC LIMIT 1")->fetch(PDO::FETCH_ASSOC) ?: [];
     $schoolDetailsAvailable = true;
 } catch (PDOException $e) {
     error_log('setting_controller.php school_details fetch error: ' . $e->getMessage());

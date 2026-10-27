@@ -191,6 +191,19 @@ require_once 'controllers/setting/setting_controller.php';
                 </div>
                 <div class="modal-body p-4">
                     <div class="mb-3">
+                        <label for="schoolRegion" class="form-label fw-semibold">Region</label>
+                        <select class="form-select" id="schoolRegion" name="Region" required>
+                            <option value="" disabled <?php echo empty($schoolDetails['Region']) ? 'selected' : ''; ?>>Select a region</option>
+                            <?php foreach ($philippineRegions as $region): ?>
+                                <option value="<?php echo htmlspecialchars($region, ENT_QUOTES, 'UTF-8'); ?>" <?php echo ($schoolDetails['Region'] ?? '') === $region ? 'selected' : ''; ?>><?php echo htmlspecialchars($region, ENT_QUOTES, 'UTF-8'); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="schoolDivision" class="form-label fw-semibold">School Division</label>
+                        <input type="text" class="form-control" id="schoolDivision" name="Division" maxlength="255" value="<?php echo htmlspecialchars($schoolDetails['Division'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" required>
+                    </div>
+                    <div class="mb-3">
                         <label for="schoolName" class="form-label fw-semibold">School Name</label>
                         <input type="text" class="form-control" id="schoolName" name="school_name" maxlength="255" value="<?php echo htmlspecialchars($schoolDetails['school_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
                     </div>
@@ -198,18 +211,19 @@ require_once 'controllers/setting/setting_controller.php';
                         <label for="schoolAddress" class="form-label fw-semibold">School Address</label>
                         <textarea class="form-control" id="schoolAddress" name="school_address" maxlength="255" rows="2"><?php echo htmlspecialchars($schoolDetails['school_address'] ?? '', ENT_QUOTES, 'UTF-8'); ?></textarea>
                     </div>
-                    <div class="mb-3">
+                    <div class="row">
+                    <div class="col-md-6 mb-3">
                         <label for="headName" class="form-label fw-semibold">School Head Name</label>
                         <select class="form-select" id="headName" name="head_name" required>
                             <option value="" disabled <?php echo empty($schoolDetails['head_name']) ? 'selected' : ''; ?>>Select a school head</option>
                             <?php foreach ($employees as $employee): ?>
                                 <option value="<?php echo htmlspecialchars($employee['emp_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" <?php echo ($schoolDetails['head_name'] ?? '') === ($employee['emp_name'] ?? null) ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($employee['emp_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?><?php if (!empty($employee['emp_position'])): ?> — <?php echo htmlspecialchars($employee['emp_position'], ENT_QUOTES, 'UTF-8'); ?><?php endif; ?>
+                                    <?php echo htmlspecialchars($employee['emp_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
                     </div>
-                    <div class="mb-3">
+                    <div class="col-md-6 mb-3">
                         <label for="headPosition" class="form-label fw-semibold">School Head Position</label>
                         <select class="form-select" id="headPosition" name="head_position" required>
                             <option value="" disabled <?php echo empty($schoolDetails['head_position']) ? 'selected' : ''; ?>>Select a position</option>
@@ -218,18 +232,18 @@ require_once 'controllers/setting/setting_controller.php';
                             <?php endforeach; ?>
                         </select>
                     </div>
-                    <div class="mb-3">
+                    <div class="col-md-6 mb-3">
                         <label for="custodianName" class="form-label fw-semibold">Property Custodian Name</label>
                         <select class="form-select" id="custodianName" name="custodian_name" required>
                             <option value="" disabled <?php echo empty($schoolDetails['custodian_name']) ? 'selected' : ''; ?>>Select a property custodian</option>
                             <?php foreach ($employees as $employee): ?>
                                 <option value="<?php echo htmlspecialchars($employee['emp_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" <?php echo ($schoolDetails['custodian_name'] ?? '') === ($employee['emp_name'] ?? null) ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($employee['emp_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?><?php if (!empty($employee['emp_position'])): ?> — <?php echo htmlspecialchars($employee['emp_position'], ENT_QUOTES, 'UTF-8'); ?><?php endif; ?>
+                                    <?php echo htmlspecialchars($employee['emp_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
                     </div>
-                    <div class="mb-0">
+                    <div class="col-md-6 mb-3">
                         <label for="custodianPosition" class="form-label fw-semibold">Property Custodian Position</label>
                         <select class="form-select" id="custodianPosition" name="custodian_position" required>
                             <option value="" disabled <?php echo empty($schoolDetails['custodian_position']) ? 'selected' : ''; ?>>Select a position</option>
@@ -237,6 +251,7 @@ require_once 'controllers/setting/setting_controller.php';
                                 <option value="<?php echo htmlspecialchars($position['position_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" <?php echo ($schoolDetails['custodian_position'] ?? '') === ($position['position_name'] ?? null) ? 'selected' : ''; ?>><?php echo htmlspecialchars($position['position_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?></option>
                             <?php endforeach; ?>
                         </select>
+                    </div>
                     </div>
                 </div>
                 <div class="modal-footer bg-light">
