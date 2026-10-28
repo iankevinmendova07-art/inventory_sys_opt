@@ -68,6 +68,7 @@ if ((!$adminExists || $editSchoolDetails) && ($_SERVER['REQUEST_METHOD'] ?? 'GET
             ? mb_strtoupper($schoolName, 'UTF-8')
             : strtoupper($schoolName);
         $schoolAddress = trim((string)($_POST['school_address'] ?? ''));
+        $schoolType = trim((string)($_POST['type'] ?? ''));
 
         if (!$editSchoolDetails && !preg_match('/^[A-Za-z0-9._-]{3,50}$/', $username)) {
             $error = 'Username must be 3 to 50 characters using letters, numbers, dots, underscores, or hyphens.';
@@ -83,6 +84,8 @@ if ((!$adminExists || $editSchoolDetails) && ($_SERVER['REQUEST_METHOD'] ?? 'GET
             $error = 'Enter a school name between 1 and 255 characters.';
         } elseif ($schoolAddress === '' || strlen($schoolAddress) > 255) {
             $error = 'Enter a school address between 1 and 255 characters.';
+        } elseif (!in_array($schoolType, ['Elementary', 'Secondary'], true)) {
+            $error = 'Please select Elementary or Secondary.';
         } else {
             try {
                 $pdo->beginTransaction();
@@ -101,11 +104,11 @@ if ((!$adminExists || $editSchoolDetails) && ($_SERVER['REQUEST_METHOD'] ?? 'GET
                     // Save or update the school information in school_details
                     $existingSD = $pdo->query("SELECT id FROM school_details ORDER BY id ASC LIMIT 1")->fetch(PDO::FETCH_ASSOC);
                     if ($existingSD) {
-                        $updateSD = $pdo->prepare("UPDATE school_details SET Region = ?, Division = ?, school_name = ?, school_address = ? WHERE id = ?");
-                        $updateSD->execute([$region, $division, $schoolName, $schoolAddress, $existingSD['id']]);
+                        $updateSD = $pdo->prepare("UPDATE school_details SET Region = ?, Division = ?, school_name = ?, school_address = ?, type = ? WHERE id = ?");
+                        $updateSD->execute([$region, $division, $schoolName, $schoolAddress, $schoolType, $existingSD['id']]);
                     } else {
-                        $insertSD = $pdo->prepare("INSERT INTO school_details (Region, Division, school_name, school_address, head_name, head_position, custodian_name, custodian_position) VALUES (?, ?, ?, ?, '', '', '', '')");
-                        $insertSD->execute([$region, $division, $schoolName, $schoolAddress]);
+                        $insertSD = $pdo->prepare("INSERT INTO school_details (Region, Division, school_name, school_address, type, head_name, head_position, custodian_name, custodian_position) VALUES (?, ?, ?, ?, ?, '', '', '', '')");
+                        $insertSD->execute([$region, $division, $schoolName, $schoolAddress, $schoolType]);
                     }
 
                     $pdo->commit();
@@ -192,6 +195,15 @@ if ((!$adminExists || $editSchoolDetails) && ($_SERVER['REQUEST_METHOD'] ?? 'GET
 
             <label for="division">School Division</label>
             <input id="division" name="division" type="text" maxlength="255" placeholder="e.g. Catbalogan City or Schools Division of Catbalogan City" value="<?php echo htmlspecialchars($divisionValue, ENT_QUOTES, 'UTF-8'); ?>" required>
+
+            <label for="school_type">School Type</label>
+            <?php $selectedSchoolType = $_POST['type'] ?? $schoolDetails['type'] ?? ''; ?>
+            <select id="school_type" name="type" required>
+                <option value="" disabled <?php echo $selectedSchoolType === '' ? 'selected' : ''; ?>>Select a school type</option>
+                <?php foreach (['Elementary', 'Secondary'] as $schoolTypeOption): ?>
+                    <option value="<?php echo $schoolTypeOption; ?>" <?php echo $selectedSchoolType === $schoolTypeOption ? 'selected' : ''; ?>><?php echo $schoolTypeOption; ?></option>
+                <?php endforeach; ?>
+            </select>
 
             <label for="school_name">School Name</label>
             <input id="school_name" name="school_name" type="text" maxlength="255" style="text-transform: uppercase;" value="<?php echo htmlspecialchars($_POST['school_name'] ?? $schoolDetails['school_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" oninput="this.value = this.value.toLocaleUpperCase();" required>

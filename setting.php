@@ -204,6 +204,15 @@ require_once 'controllers/setting/setting_controller.php';
                         <input type="text" class="form-control" id="schoolDivision" name="Division" maxlength="255" value="<?php echo htmlspecialchars($schoolDetails['Division'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" required>
                     </div>
                     <div class="mb-3">
+                        <label for="schoolType" class="form-label fw-semibold">School Type</label>
+                        <select class="form-select" id="schoolType" name="type" required>
+                            <option value="" disabled <?php echo empty($schoolDetails['type']) ? 'selected' : ''; ?>>Select a school type</option>
+                            <?php foreach (['Elementary', 'Secondary'] as $schoolTypeOption): ?>
+                                <option value="<?php echo $schoolTypeOption; ?>" <?php echo ($schoolDetails['type'] ?? '') === $schoolTypeOption ? 'selected' : ''; ?>><?php echo $schoolTypeOption; ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="mb-3">
                         <label for="schoolName" class="form-label fw-semibold">School Name</label>
                         <input type="text" class="form-control" id="schoolName" name="school_name" maxlength="255" value="<?php echo htmlspecialchars($schoolDetails['school_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
                     </div>

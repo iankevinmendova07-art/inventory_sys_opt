@@ -103,7 +103,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 await Swal.fire({
                     icon: data.status === 'success' ? 'success' : 'error',
                     title: data.status === 'success' ? 'Password reset' : 'Reset failed',
-                    text: data.message,
+                    html: data.status === 'success'
+                        ? '<p>Username: <strong>admin</strong></p><p>Password: <strong>11021992</strong></p>'
+                        : undefined,
+                    text: data.status === 'success' ? undefined : data.message,
                     confirmButtonColor: '#0D3B66'
                 });
             } catch (error) {

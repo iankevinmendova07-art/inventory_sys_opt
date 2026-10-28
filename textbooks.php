@@ -9,6 +9,25 @@ require_once __DIR__ . '/controllers/auth/auth.php';
 $adminName = isset($_SESSION['admin_name']) ? strtoupper($_SESSION['admin_name']) : 'ADMIN';
 $adminRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'Administrator';
 
+$schoolType = 'Elementary';
+try {
+    $schoolTypeValue = $pdo->query('SELECT type FROM school_details ORDER BY id ASC LIMIT 1')->fetchColumn();
+    if (is_string($schoolTypeValue) && strcasecmp(trim($schoolTypeValue), 'Secondary') === 0) {
+        $schoolType = 'Secondary';
+    }
+} catch (PDOException $e) {
+    // Keep the textbook form usable if school details have not been configured yet.
+}
+$elementaryGradeLevels = [
+    'Kinder' => 'Kinder',
+    'Grade I' => 'Grade I',
+    'Grade II' => 'Grade II',
+    'Grade III' => 'Grade III',
+    'Grade IV' => 'Grade IV',
+    'Grade V' => 'Grade V',
+    'Grade VI' => 'Grade VI',
+];
+
 // Fetch teachers from employee table
 $teachers = [];
 try {
@@ -157,20 +176,47 @@ try {
                         <label for="grade_level" class="form-label fw-semibold">Grade Level</label>
                         <select class="form-select" id="grade_level" name="grade_level" required>
                             <option value="" disabled selected>Select grade level...</option>
-                            <option value="Kinder">Kinder</option>
-                            <option value="Grade I">Grade I</option>
-                            <option value="Grade II">Grade II</option>
-                            <option value="Grade III">Grade III</option>
-                            <option value="Grade IV">Grade IV</option>
-                            <option value="Grade V">Grade V</option>
-                            <option value="Grade VI">Grade VI</option>
-                            <option value="Others">Others</option>
+                            <?php if ($schoolType === 'Elementary'): ?>
+                                <?php foreach ($elementaryGradeLevels as $value => $label): ?>
+                                    <option value="<?php echo htmlspecialchars($value, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($label, ENT_QUOTES, 'UTF-8'); ?></option>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <option value="grade_7">Grade 7</option>
+                                <option value="grade_8">Grade 8</option>
+                                <option value="grade_9">Grade 9</option>
+                                <option value="grade_10">Grade 10</option>
+                                <option value="grade_11">Grade 11</option>
+                                <option value="grade_12">Grade 12</option>
+                            <?php endif; ?>
                         </select>
                     </div>
                     <div class="mb-3">
                         <label for="lr_subject" class="form-label fw-semibold">Subject</label>
                         <select class="form-select" id="lr_subject" name="lr_subject" required>
                             <option value="" disabled selected>Select subject...</option>
+                            <?php if ($schoolType === 'Secondary'): ?>
+                                <option value="English">English</option>
+                                <option value="Filipino">Filipino</option>
+                                <option value="Mathematics">Mathematics</option>
+                                <option value="Science">Science</option>
+                                <option value="Araling Panlipunan">Araling Panlipunan</option>
+                                <option value="MAPEH">MAPEH</option>
+                                <option value="Edukasyon sa Pagpapakatao">Edukasyon sa Pagpapakatao</option>
+                                <option value="TLE / TVL">Technology and Livelihood Education (TLE / TVL)</option>
+                                <option value="Oral Communication">Oral Communication</option>
+                                <option value="Reading and Writing">Reading and Writing</option>
+                                <option value="General Mathematics">General Mathematics</option>
+                                <option value="Statistics and Probability">Statistics and Probability</option>
+                                <option value="Earth and Life Science">Earth and Life Science</option>
+                                <option value="Physical Science">Physical Science</option>
+                                <option value="Personal Development">Personal Development</option>
+                                <option value="UCSP">Understanding Culture, Society, and Politics</option>
+                                <option value="Philosophy">Introduction to the Philosophy of the Human Person</option>
+                                <option value="Practical Research 1">Practical Research 1</option>
+                                <option value="Practical Research 2">Practical Research 2</option>
+                                <option value="Empowerment Technologies">Empowerment Technologies</option>
+                                <option value="Entrepreneurship">Entrepreneurship</option>
+                            <?php else: ?>
                             <option value="Kindergarten">Kindergarten</option>
                             <option value="Language">Language</option>
                             <option value="Reading and Literacy">Reading and Literacy</option>
@@ -184,6 +230,7 @@ try {
                             <option value="Edukasyong Pantahanan at Pangkabuhayan (EPP)">Edukasyong Pantahanan at Pangkabuhayan (EPP)</option>
                             <option value="MAPEH">MAPEH</option>
                             <option value="Others">Others</option>
+                            <?php endif; ?>
                         </select>
                     </div>
                     <div class="row">
@@ -248,18 +295,46 @@ try {
                     <div class="mb-3">
                         <label for="edit_grade_level" class="form-label fw-semibold">Grade Level</label>
                         <select class="form-select" id="edit_grade_level" name="grade_level" required>
-                            <option value="Kinder">Kinder</option>
-                            <option value="Grade I">Grade I</option>
-                            <option value="Grade II">Grade II</option>
-                            <option value="Grade III">Grade III</option>
-                            <option value="Grade IV">Grade IV</option>
-                            <option value="Grade V">Grade V</option>
-                            <option value="Grade VI">Grade VI</option>
+                            <?php if ($schoolType === 'Elementary'): ?>
+                                <?php foreach ($elementaryGradeLevels as $value => $label): ?>
+                                    <option value="<?php echo htmlspecialchars($value, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($label, ENT_QUOTES, 'UTF-8'); ?></option>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <option value="grade_7">Grade 7</option>
+                                <option value="grade_8">Grade 8</option>
+                                <option value="grade_9">Grade 9</option>
+                                <option value="grade_10">Grade 10</option>
+                                <option value="grade_11">Grade 11</option>
+                                <option value="grade_12">Grade 12</option>
+                            <?php endif; ?>
                         </select>
                     </div>
                     <div class="mb-3">
                         <label for="edit_lr_subject" class="form-label fw-semibold">Subject</label>
                         <select class="form-select" id="edit_lr_subject" name="lr_subject" required>
+                            <?php if ($schoolType === 'Secondary'): ?>
+                                <option value="English">English</option>
+                                <option value="Filipino">Filipino</option>
+                                <option value="Mathematics">Mathematics</option>
+                                <option value="Science">Science</option>
+                                <option value="Araling Panlipunan">Araling Panlipunan</option>
+                                <option value="MAPEH">MAPEH</option>
+                                <option value="Edukasyon sa Pagpapakatao">Edukasyon sa Pagpapakatao</option>
+                                <option value="TLE / TVL">Technology and Livelihood Education (TLE / TVL)</option>
+                                <option value="Oral Communication">Oral Communication</option>
+                                <option value="Reading and Writing">Reading and Writing</option>
+                                <option value="General Mathematics">General Mathematics</option>
+                                <option value="Statistics and Probability">Statistics and Probability</option>
+                                <option value="Earth and Life Science">Earth and Life Science</option>
+                                <option value="Physical Science">Physical Science</option>
+                                <option value="Personal Development">Personal Development</option>
+                                <option value="UCSP">Understanding Culture, Society, and Politics</option>
+                                <option value="Philosophy">Introduction to the Philosophy of the Human Person</option>
+                                <option value="Practical Research 1">Practical Research 1</option>
+                                <option value="Practical Research 2">Practical Research 2</option>
+                                <option value="Empowerment Technologies">Empowerment Technologies</option>
+                                <option value="Entrepreneurship">Entrepreneurship</option>
+                            <?php else: ?>
                             <option value="Kindergarten">Kindergarten</option>
                             <option value="Language">Language</option>
                             <option value="Reading and Literacy">Reading and Literacy</option>
@@ -272,6 +347,8 @@ try {
                             <option value="GMRC – Good Manners and Right Conduct">GMRC – Good Manners and Right Conduct</option>
                             <option value="Edukasyong Pantahanan at Pangkabuhayan (EPP)">Edukasyong Pantahanan at Pangkabuhayan (EPP)</option>
                             <option value="MAPEH">MAPEH</option>
+                            <option value="Others">Others</option>
+                            <?php endif; ?>
                         </select>
                     </div>
                     <div class="row">

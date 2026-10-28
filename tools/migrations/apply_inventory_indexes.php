@@ -160,4 +160,21 @@ if ($v3Applied === 0) {
     echo 'Migration version 3 applied.' . PHP_EOL;
 }
 
+// Migration version 4 adds the school type field used by setup and Settings.
+$v4Applied = (int) $pdo->query('SELECT COUNT(*) FROM schema_migrations WHERE version = 4')->fetchColumn();
+if ($v4Applied === 0) {
+    $hasSchoolType = (int) $pdo->query(
+        "SELECT COUNT(*) FROM information_schema.columns
+         WHERE table_schema = DATABASE()
+           AND table_name = 'school_details'
+           AND column_name = 'type'"
+    )->fetchColumn();
+    if ($hasSchoolType === 0) {
+        $pdo->exec("ALTER TABLE school_details ADD COLUMN type VARCHAR(255) NOT NULL DEFAULT '' AFTER Division");
+        echo 'Added type column to school_details.' . PHP_EOL;
+    }
+    $pdo->exec('INSERT IGNORE INTO schema_migrations (version) VALUES (4)');
+    echo 'Migration version 4 applied.' . PHP_EOL;
+}
+
 echo 'Additive inventory schema migration completed.' . PHP_EOL;

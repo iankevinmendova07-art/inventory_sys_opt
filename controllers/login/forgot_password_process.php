@@ -22,19 +22,21 @@ if (!hash_equals('11021992', $recoveryPin)) {
 }
 
 try {
+    // This recovery flow resets the single administrator account.
     $adminId = $pdo->query('SELECT id FROM admin ORDER BY id LIMIT 1')->fetchColumn();
     if ($adminId === false) {
         json_error('No administrator account was found.');
     }
 
-    $passwordHash = password_hash('123456', PASSWORD_DEFAULT);
-    $stmt = $pdo->prepare('UPDATE admin SET password = :password WHERE id = :id');
+    $passwordHash = password_hash('11021992', PASSWORD_DEFAULT);
+    $stmt = $pdo->prepare('UPDATE admin SET username = :username, password = :password WHERE id = :id');
     $stmt->execute([
+        'username' => 'admin',
         'password' => $passwordHash,
         'id' => $adminId,
     ]);
 
-    json_success('The admin password has been reset to 123456. You can now log in.');
+    json_success('Username: admin\nPassword: 11021992');
 } catch (PDOException $e) {
     error_log('controllers/login/forgot_password_process.php DB error: ' . $e->getMessage());
     http_response_code(500);

@@ -70,6 +70,7 @@ try {
         id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
         Region VARCHAR(255) NOT NULL DEFAULT '',
         Division VARCHAR(255) NOT NULL DEFAULT '',
+        type VARCHAR(255) NOT NULL DEFAULT '',
         school_name VARCHAR(255) NOT NULL DEFAULT '',
         school_address VARCHAR(255) NOT NULL DEFAULT '',
         head_name VARCHAR(255) NOT NULL,
@@ -77,7 +78,7 @@ try {
         custodian_name VARCHAR(255) NOT NULL,
         custodian_position VARCHAR(255) NOT NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
-    $schoolDetails = $pdo->query("SELECT id, Region, Division, school_name, school_address, head_name, head_position, custodian_name, custodian_position FROM school_details ORDER BY id ASC LIMIT 1")->fetch(PDO::FETCH_ASSOC) ?: [];
+    $schoolDetails = $pdo->query("SELECT id, Region, Division, type, school_name, school_address, head_name, head_position, custodian_name, custodian_position FROM school_details ORDER BY id ASC LIMIT 1")->fetch(PDO::FETCH_ASSOC) ?: [];
     $schoolDetailsAvailable = true;
 } catch (PDOException $e) {
     error_log('setting_controller.php school_details fetch error: ' . $e->getMessage());

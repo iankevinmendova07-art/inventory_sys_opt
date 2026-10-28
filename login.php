@@ -73,7 +73,7 @@ $adminNameUpper = isset($_SESSION['admin_name']) ? strtoupper($_SESSION['admin_n
 <script src="assets/vendor/sweetalert2/sweetalert2.min.js"></script>
 
 <!-- External Custom Login JS -->
-<script src="assets/js/login.js"></script>
+<script src="assets/js/login.js?v=2"></script>
 
 </body>
 </html>

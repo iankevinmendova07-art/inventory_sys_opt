@@ -6,7 +6,7 @@ require_once dirname(__DIR__, 3) . '/config/db.php';
 $schoolDetails = [];
 try {
     $schoolDetails = $pdo->query(
-        'SELECT Region, Division, school_name, school_address, custodian_name, custodian_position, head_name, head_position FROM school_details ORDER BY id ASC LIMIT 1'
+        'SELECT Region, Division, type, school_name, school_address, custodian_name, custodian_position, head_name, head_position FROM school_details ORDER BY id ASC LIMIT 1'
     )->fetch(PDO::FETCH_ASSOC) ?: [];
     $schoolRegion = trim((string) ($schoolDetails['Region'] ?? ''));
     $schoolDivision = trim((string) ($schoolDetails['Division'] ?? ''));
@@ -29,14 +29,51 @@ $custodianPosition = $schoolDetails['custodian_position'] ?? '';
 $headName = $schoolDetails['head_name'] ?? '';
 $headPosition = $schoolDetails['head_position'] ?? '';
 
-$gradeLevels = ['Kinder', 'Grade I', 'Grade II', 'Grade III', 'Grade IV', 'Grade V', 'Grade VI'];
-$textbooksByGrade = array_fill_keys($gradeLevels, []);
-$textbooksByGrade['Other'] = [];
+$isSecondary = strcasecmp(trim((string) ($schoolDetails['type'] ?? '')), 'Secondary') === 0;
+if ($isSecondary) {
+    $gradeLevels = [
+        'grade_7' => 'Grade 7',
+        'grade_8' => 'Grade 8',
+        'grade_9' => 'Grade 9',
+        'grade_10' => 'Grade 10',
+        'grade_11' => 'Grade 11',
+        'grade_12' => 'Grade 12',
+    ];
+} else {
+    $gradeLevels = [
+        'Kinder' => 'Kinder',
+        'Grade I' => 'Grade I',
+        'Grade II' => 'Grade II',
+        'Grade III' => 'Grade III',
+        'Grade IV' => 'Grade IV',
+        'Grade V' => 'Grade V',
+        'Grade VI' => 'Grade VI',
+    ];
+}
+$textbooksByGrade = array_fill_keys(array_keys($gradeLevels), []);
+if (!$isSecondary) {
+    $textbooksByGrade['Other'] = [];
+}
 $textbookCount = 0;
+
+$secondaryGradeAliases = [
+    'Grade 7' => 'grade_7',
+    'Grade 8' => 'grade_8',
+    'Grade 9' => 'grade_9',
+    'Grade 10' => 'grade_10',
+    'Grade 11' => 'grade_11',
+    'Grade 12' => 'grade_12',
+];
 
 while ($textbook = $stmt->fetch(PDO::FETCH_ASSOC)) {
     $gradeLevel = trim($textbook['grade_level'] ?? '');
-    $group = in_array($gradeLevel, $gradeLevels, true) ? $gradeLevel : 'Other';
+    if ($isSecondary && isset($secondaryGradeAliases[$gradeLevel])) {
+        $gradeLevel = $secondaryGradeAliases[$gradeLevel];
+    }
+    if ($isSecondary && !array_key_exists($gradeLevel, $gradeLevels)) {
+        continue;
+    }
+    $group = array_key_exists($gradeLevel, $gradeLevels) ? $gradeLevel : 'Other';
     $textbooksByGrade[$group][] = $textbook;
     $textbookCount++;
 }
@@ -233,8 +270,9 @@ $reportDate = date('F d, Y');
                 <?php $grandTotalQuantity = 0; ?>
                 <?php foreach ($textbooksByGrade as $gradeLevel => $gradeTextbooks): ?>
                     <?php if ($gradeLevel === 'Other' && empty($gradeTextbooks)) continue; ?>
+                    <?php $gradeLabel = $gradeLevel === 'Other' ? 'Other' : $gradeLevels[$gradeLevel]; ?>
                     <tr>
-                        <td colspan="7" class="category-yellow">GRADE LEVEL: <?php echo htmlspecialchars(strtoupper($gradeLevel)); ?></td>
+                        <td colspan="7" class="category-yellow">GRADE LEVEL: <?php echo htmlspecialchars(strtoupper($gradeLabel)); ?></td>
                     </tr>
                     <?php $gradeTotalQuantity = 0; ?>
                     <?php if (empty($gradeTextbooks)): ?>
@@ -260,7 +298,7 @@ $reportDate = date('F d, Y');
                         <?php endforeach; ?>
                     <?php endif; ?>
                     <tr class="total-row">
-                        <td colspan="2" class="text-end">TOTAL FOR <?php echo htmlspecialchars(strtoupper($gradeLevel)); ?></td>
+                        <td colspan="2" class="text-end">TOTAL FOR <?php echo htmlspecialchars(strtoupper($gradeLabel)); ?></td>
                         <td class="text-center"><?php echo $gradeTotalQuantity > 0 ? $gradeTotalQuantity : ''; ?></td>
                         <td colspan="4"></td>
                     </tr>
