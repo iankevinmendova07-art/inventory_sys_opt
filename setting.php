@@ -11,7 +11,7 @@ require_once 'controllers/setting/setting_controller.php';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PROJECT - IAN (Inventory and Assets Navigation)</title>
-    <link rel="icon" type="image/png" href="assets/img/ian.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="assets/img/ian-taskbar-hd.png?v=20261029">
     <!-- Bootstrap 5 CSS -->
     <link href="assets/vendor/bootstrap/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
@@ -201,7 +201,7 @@ require_once 'controllers/setting/setting_controller.php';
                     </div>
                     <div class="mb-3">
                         <label for="schoolDivision" class="form-label fw-semibold">School Division</label>
-                        <input type="text" class="form-control" id="schoolDivision" name="Division" maxlength="255" value="<?php echo htmlspecialchars($schoolDetails['Division'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" required>
+                        <input type="text" class="form-control" id="schoolDivision" name="Division" maxlength="255" placeholder="e.g., Schools Division Of Catbalogan City" value="<?php echo htmlspecialchars($schoolDetails['Division'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" required>
                     </div>
                     <div class="mb-3">
                         <label for="schoolType" class="form-label fw-semibold">School Type</label>

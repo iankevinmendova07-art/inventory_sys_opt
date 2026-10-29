@@ -27,12 +27,12 @@ Name: "desktopicon"; Description: "Create a desktop shortcut"; GroupDescription:
 Source: "stage\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{autoprograms}\{#AppName}"; Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File ""{app}\tools\installer\start-local.ps1"""; WorkingDir: "{app}"
-Name: "{autoprograms}\Stop {#AppName}"; Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File ""{app}\tools\installer\stop-local.ps1"""; WorkingDir: "{app}"
-Name: "{autoprograms}\Back Up {#AppName}"; Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File ""{app}\tools\installer\backup-local.ps1"""; WorkingDir: "{app}"
-Name: "{autoprograms}\Restore {#AppName}"; Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File ""{app}\tools\installer\restore-local.ps1"""; WorkingDir: "{app}"
-Name: "{autoprograms}\Remove {#AppName}"; Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File ""{app}\tools\installer\remove-local.ps1"""; WorkingDir: "{app}"
-Name: "{autodesktop}\{#AppName}"; Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File ""{app}\tools\installer\start-local.ps1"""; WorkingDir: "{app}"; Tasks: desktopicon
+Name: "{autoprograms}\{#AppName}"; Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File ""{app}\tools\installer\start-local.ps1"""; WorkingDir: "{app}"; IconFilename: "{app}\assets\img\inventory-system.ico"
+Name: "{autoprograms}\Stop {#AppName}"; Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File ""{app}\tools\installer\stop-local.ps1"""; WorkingDir: "{app}"; IconFilename: "{app}\assets\img\inventory-system.ico"
+Name: "{autoprograms}\Back Up {#AppName}"; Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File ""{app}\tools\installer\backup-local.ps1"""; WorkingDir: "{app}"; IconFilename: "{app}\assets\img\inventory-system.ico"
+Name: "{autoprograms}\Restore {#AppName}"; Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File ""{app}\tools\installer\restore-local.ps1"""; WorkingDir: "{app}"; IconFilename: "{app}\assets\img\inventory-system.ico"
+Name: "{autoprograms}\Remove {#AppName}"; Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File ""{app}\tools\installer\remove-local.ps1"""; WorkingDir: "{app}"; IconFilename: "{app}\assets\img\inventory-system.ico"
+Name: "{autodesktop}\{#AppName}"; Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File ""{app}\tools\installer\start-local.ps1"""; WorkingDir: "{app}"; Tasks: desktopicon; IconFilename: "{app}\assets\img\inventory-system.ico"
 
 [Run]
 Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\tools\installer\start-local.ps1"""; WorkingDir: "{app}"; Description: "Launch {#AppName}"; Flags: postinstall nowait skipifsilent

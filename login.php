@@ -17,7 +17,7 @@ $adminNameUpper = isset($_SESSION['admin_name']) ? strtoupper($_SESSION['admin_n
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PROJECT - IAN (Inventory and Assets Navigation)</title>
-    <link rel="icon" type="image/png" href="assets/img/ian.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="assets/img/ian-taskbar-hd.png?v=20261029">
     
     <!-- Bootstrap 5 CSS -->
     <link href="assets/vendor/bootstrap/bootstrap.min.css" rel="stylesheet">
