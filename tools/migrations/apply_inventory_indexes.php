@@ -96,6 +96,16 @@ foreach ($indexes as $table => $tableIndexes) {
 
 $pdo->exec('INSERT IGNORE INTO schema_migrations (version) VALUES (1)');
 
+// Migration version 5 stores persistent login rate-limit buckets.
+$pdo->exec("CREATE TABLE IF NOT EXISTS login_attempts (
+    bucket_hash CHAR(64) NOT NULL,
+    failures INT NOT NULL DEFAULT 0,
+    window_started DATETIME NOT NULL,
+    locked_until DATETIME DEFAULT NULL,
+    PRIMARY KEY (bucket_hash),
+    KEY idx_login_attempts_locked_until (locked_until)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
 // ── Migration version 2 (v1.1 upgrade) ───────────────────────────────────────
 // Adds columns and tables introduced in v1.1. All statements are idempotent
 // (CREATE TABLE IF NOT EXISTS / column existence check before ALTER TABLE).
@@ -176,5 +186,8 @@ if ($v4Applied === 0) {
     $pdo->exec('INSERT IGNORE INTO schema_migrations (version) VALUES (4)');
     echo 'Migration version 4 applied.' . PHP_EOL;
 }
+
+$pdo->exec('INSERT IGNORE INTO schema_migrations (version) VALUES (5)');
+echo 'Migration version 5 applied.' . PHP_EOL;
 
 echo 'Additive inventory schema migration completed.' . PHP_EOL;

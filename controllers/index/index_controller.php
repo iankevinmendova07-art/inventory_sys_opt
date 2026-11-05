@@ -7,6 +7,7 @@ require_once dirname(__DIR__, 2) . '/config/db.php';
 // Get admin info from session
 $adminName = isset($_SESSION['admin_name']) ? strtoupper($_SESSION['admin_name']) : 'ADMIN';
 $adminRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'Administrator';
+$recentTransactions = [];
 
 // 1. Single consolidated query for high-level KPIs
 $totalConsumablesWithStock   = 0;
@@ -49,6 +50,19 @@ try {
     error_log('controllers/index/index_controller.php KPI query error: ' . $e->getMessage());
 }
 
+// Recent releases are grouped by their existing transaction code.
+try {
+    $recentStmt = $pdo->query("SELECT trans_code, MAX(created_at) AS created_at,
+        MAX(emp_name) AS emp_name, COUNT(*) AS item_count
+        FROM transaction_log
+        GROUP BY trans_code
+        ORDER BY MAX(created_at) DESC
+        LIMIT 6");
+    $recentTransactions = $recentStmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    error_log('controllers/index/index_controller.php recent transactions query error: ' . $e->getMessage());
+}
+
 // 2. Standard subjects & grades definitions
 $allSubjects = [
     'Kindergarten', 'Language', 'Reading and Literacy', 'Filipino', 
@@ -72,14 +86,14 @@ try {
     $subjectStmt = $pdo->query("SELECT lr_subject, SUM(lr_qty) AS total_qty FROM lr_textbooks GROUP BY lr_subject HAVING total_qty > 0 ORDER BY total_qty DESC");
     $subjectData = $subjectStmt->fetchAll(PDO::FETCH_ASSOC);
     foreach ($subjectData as $row) {
-        $subjects[] = $row['lr_subject'];
+        $subjects[] = (string)$row['lr_subject'];
         $subjectCounts[] = (int)$row['total_qty'];
     }
 
     $gradeStmt = $pdo->query("SELECT grade_level, SUM(lr_qty) AS total_qty FROM lr_textbooks GROUP BY grade_level HAVING total_qty > 0 ORDER BY grade_level ASC");
     $gradeData = $gradeStmt->fetchAll(PDO::FETCH_ASSOC);
     foreach ($gradeData as $row) {
-        $grades[] = $row['grade_level'];
+        $grades[] = (string)$row['grade_level'];
         $gradeCounts[] = (int)$row['total_qty'];
     }
 } catch (PDOException $e) {

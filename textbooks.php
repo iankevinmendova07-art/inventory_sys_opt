@@ -55,6 +55,7 @@ try {
     <link rel="stylesheet" href="assets/vendor/datatables/dataTables.bootstrap5.min.css">
     <!-- Custom Dashboard Styling -->
     <link href="assets/css/textbooks.css" rel="stylesheet">
+    <link href="assets/css/navigation.css" rel="stylesheet">
 
     <!-- jQuery -->
     <script src="assets/vendor/jquery/jquery.min.js"></script>
@@ -75,11 +76,13 @@ try {
 <div class="wrapper d-flex">
     <!-- Include Sidebar Navigation Component -->
     <?php include_once 'includes/nav.php'; ?>
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
     <!-- Page Content Wrapper -->
     <div id="content">
         <!-- Top Navbar -->
         <nav class="navbar navbar-expand-lg navbar-top">
             <div class="container-fluid">
+                <button class="btn sidebar-toggle" id="sidebarToggle" type="button" aria-label="Toggle navigation" aria-expanded="false"><i class="bi bi-list"></i></button>
                 <span class="navbar-brand mb-0 h6 text-secondary fw-bold">
                     <i class="bi bi-speedometer2 me-2"></i> Textbook Overview
                 </span>
@@ -226,7 +229,7 @@ try {
                             <option value="Science">Science</option>
                             <option value="Araling Panlipunan">Araling Panlipunan</option>
                             <option value="Makabansa">Makabansa</option>
-                            <option value="GMRC – Good Manners and Right Conduct">GMRC – Good Manners and Right Conduct</option>
+                            <option value="GMRC â€“ Good Manners and Right Conduct">GMRC â€“ Good Manners and Right Conduct</option>
                             <option value="Edukasyong Pantahanan at Pangkabuhayan (EPP)">Edukasyong Pantahanan at Pangkabuhayan (EPP)</option>
                             <option value="MAPEH">MAPEH</option>
                             <option value="Others">Others</option>
@@ -344,7 +347,7 @@ try {
                             <option value="Science">Science</option>
                             <option value="Araling Panlipunan">Araling Panlipunan</option>
                             <option value="Makabansa">Makabansa</option>
-                            <option value="GMRC – Good Manners and Right Conduct">GMRC – Good Manners and Right Conduct</option>
+                            <option value="GMRC â€“ Good Manners and Right Conduct">GMRC â€“ Good Manners and Right Conduct</option>
                             <option value="Edukasyong Pantahanan at Pangkabuhayan (EPP)">Edukasyong Pantahanan at Pangkabuhayan (EPP)</option>
                             <option value="MAPEH">MAPEH</option>
                             <option value="Others">Others</option>

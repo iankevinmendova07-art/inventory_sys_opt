@@ -24,6 +24,7 @@ require_once 'controllers/setting/setting_controller.php';
     <link rel="stylesheet" href="assets/vendor/datatables/dataTables.bootstrap5.min.css">
     <!-- Custom Dashboard Styling -->
     <link href="assets/css/index.css" rel="stylesheet">
+    <link href="assets/css/navigation.css" rel="stylesheet">
     <style>
         .clickable-card {
             cursor: pointer;
@@ -42,16 +43,19 @@ require_once 'controllers/setting/setting_controller.php';
             border-bottom-color: transparent;
         }
     </style>
+    <script src="assets/js/index.js" defer></script>
 </head>
 <body>
 <div class="wrapper d-flex">
     <!-- Include Sidebar Navigation Component -->
     <?php include_once 'includes/nav.php'; ?>
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
     <!-- Page Content Wrapper -->
     <div id="content">
         <!-- Top Navbar -->
         <nav class="navbar navbar-expand-lg navbar-top">
             <div class="container-fluid">
+                <button class="btn sidebar-toggle" id="sidebarToggle" type="button" aria-label="Toggle navigation" aria-expanded="false"><i class="bi bi-list"></i></button>
                 <span class="navbar-brand mb-0 h6 text-secondary fw-bold">
                     <i class="bi bi-speedometer2 me-2"></i> Settings Overview
                 </span>

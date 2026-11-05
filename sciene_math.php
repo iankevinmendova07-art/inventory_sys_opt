@@ -26,6 +26,7 @@ $adminRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'Administra
     <link rel="stylesheet" href="assets/vendor/datatables/dataTables.bootstrap5.min.css">
     <!-- Custom Styling -->
     <link href="assets/css/consup.css" rel="stylesheet">
+    <link href="assets/css/navigation.css" rel="stylesheet">
 
     <!-- jQuery -->
     <script src="assets/vendor/jquery/jquery.min.js"></script>
@@ -74,11 +75,13 @@ $adminRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'Administra
 
 <div class="wrapper d-flex">
     <?php include_once 'includes/nav.php'; ?>
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
     <div id="content">
         <!-- Top Navbar -->
         <nav class="navbar navbar-expand-lg navbar-top">
             <div class="container-fluid">
+                <button class="btn sidebar-toggle" id="sidebarToggle" type="button" aria-label="Toggle navigation" aria-expanded="false"><i class="bi bi-list"></i></button>
                 <span class="navbar-brand mb-0 h6 text-secondary fw-bold">
                     <i class="bi bi-journal-bookmark me-2"></i> Science &amp; Math Equipment Overview
                 </span>
@@ -207,7 +210,7 @@ $adminRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'Administra
         </div>
     </div>
 </div>
-<!-- ── Add Item Modal ───────────────────────────────────────────────────── -->
+<!-- â”€â”€ Add Item Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
 <div class="modal fade" id="addEquipmentModal" tabindex="-1" aria-labelledby="addEquipmentModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content" style="border-radius: 12px;">
@@ -254,7 +257,7 @@ $adminRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'Administra
     </div>
 </div>
 
-<!-- ── Inventory Report Modal ───────────────────────────────────────────── -->
+<!-- â”€â”€ Inventory Report Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
 <div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-sm modal-dialog-centered">
         <div class="modal-content" style="border-radius: 12px;">
@@ -291,7 +294,7 @@ $adminRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'Administra
     </div>
 </div>
 
-<!-- ── Edit Item Modal ──────────────────────────────────────────────────── -->
+<!-- â”€â”€ Edit Item Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
 <div class="modal fade" id="editEquipmentModal" tabindex="-1" aria-labelledby="editEquipmentModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content" style="border-radius: 12px;">
@@ -391,7 +394,7 @@ document.addEventListener('DOMContentLoaded', function () {
         initTable('mathTable');
     });
 
-    // ── Add Item ────────────────────────────────────────────────────────────
+    // â”€â”€ Add Item â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     document.getElementById('saveEquipmentBtn').addEventListener('click', function () {
         const form = document.getElementById('addEquipmentForm');
         if (!form.checkValidity()) { form.reportValidity(); return; }
@@ -407,7 +410,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }).catch(() => Swal.fire({ icon: 'error', title: 'Server Error', confirmButtonColor: '#0D3B66' }));
     });
 
-    // ── Open Edit Modal ─────────────────────────────────────────────────────
+    // â”€â”€ Open Edit Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     $(document).on('click', '.edit-btn', function () {
         const selectedUnit = $(this).attr('data-lr_unit') || '';
 
@@ -427,7 +430,7 @@ document.addEventListener('DOMContentLoaded', function () {
         $('#editEquipmentModal').modal('show');
     });
 
-    // ── Save Edit ───────────────────────────────────────────────────────────
+    // â”€â”€ Save Edit â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     document.getElementById('updateEquipmentBtn').addEventListener('click', function () {
         const form = document.getElementById('editEquipmentForm');
         if (!form.checkValidity()) { form.reportValidity(); return; }
@@ -442,7 +445,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }).catch(() => Swal.fire({ icon: 'error', title: 'Server Error', confirmButtonColor: '#0D3B66' }));
     });
 
-    // ── Delete ──────────────────────────────────────────────────────────────
+    // â”€â”€ Delete â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     $(document).on('click', '.delete-btn', function () {
         const id = $(this).data('id');
         Swal.fire({

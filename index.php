@@ -1,282 +1,92 @@
 <?php
 require_once __DIR__ . '/includes/session_security.php';
-// Protect the page using your auth check
-require_once 'controllers/auth/auth.php';
-// Include dashboard controller logic from controllers/index
-require_once 'controllers/index/index_controller.php';
-
+require_once __DIR__ . '/controllers/auth/auth.php';
+require_once __DIR__ . '/controllers/index/index_controller.php';
+$e = static fn($value): string => htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
+$initial = strtoupper(substr(trim((string)$adminName), 0, 1)) ?: 'A';
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PROJECT - IAN (Inventory and Assets Navigation)</title>
+    <title>Dashboard | Project IAN</title>
     <link rel="icon" type="image/png" sizes="512x512" href="assets/img/ian-taskbar-hd.png?v=20261029">
-
-    <!-- Bootstrap 5 CSS -->
     <link href="assets/vendor/bootstrap/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="assets/vendor/bootstrap-icons/font/bootstrap-icons.min.css">
-    <!-- SweetAlert2 CSS -->
     <link rel="stylesheet" href="assets/vendor/sweetalert2/sweetalert2.min.css">
-    <!-- Custom Dashboard Styling -->
     <link href="assets/css/index.css" rel="stylesheet">
-
-    <!-- jQuery -->
+    <link href="assets/css/navigation.css" rel="stylesheet">
     <script src="assets/vendor/jquery/jquery.min.js"></script>
-    <!-- Bootstrap 5 JS Bundle -->
     <script src="assets/vendor/bootstrap/bootstrap.bundle.min.js"></script>
-    <!-- SweetAlert2 JS -->
     <script src="assets/vendor/sweetalert2/sweetalert2.min.js"></script>
-    <!-- Chart.js -->
     <script src="assets/vendor/chartjs/chart.umd.min.js"></script>
-    <!-- Dashboard JS Logic -->
     <script src="assets/js/index.js" defer></script>
 </head>
 <body>
-
 <div class="wrapper d-flex">
-    <!-- Include Sidebar Navigation Component -->
-    <?php include_once 'includes/nav.php'; ?>
-
-    <!-- Page Content Wrapper -->
-    <div id="content">
-        <!-- Top Navbar -->
-        <nav class="navbar navbar-expand-lg navbar-top">
-            <div class="container-fluid">
-                <span class="navbar-brand mb-0 h6 text-secondary fw-bold">
-                    <i class="bi bi-speedometer2 me-2"></i> Dashboard Overview
-                </span>
-
-                <div class="ms-auto d-flex align-items-center">
-                    <div class="user-profile-badge">
-                        <div class="user-avatar">
-                            <?php echo substr($adminName, 0, 1); ?>
-                        </div>
-                        <div class="text-start">
-                            <span class="d-block fw-bold text-dark" style="font-size: 0.85rem; line-height: 1.1;"><?php echo htmlspecialchars($adminName); ?></span>
-                            <span class="text-muted" style="font-size: 0.75rem;"><?php echo htmlspecialchars($adminRole); ?></span>
-                        </div>
-                    </div>
+    <?php include_once __DIR__ . '/includes/nav.php'; ?>
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+    <main id="content">
+        <nav class="navbar navbar-top" aria-label="Top navigation">
+            <div class="container-fluid px-3 px-lg-4">
+                <button class="btn sidebar-toggle" id="sidebarToggle" type="button" aria-label="Toggle navigation" aria-expanded="false"><i class="bi bi-list"></i></button>
+                <div class="page-heading"><span class="eyebrow">INVENTORY & ASSET MANAGEMENT</span><h1>Dashboard</h1></div>
+                <div class="ms-auto user-profile-badge" aria-label="Signed in as <?php echo $e($adminName); ?>, <?php echo $e($adminRole); ?>">
+                    <span class="user-avatar"><?php echo $e($initial); ?></span>
+                    <span class="profile-copy"><strong><?php echo $e($adminName); ?></strong><small><?php echo $e($adminRole); ?></small></span>
                 </div>
             </div>
         </nav>
-        <!-- Main Body Container -->
-        <div class="container-fluid p-4">
-            <!-- Welcome Banner -->
-            <div class="alert alert-primary border-0 shadow-sm d-flex align-items-center mb-4" style="background: linear-gradient(135deg, #0D3B66 0%, #1a528a 100%); color: white; border-radius: 12px; padding: 1.5rem;">
-                <div>
-                    <h4 class="alert-heading fw-bold mb-1">Welcome back, <?php echo htmlspecialchars($adminName); ?>!</h4>
-                    <p class="mb-0 text-white-50" style="font-size: 0.9rem;">Overview of inventory supplies, stock status, transactions, and registered personnel.</p>
-                </div>
-            </div>
+        <div class="dashboard-content">
+            <section class="welcome-panel">
+                <div><span class="welcome-kicker">YOUR INVENTORY AT A GLANCE</span><h2>Welcome back, <?php echo $e($adminName); ?></h2><p>Here’s what’s happening across your school’s inventory and learning resources.</p></div>
+                <div class="welcome-date"><i class="bi bi-calendar3"></i><span><?php echo $e(date('l, F j, Y')); ?></span></div>
+            </section>
 
-            <!-- Dashboard Metric Stat Cards -->
-            <div class="row g-3 mb-4">
-                <!-- Consumable Supplies (With Stock) -->
-                <div class="col-md-4 col-xl-2">
-                    <div class="card bg-white shadow-sm h-100" style="border: 1.5px solid #0d6efd; border-radius: 10px;">
-                        <div class="card-body py-3">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div>
-                                    <span class="text-muted d-block small text-uppercase fw-semibold" style="font-size: 0.7rem; letter-spacing: 0.5px;">Consumable Item</span>
-                                    <h3 class="fw-bold my-1 text-dark"><?php echo number_format($totalConsumablesWithStock); ?></h3>
-                                    <span class="small text-success fw-semibold"><i class="bi bi-check-circle-fill me-1"></i>With Stock</span>
-                                </div>
-                                <div class="p-2 rounded-3 d-flex align-items-center justify-content-center" style="border: 1.5px solid rgba(13, 110, 253, 0.3); color: #0d6efd;">
-                                    <i class="bi bi-box-seam fs-4"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            <section aria-labelledby="overviewTitle" class="mb-4">
+                <div class="section-heading"><div><h2 id="overviewTitle">Inventory overview</h2><p>Current records across your system</p></div></div>
+                <div class="row g-3">
+                    <?php
+                    $metrics = [
+                        ['Consumables in stock', $totalConsumablesWithStock, 'bi-box-seam', 'blue', 'Items with available quantity'],
+                        ['Out of stock', $totalConsumablesOutStock, 'bi-exclamation-triangle', 'red', 'Consumable items needing attention'],
+                        ['Non-consumables', $totalNonConsumables, 'bi-pc-display', 'amber', 'Property records'],
+                        ['Consumable releases', $totalConsumableTransactions, 'bi-receipt', 'green', 'Unique release transactions'],
+                        ['Non-consumable records', $totalNonConsumableTransactions, 'bi-journal-check', 'teal', 'Recorded transactions'],
+                        ['Personnel', $totalEmployees, 'bi-people', 'violet', 'Registered staff'],
+                    ];
+                    foreach ($metrics as [$label, $value, $icon, $tone, $note]): ?>
+                    <div class="col-6 col-xl-4 col-xxl-2"><article class="metric-card">
+                        <div class="metric-top"><span><?php echo $e($label); ?></span><span class="metric-icon tone-<?php echo $e($tone); ?>"><i class="bi <?php echo $e($icon); ?>"></i></span></div>
+                        <strong class="metric-value"><?php echo number_format((int)$value); ?></strong><span class="metric-note"><?php echo $e($note); ?></span>
+                    </article></div>
+                    <?php endforeach; ?>
                 </div>
+            </section>
 
-                <!-- Consumable Supplies (Without Stock) -->
-                <div class="col-md-4 col-xl-2">
-                    <div class="card bg-white shadow-sm h-100" style="border: 1.5px solid #dc3545; border-radius: 10px;">
-                        <div class="card-body py-3">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div>
-                                    <span class="text-muted d-block small text-uppercase fw-semibold" style="font-size: 0.7rem; letter-spacing: 0.5px;">Consumable Item</span>
-                                    <h3 class="fw-bold my-1 text-dark"><?php echo number_format($totalConsumablesOutStock); ?></h3>
-                                    <span class="small text-danger fw-semibold"><i class="bi bi-x-circle-fill me-1"></i>Without Stock</span>
-                                </div>
-                                <div class="p-2 rounded-3 d-flex align-items-center justify-content-center" style="border: 1.5px solid rgba(220, 53, 69, 0.3); color: #dc3545;">
-                                    <i class="bi bi-exclamation-triangle fs-4"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Non-Consumable Supplies -->
-                <div class="col-md-4 col-xl-2">
-                    <div class="card bg-white shadow-sm h-100" style="border: 1.5px solid #ffc107; border-radius: 10px;">
-                        <div class="card-body py-3">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div>
-                                    <span class="text-muted d-block small text-uppercase fw-semibold" style="font-size: 0.7rem; letter-spacing: 0.5px;">Non-Consumable Item</span>
-                                    <h3 class="fw-bold my-1 text-dark"><?php echo number_format($totalNonConsumables); ?></h3>
-                                    <span class="small text-muted">Supplies</span>
-                                </div>
-                                <div class="p-2 rounded-3 d-flex align-items-center justify-content-center" style="border: 1.5px solid rgba(255, 193, 7, 0.4); color: #d4a713;">
-                                    <i class="bi bi-pc-display fs-4"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Consumable Transactions -->
-                <div class="col-md-4 col-xl-2">
-                    <div class="card bg-white shadow-sm h-100" style="border: 1.5px solid #198754; border-radius: 10px;">
-                        <div class="card-body py-3">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div>
-                                    <span class="text-muted d-block small text-uppercase fw-semibold" style="font-size: 0.7rem; letter-spacing: 0.5px;">Consumable Trans.</span>
-                                    <h3 class="fw-bold my-1 text-dark"><?php echo number_format($totalConsumableTransactions); ?></h3>
-                                    <span class="small text-muted">Releases</span>
-                                </div>
-                                <div class="p-2 rounded-3 d-flex align-items-center justify-content-center" style="border: 1.5px solid rgba(25, 135, 84, 0.3); color: #198754;">
-                                    <i class="bi bi-receipt fs-4"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Non-Consumable Transactions -->
-                <div class="col-md-4 col-xl-2">
-                    <div class="card bg-white shadow-sm h-100" style="border: 1.5px solid #0dcaf0; border-radius: 10px;">
-                        <div class="card-body py-3">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div>
-                                    <span class="text-muted d-block small text-uppercase fw-semibold" style="font-size: 0.7rem; letter-spacing: 0.5px;">Non-Consumable Trans.</span>
-                                    <h3 class="fw-bold my-1 text-dark"><?php echo number_format($totalNonConsumableTransactions); ?></h3>
-                                    <span class="small text-muted">Transactions</span>
-                                </div>
-                                <div class="p-2 rounded-3 d-flex align-items-center justify-content-center" style="border: 1.5px solid rgba(13, 202, 240, 0.4); color: #0dcaf0;">
-                                    <i class="bi bi-journal-check fs-4"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- Total Personnel Card -->
-                <div class="col-md-4 col-xl-2">
-                    <div class="card bg-white shadow-sm h-100" style="border: 1.5px solid #6f42c1; border-radius: 10px;">
-                        <div class="card-body py-3">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div>
-                                    <span class="text-muted d-block small text-uppercase fw-semibold" style="font-size: 0.7rem; letter-spacing: 0.5px;">Personnel</span>
-                                    <h3 class="fw-bold my-1 text-dark"><?php echo number_format($totalEmployees); ?></h3>
-                                    <span class="small text-muted">Active Staff</span>
-                                </div>
-                                <div class="p-2 rounded-3 d-flex align-items-center justify-content-center" style="border: 1.5px solid rgba(111, 66, 193, 0.3); color: #6f42c1;">
-                                    <i class="bi bi-people-fill fs-4"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- First Row of Charts (3 items) -->
-            <div class="row g-4 mb-4">
-                <!-- Column Chart 1: Total Supplies Breakdown -->
-                <div class="col-lg-4">
-                    <div class="card border-0 shadow-sm h-100" style="border-radius: 12px;">
-                        <div class="card-header bg-white py-3 border-bottom-0 d-flex align-items-center justify-content-between">
-                            <h5 class="fw-bold text-dark mb-0" style="font-size: 1.05rem;"><i class="bi bi-bar-chart-fill me-2 text-primary"></i> Total Supplies</h5>
-                        </div>
-                        <div class="card-body">
-                            <div style="height: 320px; position: relative;">
-                                <canvas id="suppliesColumnChart"
-                                    data-with-stock="<?php echo $totalConsumablesWithStock; ?>"
-                                    data-out-stock="<?php echo $totalConsumablesOutStock; ?>"
-                                    data-non-consumable="<?php echo $totalNonConsumables; ?>">
-                                </canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Column Chart 2: Total Transactions -->
-                <div class="col-lg-4">
-                    <div class="card border-0 shadow-sm h-100" style="border-radius: 12px;">
-                        <div class="card-header bg-white py-3 border-bottom-0 d-flex align-items-center justify-content-between">
-                            <h5 class="fw-bold text-dark mb-0" style="font-size: 1.05rem;"><i class="bi bi-bar-chart-line-fill me-2 text-success"></i> Total Transactions</h5>
-                        </div>
-                        <div class="card-body">
-                            <div style="height: 320px; position: relative;">
-                                <canvas id="transactionsColumnChart"
-                                    data-consumable="<?php echo $totalConsumableTransactions; ?>"
-                                    data-non-consumable="<?php echo $totalNonConsumableTransactions; ?>">
-                                </canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Column Chart 3: Learning Resources (LR SME) -->
-                <div class="col-lg-4">
-                    <div class="card border-0 shadow-sm h-100" style="border-radius: 12px;">
-                        <div class="card-header bg-white py-3 border-bottom-0 d-flex align-items-center justify-content-between">
-                            <h5 class="fw-bold text-dark mb-0" style="font-size: 1.05rem;"><i class="bi bi-book-half me-2 text-warning"></i> Science and Math Equipment Breakdown</h5>
-                        </div>
-                        <div class="card-body">
-                            <div style="height: 320px; position: relative;">
-                                <canvas id="lrSmeColumnChart"
-                                    data-science="<?php echo $scienceCount; ?>"
-                                    data-math="<?php echo $mathCount; ?>">
-                                </canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Second Row of Charts (Textbooks analytics) -->
-            <div class="row g-4 mb-4">
-                <!-- Textbooks by Subject Chart Card -->
-                <div class="col-lg-8">
-                    <div class="card border-0 shadow-sm h-100" style="border-radius: 12px;">
-                        <div class="card-header bg-white py-3 border-bottom-0 d-flex align-items-center justify-content-between">
-                            <h5 class="fw-bold text-dark mb-0" style="font-size: 1.05rem;"><i class="bi bi-journal-bookmark-fill me-2 text-info"></i> Textbooks by Subject</h5>
-                        </div>
-                        <div class="card-body">
-                            <div style="height: 320px; position: relative;">
-                                <canvas id="textbooksSubjectChart"
-                                    data-labels='<?php echo json_encode($subjects); ?>'
-                                    data-values='<?php echo json_encode($subjectCounts); ?>'>
-                                </canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Textbooks by Grade Level Chart Card -->
-                <div class="col-lg-4">
-                    <div class="card border-0 shadow-sm h-100" style="border-radius: 12px;">
-                        <div class="card-header bg-white py-3 border-bottom-0 d-flex align-items-center justify-content-between">
-                            <h5 class="fw-bold text-dark mb-0" style="font-size: 1.05rem;"><i class="bi bi-layers-fill me-2 text-warning"></i> Textbooks by Grade Level</h5>
-                        </div>
-                        <div class="card-body">
-                            <div style="height: 320px; position: relative;">
-                                <canvas id="textbooksGradeChart"
-                                    data-labels='<?php echo json_encode($grades); ?>'
-                                    data-values='<?php echo json_encode($gradeCounts); ?>'>
-                                </canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
+            <section aria-label="Analytics" class="row g-3 mb-4">
+                <div class="col-lg-7"><article class="panel h-100"><div class="panel-heading"><div><h2>Supply stock status</h2><p>Item records by current stock level</p></div><span class="panel-icon"><i class="bi bi-bar-chart-line"></i></span></div><div class="chart-frame"><canvas id="suppliesColumnChart" data-with-stock="<?php echo (int)$totalConsumablesWithStock; ?>" data-out-stock="<?php echo (int)$totalConsumablesOutStock; ?>" data-non-consumable="<?php echo (int)$totalNonConsumables; ?>" aria-label="Supply stock status chart"></canvas></div></article></div>
+                <div class="col-lg-5"><article class="panel h-100"><div class="panel-heading"><div><h2>Transactions</h2><p>Recorded transaction totals by module</p></div><span class="panel-icon"><i class="bi bi-arrow-left-right"></i></span></div><div class="chart-frame"><canvas id="transactionsColumnChart" data-consumable="<?php echo (int)$totalConsumableTransactions; ?>" data-non-consumable="<?php echo (int)$totalNonConsumableTransactions; ?>" aria-label="Transactions chart"></canvas></div></article></div>
+                <div class="col-lg-5"><article class="panel h-100"><div class="panel-heading"><div><h2>Science &amp; math equipment</h2><p>Equipment records by learning area</p></div><span class="panel-icon"><i class="bi bi-flask"></i></span></div><div class="chart-frame chart-frame-short"><canvas id="lrSmeColumnChart" data-science="<?php echo (int)$scienceCount; ?>" data-math="<?php echo (int)$mathCount; ?>" aria-label="Science and math equipment chart"></canvas></div></article></div>
+                <div class="col-lg-7"><article class="panel h-100"><div class="panel-heading"><div><h2>Textbooks by subject</h2><p>Total recorded quantity</p></div><span class="panel-icon"><i class="bi bi-book"></i></span></div><div class="chart-frame chart-frame-short"><canvas id="textbooksSubjectChart" data-labels="<?php echo $e(json_encode($subjects, JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_TAG | JSON_HEX_AMP)); ?>" data-values="<?php echo $e(json_encode($subjectCounts)); ?>" aria-label="Textbooks by subject chart"></canvas></div></article></div>
+                <div class="col-lg-7"><article class="panel h-100"><div class="panel-heading"><div><h2>Textbooks by grade</h2><p>Total recorded quantity</p></div><span class="panel-icon"><i class="bi bi-layers"></i></span></div><div class="chart-frame chart-frame-short"><canvas id="textbooksGradeChart" data-labels="<?php echo $e(json_encode($grades, JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_TAG | JSON_HEX_AMP)); ?>" data-values="<?php echo $e(json_encode($gradeCounts)); ?>" aria-label="Textbooks by grade chart"></canvas></div></article></div>
+                <div class="col-lg-5"><article class="panel h-100"><div class="panel-heading"><div><h2>Quick actions</h2><p>Go directly to a system module</p></div><span class="panel-icon"><i class="bi bi-lightning-charge"></i></span></div><div class="quick-actions">
+                    <a href="consup.php"><span class="action-icon tone-blue"><i class="bi bi-box-seam"></i></span><span><strong>Consumable supplies</strong><small>Manage stock and releases</small></span><i class="bi bi-arrow-up-right"></i></a>
+                    <a href="nonconsup.php"><span class="action-icon tone-amber"><i class="bi bi-pc-display"></i></span><span><strong>Non-consumable supplies</strong><small>Manage property records</small></span><i class="bi bi-arrow-up-right"></i></a>
+                    <a href="sciene_math.php"><span class="action-icon tone-green"><i class="bi bi-flask"></i></span><span><strong>Science &amp; math equipment</strong><small>Browse learning resources</small></span><i class="bi bi-arrow-up-right"></i></a>
+                    <a href="textbooks.php"><span class="action-icon tone-violet"><i class="bi bi-book"></i></span><span><strong>Textbooks</strong><small>Browse textbook records</small></span><i class="bi bi-arrow-up-right"></i></a>
+                    <a href="setting.php"><span class="action-icon tone-teal"><i class="bi bi-gear"></i></span><span><strong>System settings</strong><small>Manage school information</small></span><i class="bi bi-arrow-up-right"></i></a>
+                </div></article></div>
+                <div class="col-12"><article class="panel"><div class="panel-heading"><div><h2>Recent consumable releases</h2><p>Latest transactions recorded in the inventory</p></div><a class="text-link" href="consup.php">View supplies <i class="bi bi-arrow-right"></i></a></div>
+                    <?php if ($recentTransactions): ?><div class="table-responsive"><table class="table activity-table mb-0"><thead><tr><th>Transaction</th><th>Recipient</th><th>Items</th><th>Date</th><th class="text-end">Module</th></tr></thead><tbody>
+                    <?php foreach ($recentTransactions as $transaction): ?><tr><td><span class="transaction-code"><?php echo $e($transaction['trans_code']); ?></span></td><td><?php echo $e($transaction['emp_name']); ?></td><td><?php echo number_format((int)$transaction['item_count']); ?> line<?php echo (int)$transaction['item_count'] === 1 ? '' : 's'; ?></td><td><?php echo $e($transaction['created_at'] ? date('M j, Y · g:i A', strtotime($transaction['created_at'])) : '—'); ?></td><td class="text-end"><span class="status-pill"><span></span>Consumable release</span></td></tr><?php endforeach; ?>
+                    </tbody></table></div><?php else: ?><div class="empty-state"><span><i class="bi bi-inbox"></i></span><strong>No releases yet</strong><p>Completed consumable transactions will appear here.</p></div><?php endif; ?>
+                </article></div>
+            </section>
+            <footer class="dashboard-footer">Project IAN <span>·</span> Inventory and Assets Navigation</footer>
         </div>
-    </div>
+    </main>
 </div>
-
 </body>
 </html>

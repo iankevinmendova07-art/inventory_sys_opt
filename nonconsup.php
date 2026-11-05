@@ -25,6 +25,7 @@ $adminRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'Administra
     <link rel="stylesheet" href="assets/vendor/datatables/dataTables.bootstrap5.min.css">
     <!-- Custom Dashboard Styling -->
     <link href="assets/css/consup.css" rel="stylesheet">
+    <link href="assets/css/navigation.css" rel="stylesheet">
 
     <!-- jQuery -->
     <script src="assets/vendor/jquery/jquery.min.js"></script>
@@ -45,11 +46,13 @@ $adminRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'Administra
 <div class="wrapper d-flex">
     <!-- Include Sidebar Navigation Component -->
     <?php include_once 'includes/nav.php'; ?>
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
     <!-- Page Content Wrapper -->
     <div id="content">
         <!-- Top Navbar -->
         <nav class="navbar navbar-expand-lg navbar-top">
             <div class="container-fluid">
+                <button class="btn sidebar-toggle" id="sidebarToggle" type="button" aria-label="Toggle navigation" aria-expanded="false"><i class="bi bi-list"></i></button>
                 <span class="navbar-brand mb-0 h6 text-secondary fw-bold">
                     <i class="bi bi-speedometer2 me-2"></i> Non-Consumable Supplies Overview
                 </span>

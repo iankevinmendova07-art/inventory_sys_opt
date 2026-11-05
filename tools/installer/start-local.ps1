@@ -238,9 +238,7 @@ $migrationVersion = (& $mysqlExe @client --batch --skip-column-names --execute="
 $migrationNeeded = ([int]$migrationVersion -eq 0)
 if (-not $migrationNeeded) {
     # Keep this in sync with the newest version in apply_inventory_indexes.php.
-    # Existing installs that already recorded version 3 still need version 4
-    # to add the school_details.type column.
-    $migrationDone = (& $mysqlExe @client "--database=$databaseName" --batch --skip-column-names --execute='SELECT COUNT(*) FROM schema_migrations WHERE version=4').Trim()
+    $migrationDone = (& $mysqlExe @client "--database=$databaseName" --batch --skip-column-names --execute='SELECT COUNT(*) FROM schema_migrations WHERE version=5').Trim()
     $migrationNeeded = ([int]$migrationDone -eq 0)
 }
 if ($migrationNeeded -and -not $freshDatabase) {

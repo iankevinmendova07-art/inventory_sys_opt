@@ -1,0 +1,23 @@
+﻿/* Shared application navigation across all authenticated modules. */
+:root{--navy:#123b5d;--navy-deep:#0b2841;--nav-line:#e8edf2}
+.wrapper{min-height:100vh;align-items:stretch}
+#sidebar{flex:0 0 258px;width:258px;min-height:100vh;background:linear-gradient(180deg,var(--navy) 0%,var(--navy-deep) 100%);color:#fff;transition:transform .25s ease;z-index:1045;box-shadow:none}
+#sidebar .sidebar-header{padding:26px 22px 22px;text-align:left;border-bottom:1px solid rgba(255,255,255,.12)}
+#sidebar .sidebar-logo{display:block;width:56px;height:56px;object-fit:contain;background:#fff;border:2px solid rgba(255,255,255,.45);border-radius:14px;padding:2px;margin:0 0 16px;box-shadow:none}
+#sidebar .sidebar-school-name{font-size:.73rem!important;color:#c9d7e4!important;letter-spacing:.08em;margin:0 0 7px!important}
+#sidebar h3{font-size:.84rem!important;font-weight:700;line-height:1.4;letter-spacing:0;color:#fff;margin:0!important}
+#sidebar ul.components{padding:20px 13px;margin:0}
+#sidebar ul li a{padding:11px 13px;font-size:.88rem;font-weight:500;display:flex;align-items:center;color:#c4d2df;border-radius:9px;margin:3px 0;text-decoration:none;transition:background .16s,color .16s}
+#sidebar ul li a i{width:22px;margin-right:10px;font-size:1.05rem;color:#9eb6ca}
+#sidebar ul li a:hover,#sidebar ul li.active>a{color:#fff;background:rgba(255,255,255,.105);transform:none}
+#sidebar ul li.active>a{box-shadow:inset 3px 0 #83c5e7;font-weight:650}
+#sidebar ul li.active>a i{color:#a6daf3}
+#sidebar ul li ul{padding:3px 0 5px 17px}#sidebar ul li ul a{font-size:.82rem;padding:9px 10px}#sidebar ul li ul a i{font-size:.85rem}
+#sidebar ul li.mt-4{margin-top:22px!important;border-top:1px solid rgba(255,255,255,.11);padding-top:13px}#sidebar ul li.mt-4 a,#sidebar ul li.mt-4 a i{color:#f1b3b3}
+#content{flex:1 1 0;min-width:0;min-height:100vh;display:flex;flex-direction:column}
+.navbar-top{height:76px;min-height:76px;background:#fff;border-bottom:1px solid var(--nav-line);box-shadow:none;padding:0;position:sticky;top:0;z-index:1020}.navbar-top>.container-fluid{height:100%}.navbar-top .navbar-brand{font-size:1rem;color:#172b3e!important;font-weight:700!important;white-space:normal}
+.user-profile-badge{display:flex;align-items:center;background:transparent;padding:0;border:0;border-radius:0;gap:10px}.user-avatar{width:39px;height:39px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:#e8f1f8;color:var(--navy);font-weight:750;font-size:1rem;margin:0}
+.sidebar-toggle{display:none;border:1px solid var(--nav-line);color:var(--navy);font-size:1.35rem;margin-right:12px;padding:3px 10px;background:#fff;border-radius:8px}.sidebar-backdrop{display:none}
+@media(max-width:1199.98px){#sidebar{flex-basis:235px;width:235px}}
+@media(max-width:767.98px){#sidebar{position:fixed;inset:0 auto 0 0;width:270px;max-width:85vw;min-height:100dvh;transform:translateX(-100%);overflow-y:auto}.sidebar-open #sidebar{transform:translateX(0)}.sidebar-backdrop{position:fixed;inset:0;background:rgba(13,31,47,.44);z-index:1040}.sidebar-open .sidebar-backdrop{display:block}.sidebar-toggle{display:inline-block}.navbar-top{height:68px;min-height:68px}.navbar-top .navbar-brand{font-size:.92rem!important}.user-profile-badge>div:last-child{display:none}.user-avatar{width:36px;height:36px}}
+@media(prefers-reduced-motion:reduce){#sidebar,#sidebar *{transition:none!important}}
