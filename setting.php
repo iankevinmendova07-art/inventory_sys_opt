@@ -149,8 +149,8 @@ require_once 'controllers/setting/setting_controller.php';
                     <div class="card stat-card p-3 border-start border-4 border-danger shadow-sm h-100 clickable-card" role="button" tabindex="0" data-bs-toggle="modal" data-bs-target="#schoolDetailsModal" aria-controls="schoolDetailsModal" aria-label="Edit school details">
                         <div class="d-flex align-items-start justify-content-between gap-3">
                             <div class="flex-grow-1">
-                                <span class="text-muted fw-semibold text-uppercase" style="font-size: 0.75rem;">School Profile</span>
-                                <h5 class="fw-bold text-dark mb-0">School Details</h5>
+                                <span class="text-muted fw-semibold text-uppercase" style="font-size: 0.75rem;">System Profile</span>
+                                <h5 class="fw-bold text-dark mb-0">School/Office Details</h5>
                             </div>
                             <div class="text-danger fs-2 opacity-50"><i class="bi bi-building"></i></div>
                         </div>
@@ -208,10 +208,10 @@ require_once 'controllers/setting/setting_controller.php';
                         <input type="text" class="form-control" id="schoolDivision" name="Division" maxlength="255" placeholder="e.g., Schools Division Of Catbalogan City" value="<?php echo htmlspecialchars($schoolDetails['Division'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" required>
                     </div>
                     <div class="mb-3">
-                        <label for="schoolType" class="form-label fw-semibold">School Type</label>
+                        <label for="schoolType" class="form-label fw-semibold">Office/School Type</label>
                         <select class="form-select" id="schoolType" name="type" required>
                             <option value="" disabled <?php echo empty($schoolDetails['type']) ? 'selected' : ''; ?>>Select a school type</option>
-                            <?php foreach (['Elementary', 'Secondary'] as $schoolTypeOption): ?>
+                            <?php foreach (['Regional Office','Division Office','Secondary Level','Elementary Level'] as $schoolTypeOption): ?>
                                 <option value="<?php echo $schoolTypeOption; ?>" <?php echo ($schoolDetails['type'] ?? '') === $schoolTypeOption ? 'selected' : ''; ?>><?php echo $schoolTypeOption; ?></option>
                             <?php endforeach; ?>
                         </select>
@@ -226,7 +226,7 @@ require_once 'controllers/setting/setting_controller.php';
                     </div>
                     <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label for="headName" class="form-label fw-semibold">School Head Name</label>
+                        <label for="headName" class="form-label fw-semibold">School Head/Supply Officer</label>
                         <select class="form-select" id="headName" name="head_name" required>
                             <option value="" disabled <?php echo empty($schoolDetails['head_name']) ? 'selected' : ''; ?>>Select a school head</option>
                             <?php foreach ($employees as $employee): ?>
@@ -237,7 +237,7 @@ require_once 'controllers/setting/setting_controller.php';
                         </select>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label for="headPosition" class="form-label fw-semibold">School Head Position</label>
+                        <label for="headPosition" class="form-label fw-semibold">Supply Head Position</label>
                         <select class="form-select" id="headPosition" name="head_position" required>
                             <option value="" disabled <?php echo empty($schoolDetails['head_position']) ? 'selected' : ''; ?>>Select a position</option>
                             <?php foreach ($positions as $position): ?>
@@ -712,7 +712,7 @@ require_once 'controllers/setting/setting_controller.php';
     window.schoolDetailsSaveStatus = <?php echo json_encode($schoolDetailsStatus); ?>;
 </script>
 <!-- External Custom Setting JS -->
-<script src="assets/js/setting.js?v=11"></script>
+<script src="assets/js/setting.js?v=12"></script>
 
 </body>
 </html>

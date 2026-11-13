@@ -4,6 +4,8 @@ document.addEventListener('DOMContentLoaded', function() {
     if (window.schoolDetailsSaveStatus) {
         const messages = {
             saved: { icon: 'success', title: 'Saved', text: 'School details have been saved successfully.' },
+            saved_local_only: { icon: 'warning', title: 'Saved on this computer', text: 'School details were saved locally. Google Sheets sync is not set up yet.' },
+            saved_sync_failed: { icon: 'warning', title: 'Saved locally; sheet not updated', text: 'School details were saved in this system, but Google Sheets could not be updated. Check the sync settings and try saving again.' },
             invalid: { icon: 'error', title: 'Could not save', text: 'Complete the required school head and custodian fields and use no more than 255 characters per field.' },
             invalid_employee: { icon: 'error', title: 'Could not save', text: 'Select school head and property custodian names from the current employee list.' },
             invalid_position: { icon: 'error', title: 'Could not save', text: 'Select school head and property custodian positions from the current position list.' },

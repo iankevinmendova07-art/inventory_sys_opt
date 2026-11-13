@@ -28,14 +28,23 @@ try {
     $icsNo = !empty($item['trans_code']) ? $item['trans_code'] : (!empty($item['property_number']) ? $item['property_number'] : 'ICS-' . sprintf('%04d', $id));
     $currentDate = date('F d, Y');
     $schoolDetails = $pdo->query(
-        'SELECT Region, Division, school_name, school_address, custodian_name, custodian_position FROM school_details ORDER BY id ASC LIMIT 1'
+        'SELECT Region, Division, type, school_name, school_address, custodian_name, custodian_position, head_name, head_position FROM school_details ORDER BY id ASC LIMIT 1'
     )->fetch(PDO::FETCH_ASSOC) ?: [];
     $schoolRegion = trim((string) ($schoolDetails['Region'] ?? ''));
     $schoolDivision = trim((string) ($schoolDetails['Division'] ?? ''));
+    $schoolType = trim((string) ($schoolDetails['type'] ?? ''));
     $schoolName = trim((string) ($schoolDetails['school_name'] ?? ''));
     $schoolAddress = trim((string) ($schoolDetails['school_address'] ?? ''));
-    $receivedFromAdmin = $schoolDetails['custodian_name'] ?? '';
-    $receivedFromPosition = $schoolDetails['custodian_position'] ?? '';
+
+    $isRegionalOrDivision = (strcasecmp($schoolType, 'Regional Office') === 0 || strcasecmp($schoolType, 'Division Office') === 0);
+
+    if ($isRegionalOrDivision) {
+        $receivedFromAdmin = $schoolDetails['head_name'] ?? '';
+        $receivedFromPosition = $schoolDetails['head_position'] ?? '';
+    } else {
+        $receivedFromAdmin = $schoolDetails['custodian_name'] ?? '';
+        $receivedFromPosition = $schoolDetails['custodian_position'] ?? '';
+    }
 
 } catch (PDOException $e) {
     error_log('controllers/supplies/nonconsumable/print_supply.php DB error: ' . $e->getMessage());

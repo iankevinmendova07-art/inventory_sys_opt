@@ -50,7 +50,7 @@ $adminNameUpper = isset($_SESSION['admin_name']) ? strtoupper($_SESSION['admin_n
                 <label for="password" class="form-label">Password</label>
                 <input type="password" class="form-control" id="password" name="password" required placeholder="Enter your password">
             </div>
-            
+
             <button type="submit" class="btn btn-primary-custom w-100 mb-2">SECURE LOGIN</button>
         </form>
 

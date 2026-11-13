@@ -12,8 +12,13 @@ $adminRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'Administra
 $schoolType = 'Elementary';
 try {
     $schoolTypeValue = $pdo->query('SELECT type FROM school_details ORDER BY id ASC LIMIT 1')->fetchColumn();
-    if (is_string($schoolTypeValue) && strcasecmp(trim($schoolTypeValue), 'Secondary') === 0) {
-        $schoolType = 'Secondary';
+    if (is_string($schoolTypeValue)) {
+        $t = trim($schoolTypeValue);
+        if (strcasecmp($t, 'Secondary Level') === 0 || strcasecmp($t, 'Secondary') === 0) {
+            $schoolType = 'Secondary';
+        } elseif (strcasecmp($t, 'Regional Office') === 0 || strcasecmp($t, 'Division Office') === 0) {
+            $schoolType = 'All';
+        }
     }
 } catch (PDOException $e) {
     // Keep the textbook form usable if school details have not been configured yet.
@@ -26,6 +31,14 @@ $elementaryGradeLevels = [
     'Grade IV' => 'Grade IV',
     'Grade V' => 'Grade V',
     'Grade VI' => 'Grade VI',
+];
+$secondaryGradeLevels = [
+    'Grade VII' => 'Grade VII',
+    'Grade VIII' => 'Grade VIII',
+    'Grade IX' => 'Grade IX',
+    'Grade X' => 'Grade X',
+    'Grade XI' => 'Grade XI',
+    'Grade XII' => 'Grade XII',
 ];
 
 // Fetch teachers from employee table
@@ -183,13 +196,14 @@ try {
                                 <?php foreach ($elementaryGradeLevels as $value => $label): ?>
                                     <option value="<?php echo htmlspecialchars($value, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($label, ENT_QUOTES, 'UTF-8'); ?></option>
                                 <?php endforeach; ?>
+                            <?php elseif ($schoolType === 'Secondary'): ?>
+                                <?php foreach ($secondaryGradeLevels as $value => $label): ?>
+                                    <option value="<?php echo htmlspecialchars($value, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($label, ENT_QUOTES, 'UTF-8'); ?></option>
+                                <?php endforeach; ?>
                             <?php else: ?>
-                                <option value="grade_7">Grade 7</option>
-                                <option value="grade_8">Grade 8</option>
-                                <option value="grade_9">Grade 9</option>
-                                <option value="grade_10">Grade 10</option>
-                                <option value="grade_11">Grade 11</option>
-                                <option value="grade_12">Grade 12</option>
+                                <?php foreach (array_merge($elementaryGradeLevels, $secondaryGradeLevels) as $value => $label): ?>
+                                    <option value="<?php echo htmlspecialchars($value, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($label, ENT_QUOTES, 'UTF-8'); ?></option>
+                                <?php endforeach; ?>
                             <?php endif; ?>
                         </select>
                     </div>
@@ -197,29 +211,7 @@ try {
                         <label for="lr_subject" class="form-label fw-semibold">Subject</label>
                         <select class="form-select" id="lr_subject" name="lr_subject" required>
                             <option value="" disabled selected>Select subject...</option>
-                            <?php if ($schoolType === 'Secondary'): ?>
-                                <option value="English">English</option>
-                                <option value="Filipino">Filipino</option>
-                                <option value="Mathematics">Mathematics</option>
-                                <option value="Science">Science</option>
-                                <option value="Araling Panlipunan">Araling Panlipunan</option>
-                                <option value="MAPEH">MAPEH</option>
-                                <option value="Edukasyon sa Pagpapakatao">Edukasyon sa Pagpapakatao</option>
-                                <option value="TLE / TVL">Technology and Livelihood Education (TLE / TVL)</option>
-                                <option value="Oral Communication">Oral Communication</option>
-                                <option value="Reading and Writing">Reading and Writing</option>
-                                <option value="General Mathematics">General Mathematics</option>
-                                <option value="Statistics and Probability">Statistics and Probability</option>
-                                <option value="Earth and Life Science">Earth and Life Science</option>
-                                <option value="Physical Science">Physical Science</option>
-                                <option value="Personal Development">Personal Development</option>
-                                <option value="UCSP">Understanding Culture, Society, and Politics</option>
-                                <option value="Philosophy">Introduction to the Philosophy of the Human Person</option>
-                                <option value="Practical Research 1">Practical Research 1</option>
-                                <option value="Practical Research 2">Practical Research 2</option>
-                                <option value="Empowerment Technologies">Empowerment Technologies</option>
-                                <option value="Entrepreneurship">Entrepreneurship</option>
-                            <?php else: ?>
+                            <?php if ($schoolType === 'Elementary'): ?>
                             <option value="Kindergarten">Kindergarten</option>
                             <option value="Language">Language</option>
                             <option value="Reading and Literacy">Reading and Literacy</option>
@@ -229,10 +221,71 @@ try {
                             <option value="Science">Science</option>
                             <option value="Araling Panlipunan">Araling Panlipunan</option>
                             <option value="Makabansa">Makabansa</option>
-                            <option value="GMRC â€“ Good Manners and Right Conduct">GMRC â€“ Good Manners and Right Conduct</option>
+                            <option value="GMRC - Good Manners and Right Conduct">GMRC - Good Manners and Right Conduct</option>
                             <option value="Edukasyong Pantahanan at Pangkabuhayan (EPP)">Edukasyong Pantahanan at Pangkabuhayan (EPP)</option>
                             <option value="MAPEH">MAPEH</option>
                             <option value="Others">Others</option>
+                            <?php elseif ($schoolType === 'Secondary'): ?>
+                                <option value="English">English</option>
+                                <option value="Filipino">Filipino</option>
+                                <option value="Mathematics">Mathematics</option>
+                                <option value="Science">Science</option>
+                                <option value="Araling Panlipunan">Araling Panlipunan</option>
+                                <option value="MAPEH">MAPEH</option>
+                                <option value="Edukasyon sa Pagpapakatao">Edukasyon sa Pagpapakatao</option>
+                                <option value="TLE / TVL">TLE / TVL</option>
+                                <option value="Oral Communication">Oral Communication</option>
+                                <option value="Reading and Writing">Reading and Writing</option>
+                                <option value="General Mathematics">General Mathematics</option>
+                                <option value="Statistics and Probability">Statistics and Probability</option>
+                                <option value="Earth and Life Science">Earth and Life Science</option>
+                                <option value="Physical Science">Physical Science</option>
+                                <option value="Personal Development">Personal Development</option>
+                                <option value="UCSP">UCSP</option>
+                                <option value="Philosophy">Philosophy</option>
+                                <option value="Practical Research 1">Practical Research 1</option>
+                                <option value="Practical Research 2">Practical Research 2</option>
+                                <option value="Empowerment Technologies">Empowerment Technologies</option>
+                                <option value="Entrepreneurship">Entrepreneurship</option>
+                            <?php else: ?>
+                            <optgroup label="-- Elementary Subjects --">
+                            <option value="Kindergarten">Kindergarten</option>
+                            <option value="Language">Language</option>
+                            <option value="Reading and Literacy">Reading and Literacy</option>
+                            <option value="Filipino">Filipino</option>
+                            <option value="English">English</option>
+                            <option value="Mathematics">Mathematics</option>
+                            <option value="Science">Science</option>
+                            <option value="Araling Panlipunan">Araling Panlipunan</option>
+                            <option value="Makabansa">Makabansa</option>
+                            <option value="GMRC - Good Manners and Right Conduct">GMRC - Good Manners and Right Conduct</option>
+                            <option value="Edukasyong Pantahanan at Pangkabuhayan (EPP)">Edukasyong Pantahanan at Pangkabuhayan (EPP)</option>
+                            <option value="MAPEH">MAPEH</option>
+                            <option value="Others">Others</option>
+                            </optgroup>
+                            <optgroup label="-- Secondary Subjects --">
+                                <option value="English">English</option>
+                                <option value="Filipino">Filipino</option>
+                                <option value="Mathematics">Mathematics</option>
+                                <option value="Science">Science</option>
+                                <option value="Araling Panlipunan">Araling Panlipunan</option>
+                                <option value="MAPEH">MAPEH</option>
+                                <option value="Edukasyon sa Pagpapakatao">Edukasyon sa Pagpapakatao</option>
+                                <option value="TLE / TVL">TLE / TVL</option>
+                                <option value="Oral Communication">Oral Communication</option>
+                                <option value="Reading and Writing">Reading and Writing</option>
+                                <option value="General Mathematics">General Mathematics</option>
+                                <option value="Statistics and Probability">Statistics and Probability</option>
+                                <option value="Earth and Life Science">Earth and Life Science</option>
+                                <option value="Physical Science">Physical Science</option>
+                                <option value="Personal Development">Personal Development</option>
+                                <option value="UCSP">UCSP</option>
+                                <option value="Philosophy">Philosophy</option>
+                                <option value="Practical Research 1">Practical Research 1</option>
+                                <option value="Practical Research 2">Practical Research 2</option>
+                                <option value="Empowerment Technologies">Empowerment Technologies</option>
+                                <option value="Entrepreneurship">Entrepreneurship</option>
+                            </optgroup>
                             <?php endif; ?>
                         </select>
                     </div>
@@ -302,42 +355,21 @@ try {
                                 <?php foreach ($elementaryGradeLevels as $value => $label): ?>
                                     <option value="<?php echo htmlspecialchars($value, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($label, ENT_QUOTES, 'UTF-8'); ?></option>
                                 <?php endforeach; ?>
+                            <?php elseif ($schoolType === 'Secondary'): ?>
+                                <?php foreach ($secondaryGradeLevels as $value => $label): ?>
+                                    <option value="<?php echo htmlspecialchars($value, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($label, ENT_QUOTES, 'UTF-8'); ?></option>
+                                <?php endforeach; ?>
                             <?php else: ?>
-                                <option value="grade_7">Grade 7</option>
-                                <option value="grade_8">Grade 8</option>
-                                <option value="grade_9">Grade 9</option>
-                                <option value="grade_10">Grade 10</option>
-                                <option value="grade_11">Grade 11</option>
-                                <option value="grade_12">Grade 12</option>
+                                <?php foreach (array_merge($elementaryGradeLevels, $secondaryGradeLevels) as $value => $label): ?>
+                                    <option value="<?php echo htmlspecialchars($value, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($label, ENT_QUOTES, 'UTF-8'); ?></option>
+                                <?php endforeach; ?>
                             <?php endif; ?>
                         </select>
                     </div>
                     <div class="mb-3">
                         <label for="edit_lr_subject" class="form-label fw-semibold">Subject</label>
                         <select class="form-select" id="edit_lr_subject" name="lr_subject" required>
-                            <?php if ($schoolType === 'Secondary'): ?>
-                                <option value="English">English</option>
-                                <option value="Filipino">Filipino</option>
-                                <option value="Mathematics">Mathematics</option>
-                                <option value="Science">Science</option>
-                                <option value="Araling Panlipunan">Araling Panlipunan</option>
-                                <option value="MAPEH">MAPEH</option>
-                                <option value="Edukasyon sa Pagpapakatao">Edukasyon sa Pagpapakatao</option>
-                                <option value="TLE / TVL">Technology and Livelihood Education (TLE / TVL)</option>
-                                <option value="Oral Communication">Oral Communication</option>
-                                <option value="Reading and Writing">Reading and Writing</option>
-                                <option value="General Mathematics">General Mathematics</option>
-                                <option value="Statistics and Probability">Statistics and Probability</option>
-                                <option value="Earth and Life Science">Earth and Life Science</option>
-                                <option value="Physical Science">Physical Science</option>
-                                <option value="Personal Development">Personal Development</option>
-                                <option value="UCSP">Understanding Culture, Society, and Politics</option>
-                                <option value="Philosophy">Introduction to the Philosophy of the Human Person</option>
-                                <option value="Practical Research 1">Practical Research 1</option>
-                                <option value="Practical Research 2">Practical Research 2</option>
-                                <option value="Empowerment Technologies">Empowerment Technologies</option>
-                                <option value="Entrepreneurship">Entrepreneurship</option>
-                            <?php else: ?>
+                            <?php if ($schoolType === 'Elementary'): ?>
                             <option value="Kindergarten">Kindergarten</option>
                             <option value="Language">Language</option>
                             <option value="Reading and Literacy">Reading and Literacy</option>
@@ -347,10 +379,71 @@ try {
                             <option value="Science">Science</option>
                             <option value="Araling Panlipunan">Araling Panlipunan</option>
                             <option value="Makabansa">Makabansa</option>
-                            <option value="GMRC â€“ Good Manners and Right Conduct">GMRC â€“ Good Manners and Right Conduct</option>
+                            <option value="GMRC - Good Manners and Right Conduct">GMRC - Good Manners and Right Conduct</option>
                             <option value="Edukasyong Pantahanan at Pangkabuhayan (EPP)">Edukasyong Pantahanan at Pangkabuhayan (EPP)</option>
                             <option value="MAPEH">MAPEH</option>
                             <option value="Others">Others</option>
+                            <?php elseif ($schoolType === 'Secondary'): ?>
+                                <option value="English">English</option>
+                                <option value="Filipino">Filipino</option>
+                                <option value="Mathematics">Mathematics</option>
+                                <option value="Science">Science</option>
+                                <option value="Araling Panlipunan">Araling Panlipunan</option>
+                                <option value="MAPEH">MAPEH</option>
+                                <option value="Edukasyon sa Pagpapakatao">Edukasyon sa Pagpapakatao</option>
+                                <option value="TLE / TVL">TLE / TVL</option>
+                                <option value="Oral Communication">Oral Communication</option>
+                                <option value="Reading and Writing">Reading and Writing</option>
+                                <option value="General Mathematics">General Mathematics</option>
+                                <option value="Statistics and Probability">Statistics and Probability</option>
+                                <option value="Earth and Life Science">Earth and Life Science</option>
+                                <option value="Physical Science">Physical Science</option>
+                                <option value="Personal Development">Personal Development</option>
+                                <option value="UCSP">UCSP</option>
+                                <option value="Philosophy">Philosophy</option>
+                                <option value="Practical Research 1">Practical Research 1</option>
+                                <option value="Practical Research 2">Practical Research 2</option>
+                                <option value="Empowerment Technologies">Empowerment Technologies</option>
+                                <option value="Entrepreneurship">Entrepreneurship</option>
+                            <?php else: ?>
+                            <optgroup label="-- Elementary Subjects --">
+                            <option value="Kindergarten">Kindergarten</option>
+                            <option value="Language">Language</option>
+                            <option value="Reading and Literacy">Reading and Literacy</option>
+                            <option value="Filipino">Filipino</option>
+                            <option value="English">English</option>
+                            <option value="Mathematics">Mathematics</option>
+                            <option value="Science">Science</option>
+                            <option value="Araling Panlipunan">Araling Panlipunan</option>
+                            <option value="Makabansa">Makabansa</option>
+                            <option value="GMRC - Good Manners and Right Conduct">GMRC - Good Manners and Right Conduct</option>
+                            <option value="Edukasyong Pantahanan at Pangkabuhayan (EPP)">Edukasyong Pantahanan at Pangkabuhayan (EPP)</option>
+                            <option value="MAPEH">MAPEH</option>
+                            <option value="Others">Others</option>
+                            </optgroup>
+                            <optgroup label="-- Secondary Subjects --">
+                                <option value="English">English</option>
+                                <option value="Filipino">Filipino</option>
+                                <option value="Mathematics">Mathematics</option>
+                                <option value="Science">Science</option>
+                                <option value="Araling Panlipunan">Araling Panlipunan</option>
+                                <option value="MAPEH">MAPEH</option>
+                                <option value="Edukasyon sa Pagpapakatao">Edukasyon sa Pagpapakatao</option>
+                                <option value="TLE / TVL">TLE / TVL</option>
+                                <option value="Oral Communication">Oral Communication</option>
+                                <option value="Reading and Writing">Reading and Writing</option>
+                                <option value="General Mathematics">General Mathematics</option>
+                                <option value="Statistics and Probability">Statistics and Probability</option>
+                                <option value="Earth and Life Science">Earth and Life Science</option>
+                                <option value="Physical Science">Physical Science</option>
+                                <option value="Personal Development">Personal Development</option>
+                                <option value="UCSP">UCSP</option>
+                                <option value="Philosophy">Philosophy</option>
+                                <option value="Practical Research 1">Practical Research 1</option>
+                                <option value="Practical Research 2">Practical Research 2</option>
+                                <option value="Empowerment Technologies">Empowerment Technologies</option>
+                                <option value="Entrepreneurship">Entrepreneurship</option>
+                            </optgroup>
                             <?php endif; ?>
                         </select>
                     </div>

@@ -3,6 +3,7 @@ require_once dirname(__DIR__, 2) . '/includes/session_security.php';
 
 require_once dirname(__DIR__, 2) . '/controllers/auth/auth.php';
 require_once dirname(__DIR__, 2) . '/config/db.php';
+require_once dirname(__DIR__, 2) . '/includes/school_details_sync.php';
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
     header('Location: ../../setting.php');
@@ -46,7 +47,7 @@ if (!in_array($values['Region'], $philippineRegions, true)) {
     header('Location: ../../setting.php');
     exit;
 }
-if (!in_array($values['type'], ['Elementary', 'Secondary'], true)) {
+if (!in_array($values['type'], ['Regional Office', 'Division Office', 'Elementary Level', 'Secondary Level'], true)) {
     $_SESSION['school_details_status'] = 'invalid';
     header('Location: ../../setting.php');
     exit;
@@ -94,7 +95,10 @@ try {
         $stmt = $pdo->prepare('INSERT INTO school_details (Region, Division, type, school_name, school_address, head_name, head_position, custodian_name, custodian_position) VALUES (:Region, :Division, :type, :school_name, :school_address, :head_name, :head_position, :custodian_name, :custodian_position)');
         $stmt->execute($values);
     }
-    $_SESSION['school_details_status'] = 'saved';
+    $syncStatus = sync_school_details_to_sheet($values);
+    $_SESSION['school_details_status'] = $syncStatus === 'synced'
+        ? 'saved'
+        : ($syncStatus === 'not_configured' ? 'saved_local_only' : 'saved_sync_failed');
 } catch (PDOException $e) {
     error_log('save_school_details.php error: ' . $e->getMessage());
     $_SESSION['school_details_status'] = 'error';

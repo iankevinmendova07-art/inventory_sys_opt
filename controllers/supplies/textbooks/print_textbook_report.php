@@ -29,52 +29,97 @@ $custodianPosition = $schoolDetails['custodian_position'] ?? '';
 $headName = $schoolDetails['head_name'] ?? '';
 $headPosition = $schoolDetails['head_position'] ?? '';
 
-$isSecondary = strcasecmp(trim((string) ($schoolDetails['type'] ?? '')), 'Secondary') === 0;
-if ($isSecondary) {
-    $gradeLevels = [
-        'grade_7' => 'Grade 7',
-        'grade_8' => 'Grade 8',
-        'grade_9' => 'Grade 9',
-        'grade_10' => 'Grade 10',
-        'grade_11' => 'Grade 11',
-        'grade_12' => 'Grade 12',
-    ];
+$rawType = trim((string) ($schoolDetails['type'] ?? ''));
+$schoolType = 'Elementary';
+if (strcasecmp($rawType, 'Secondary Level') === 0 || strcasecmp($rawType, 'Secondary') === 0) {
+    $schoolType = 'Secondary';
+} elseif (strcasecmp($rawType, 'Regional Office') === 0 || strcasecmp($rawType, 'Division Office') === 0) {
+    $schoolType = 'All';
+} elseif (strcasecmp($rawType, 'Elementary Level') === 0 || strcasecmp($rawType, 'Elementary') === 0) {
+    $schoolType = 'Elementary';
+}
+
+$elementaryGradeLevels = [
+    'Kinder'    => 'Kinder',
+    'Grade I'   => 'Grade I',
+    'Grade II'  => 'Grade II',
+    'Grade III' => 'Grade III',
+    'Grade IV'  => 'Grade IV',
+    'Grade V'   => 'Grade V',
+    'Grade VI'  => 'Grade VI',
+];
+
+$secondaryGradeLevels = [
+    'Grade VII'  => 'Grade VII',
+    'Grade VIII' => 'Grade VIII',
+    'Grade IX'   => 'Grade IX',
+    'Grade X'    => 'Grade X',
+    'Grade XI'   => 'Grade XI',
+    'Grade XII'  => 'Grade XII',
+];
+
+if ($schoolType === 'Secondary') {
+    $gradeLevels = $secondaryGradeLevels;
+} elseif ($schoolType === 'All') {
+    $gradeLevels = array_merge($elementaryGradeLevels, $secondaryGradeLevels);
 } else {
-    $gradeLevels = [
-        'Kinder' => 'Kinder',
-        'Grade I' => 'Grade I',
-        'Grade II' => 'Grade II',
-        'Grade III' => 'Grade III',
-        'Grade IV' => 'Grade IV',
-        'Grade V' => 'Grade V',
-        'Grade VI' => 'Grade VI',
-    ];
+    $gradeLevels = $elementaryGradeLevels;
 }
+
 $textbooksByGrade = array_fill_keys(array_keys($gradeLevels), []);
-if (!$isSecondary) {
-    $textbooksByGrade['Other'] = [];
-}
 $textbookCount = 0;
 
-$secondaryGradeAliases = [
-    'Grade 7' => 'grade_7',
-    'Grade 8' => 'grade_8',
-    'Grade 9' => 'grade_9',
-    'Grade 10' => 'grade_10',
-    'Grade 11' => 'grade_11',
-    'Grade 12' => 'grade_12',
+$gradeAliases = [
+    'kindergarten' => 'Kinder',
+    'kinder'       => 'Kinder',
+    'grade 1'      => 'Grade I',
+    'grade_1'      => 'Grade I',
+    'grade i'      => 'Grade I',
+    'grade 2'      => 'Grade II',
+    'grade_2'      => 'Grade II',
+    'grade ii'     => 'Grade II',
+    'grade 3'      => 'Grade III',
+    'grade_3'      => 'Grade III',
+    'grade iii'    => 'Grade III',
+    'grade 4'      => 'Grade IV',
+    'grade_4'      => 'Grade IV',
+    'grade iv'     => 'Grade IV',
+    'grade 5'      => 'Grade V',
+    'grade_5'      => 'Grade V',
+    'grade v'      => 'Grade V',
+    'grade 6'      => 'Grade VI',
+    'grade_6'      => 'Grade VI',
+    'grade vi'     => 'Grade VI',
+    'grade 7'      => 'Grade VII',
+    'grade_7'      => 'Grade VII',
+    'grade vii'    => 'Grade VII',
+    'grade 8'      => 'Grade VIII',
+    'grade_8'      => 'Grade VIII',
+    'grade viii'   => 'Grade VIII',
+    'grade 9'      => 'Grade IX',
+    'grade_9'      => 'Grade IX',
+    'grade ix'     => 'Grade IX',
+    'grade 10'     => 'Grade X',
+    'grade_10'     => 'Grade X',
+    'grade x'      => 'Grade X',
+    'grade 11'     => 'Grade XI',
+    'grade_11'     => 'Grade XI',
+    'grade xi'     => 'Grade XI',
+    'grade 12'     => 'Grade XII',
+    'grade_12'     => 'Grade XII',
+    'grade xii'    => 'Grade XII',
 ];
 
 while ($textbook = $stmt->fetch(PDO::FETCH_ASSOC)) {
-    $gradeLevel = trim($textbook['grade_level'] ?? '');
-    if ($isSecondary && isset($secondaryGradeAliases[$gradeLevel])) {
-        $gradeLevel = $secondaryGradeAliases[$gradeLevel];
-    }
-    if ($isSecondary && !array_key_exists($gradeLevel, $gradeLevels)) {
+    $rawGrade = trim((string) ($textbook['grade_level'] ?? ''));
+    $normalizedGrade = $gradeAliases[strtolower($rawGrade)] ?? $rawGrade;
+
+    if (!array_key_exists($normalizedGrade, $gradeLevels)) {
         continue;
     }
-    $group = array_key_exists($gradeLevel, $gradeLevels) ? $gradeLevel : 'Other';
-    $textbooksByGrade[$group][] = $textbook;
+
+    $textbook['grade_level'] = $normalizedGrade;
+    $textbooksByGrade[$normalizedGrade][] = $textbook;
     $textbookCount++;
 }
 
