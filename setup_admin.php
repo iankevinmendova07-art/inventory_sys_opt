@@ -2,6 +2,7 @@
 require_once __DIR__ . '/includes/session_security.php';
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/csrf.php';
+require_once __DIR__ . '/includes/school_details_sync.php';
 
 header('Cache-Control: no-store');
 
@@ -46,6 +47,17 @@ try {
     // If table doesn't exist yet, it will be handled or created
 }
 
+$employees = [];
+$positions = [];
+if ($editSchoolDetails) {
+    try {
+        $employees = $pdo->query('SELECT emp_name FROM employee ORDER BY emp_name')->fetchAll(PDO::FETCH_ASSOC);
+        $positions = $pdo->query('SELECT position_name FROM position ORDER BY position_name')->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log('Initial school details options could not be loaded: ' . $e->getMessage());
+    }
+}
+
 $divisionValue = (string)($_POST['division'] ?? $schoolDetails['Division'] ?? '');
 if ($divisionValue === '0') {
     $divisionValue = '';
@@ -68,6 +80,11 @@ if ((!$adminExists || $editSchoolDetails) && ($_SERVER['REQUEST_METHOD'] ?? 'GET
             ? mb_strtoupper($schoolName, 'UTF-8')
             : strtoupper($schoolName);
         $schoolAddress = trim((string)($_POST['school_address'] ?? ''));
+        $schoolType = trim((string)($_POST['type'] ?? ''));
+        $headName = trim((string)($_POST['head_name'] ?? ''));
+        $headPosition = trim((string)($_POST['head_position'] ?? ''));
+        $custodianName = trim((string)($_POST['custodian_name'] ?? ''));
+        $custodianPosition = trim((string)($_POST['custodian_position'] ?? ''));
 
         if (!$editSchoolDetails && !preg_match('/^[A-Za-z0-9._-]{3,50}$/', $username)) {
             $error = 'Username must be 3 to 50 characters using letters, numbers, dots, underscores, or hyphens.';
@@ -83,7 +100,29 @@ if ((!$adminExists || $editSchoolDetails) && ($_SERVER['REQUEST_METHOD'] ?? 'GET
             $error = 'Enter a school name between 1 and 255 characters.';
         } elseif ($schoolAddress === '' || strlen($schoolAddress) > 255) {
             $error = 'Enter a school address between 1 and 255 characters.';
+        } elseif ($editSchoolDetails && !in_array($schoolType, ['Regional Office', 'Division Office', 'Secondary Level', 'Elementary Level'], true)) {
+            $error = 'Please select a valid office or school type.';
+        } elseif ($editSchoolDetails && ($headName === '' || $headPosition === '' || $custodianName === '' || $custodianPosition === '')) {
+            $error = 'Select a school head, head position, property custodian, and custodian position.';
+        } elseif ($editSchoolDetails) {
+            $employeeCheck = $pdo->prepare('SELECT COUNT(*) FROM employee WHERE emp_name = ?');
+            $employeeCheck->execute([$headName]);
+            $headExists = (int)$employeeCheck->fetchColumn() > 0;
+            $employeeCheck->execute([$custodianName]);
+            $custodianExists = (int)$employeeCheck->fetchColumn() > 0;
+            $positionCheck = $pdo->prepare('SELECT COUNT(*) FROM position WHERE position_name = ?');
+            $positionCheck->execute([$headPosition]);
+            $headPositionExists = (int)$positionCheck->fetchColumn() > 0;
+            $positionCheck->execute([$custodianPosition]);
+            $custodianPositionExists = (int)$positionCheck->fetchColumn() > 0;
+            if (!$headExists || !$custodianExists || !$headPositionExists || !$custodianPositionExists) {
+                $error = 'The selected staff or position is no longer available. Reload the page and choose from the current options.';
+            }
         } else {
+            // Continue to the shared save path below after edit selections are validated.
+        }
+
+        if ($error === '') {
             try {
                 $pdo->beginTransaction();
                 $adminExists = (bool)$pdo->query('SELECT 1 FROM admin LIMIT 1')->fetchColumn();
@@ -101,14 +140,33 @@ if ((!$adminExists || $editSchoolDetails) && ($_SERVER['REQUEST_METHOD'] ?? 'GET
                     // Save or update the school information in school_details
                     $existingSD = $pdo->query("SELECT id FROM school_details ORDER BY id ASC LIMIT 1")->fetch(PDO::FETCH_ASSOC);
                     if ($existingSD) {
-                        $updateSD = $pdo->prepare("UPDATE school_details SET Region = ?, Division = ?, school_name = ?, school_address = ? WHERE id = ?");
-                        $updateSD->execute([$region, $division, $schoolName, $schoolAddress, $existingSD['id']]);
+                        if ($editSchoolDetails) {
+                            $updateSD = $pdo->prepare("UPDATE school_details SET Region = ?, Division = ?, type = ?, school_name = ?, school_address = ?, head_name = ?, head_position = ?, custodian_name = ?, custodian_position = ? WHERE id = ?");
+                            $updateSD->execute([$region, $division, $schoolType, $schoolName, $schoolAddress, $headName, $headPosition, $custodianName, $custodianPosition, $existingSD['id']]);
+                        } else {
+                            $updateSD = $pdo->prepare("UPDATE school_details SET Region = ?, Division = ?, school_name = ?, school_address = ? WHERE id = ?");
+                            $updateSD->execute([$region, $division, $schoolName, $schoolAddress, $existingSD['id']]);
+                        }
                     } else {
-                        $insertSD = $pdo->prepare("INSERT INTO school_details (Region, Division, school_name, school_address, head_name, head_position, custodian_name, custodian_position) VALUES (?, ?, ?, ?, '', '', '', '')");
-                        $insertSD->execute([$region, $division, $schoolName, $schoolAddress]);
+                        $insertSD = $pdo->prepare("INSERT INTO school_details (Region, Division, type, school_name, school_address, head_name, head_position, custodian_name, custodian_position) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                        $insertSD->execute([$region, $division, $editSchoolDetails ? $schoolType : '', $schoolName, $schoolAddress, $editSchoolDetails ? $headName : '', $editSchoolDetails ? $headPosition : '', $editSchoolDetails ? $custodianName : '', $editSchoolDetails ? $custodianPosition : '']);
                     }
 
                     $pdo->commit();
+                    $syncStatus = sync_school_details_to_sheet([
+                        'Region' => $region,
+                        'Division' => $division,
+                        'type' => $editSchoolDetails ? $schoolType : (string)($schoolDetails['type'] ?? ''),
+                        'school_name' => $schoolName,
+                        'school_address' => $schoolAddress,
+                        'head_name' => $editSchoolDetails ? $headName : (string)($schoolDetails['head_name'] ?? ''),
+                        'head_position' => $editSchoolDetails ? $headPosition : (string)($schoolDetails['head_position'] ?? ''),
+                        'custodian_name' => $editSchoolDetails ? $custodianName : (string)($schoolDetails['custodian_name'] ?? ''),
+                        'custodian_position' => $editSchoolDetails ? $custodianPosition : (string)($schoolDetails['custodian_position'] ?? ''),
+                    ]);
+                    if ($syncStatus === 'failed') {
+                        error_log('School details were saved during setup, but the online sheet sync failed.');
+                    }
                     header($editSchoolDetails ? 'Location: setup_admin.php?edit=1&saved=1' : 'Location: login.php?setup=complete', true, 303);
                     exit();
                 }
@@ -176,7 +234,7 @@ if ((!$adminExists || $editSchoolDetails) && ($_SERVER['REQUEST_METHOD'] ?? 'GET
                 <input id="password_confirmation" name="password_confirmation" type="password" minlength="6" maxlength="72" autocomplete="new-password" required>
             <?php endif; ?>
 
-            <div class="section-title" style="margin-top: 24px;">School Jurisdiction</div>
+            <div class="section-title" style="margin-top: 24px;"><?php echo $editSchoolDetails ? 'School/Office Details' : 'School Jurisdiction'; ?></div>
             <label for="region">Region</label>
             <select id="region" name="region" required>
                 <option value="" disabled <?php echo empty($_POST['region'] ?? $schoolDetails['Region'] ?? '') ? 'selected' : ''; ?>>Select a Region</option>
@@ -193,11 +251,42 @@ if ((!$adminExists || $editSchoolDetails) && ($_SERVER['REQUEST_METHOD'] ?? 'GET
             <label for="division">School Division</label>
             <input id="division" name="division" type="text" maxlength="255" placeholder="e.g. Schools Division of Catbalogan City" value="<?php echo htmlspecialchars($divisionValue, ENT_QUOTES, 'UTF-8'); ?>" required>
 
+            <?php if ($editSchoolDetails): ?>
+                <label for="school_type">Office/School Type</label>
+                <select id="school_type" name="type" required>
+                    <option value="" disabled>Select a school type</option>
+                    <?php foreach (['Regional Office', 'Division Office', 'Secondary Level', 'Elementary Level'] as $typeOption): ?>
+                        <option value="<?php echo htmlspecialchars($typeOption, ENT_QUOTES, 'UTF-8'); ?>" <?php echo ($schoolDetails['type'] ?? '') === $typeOption ? 'selected' : ''; ?>><?php echo htmlspecialchars($typeOption, ENT_QUOTES, 'UTF-8'); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            <?php endif; ?>
+
             <label for="school_name">School Name</label>
             <input id="school_name" name="school_name" type="text" maxlength="255" style="text-transform: uppercase;" value="<?php echo htmlspecialchars($_POST['school_name'] ?? $schoolDetails['school_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" oninput="this.value = this.value.toLocaleUpperCase();" required>
 
             <label for="school_address">Address</label>
             <input id="school_address" name="school_address" type="text" maxlength="255" value="<?php echo htmlspecialchars($_POST['school_address'] ?? $schoolDetails['school_address'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" required>
+
+            <?php if ($editSchoolDetails): ?>
+                <?php
+                $renderSetupSelect = static function (string $id, string $label, string $name, array $options, string $current): void {
+                    echo '<label for="' . htmlspecialchars($id, ENT_QUOTES, 'UTF-8') . '">' . htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . '</label>';
+                    echo '<select id="' . htmlspecialchars($id, ENT_QUOTES, 'UTF-8') . '" name="' . htmlspecialchars($name, ENT_QUOTES, 'UTF-8') . '" required><option value="" disabled ' . ($current === '' ? 'selected' : '') . '>Select an option</option>';
+                    if ($current !== '' && !in_array($current, $options, true)) $options[] = $current;
+                    foreach ($options as $option) {
+                        $escaped = htmlspecialchars($option, ENT_QUOTES, 'UTF-8');
+                        echo '<option value="' . $escaped . '" ' . ($current === $option ? 'selected' : '') . '>' . $escaped . '</option>';
+                    }
+                    echo '</select>';
+                };
+                $employeeNames = array_values(array_filter(array_map(static fn($row) => (string)($row['emp_name'] ?? ''), $employees)));
+                $positionNames = array_values(array_filter(array_map(static fn($row) => (string)($row['position_name'] ?? ''), $positions)));
+                $renderSetupSelect('head_name', 'School Head/Supply Officer', 'head_name', $employeeNames, (string)($schoolDetails['head_name'] ?? ''));
+                $renderSetupSelect('head_position', 'Supply Head Position', 'head_position', $positionNames, (string)($schoolDetails['head_position'] ?? ''));
+                $renderSetupSelect('custodian_name', 'Property Custodian Name', 'custodian_name', $employeeNames, (string)($schoolDetails['custodian_name'] ?? ''));
+                $renderSetupSelect('custodian_position', 'Property Custodian Position', 'custodian_position', $positionNames, (string)($schoolDetails['custodian_position'] ?? ''));
+                ?>
+            <?php endif; ?>
 
             <button type="submit"><?php echo $editSchoolDetails ? 'Save School Details' : 'Complete Setup'; ?></button>
             <?php if ($editSchoolDetails): ?>
