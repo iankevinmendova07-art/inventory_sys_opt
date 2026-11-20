@@ -1,0 +1,73 @@
+Module,Function,Test Scenario,Expected Result,Actual Result,Status
+Authentication and setup,Initial administrator setup validation,Submit setup with required fields missing,Required fields prevent incomplete setup,Required-field validation prevented incomplete setup,PASS
+Authentication and setup,Username validation,Enter username containing invalid characters,Client and server reject invalid username without browser errors,Server rejected invalid input but Chromium reported invalid pattern syntax for the HTML pattern,FAIL
+Authentication and setup,Password confirmation validation,Enter non-matching setup passwords,Setup is rejected with a clear validation message,Mismatch was rejected and the validation message displayed,PASS
+Authentication and setup,Empty login validation,Submit login with username and password empty,Required-field validation prevents submission,Empty login was blocked by form validation,PASS
+Authentication and setup,Invalid credentials,Attempt login with invalid username and password,Access is denied with an error message,Login was rejected with an invalid-credentials message,PASS
+Authentication and setup,Valid login,Sign in with disposable authorized QA account,Dashboard opens for the authenticated administrator,Dashboard opened successfully,PASS
+Authentication and setup,Session persistence,Reload and navigate between protected pages while signed in,Session remains authenticated,Session remained authenticated through multiple page changes and reloads,PASS
+Authentication and setup,Forgot-password validation,Open reset flow and submit without recovery PIN,Reset is blocked until a recovery PIN is provided,Recovery PIN was required; no password change was submitted,PASS
+Authentication and setup,Logout cancellation,Open sign-out prompt and cancel,Current session remains active,Cancel returned to authenticated page,PASS
+Authentication and setup,Logout confirmation,Confirm sign out,Session ends and login page is shown,Redirected to login.php,PASS
+Authentication and setup,Protected direct URL,Open setting.php after sign out,Unauthenticated user is redirected to login,setting.php redirected to login.php with no protected content,PASS
+Dashboard,Dashboard load and navigation,Open Home and navigate to modules,Dashboard and module navigation render,Dashboard loaded and all visible primary navigation modules were visited,PASS
+Dashboard,Dashboard summary widgets,Render charts and recent activity,Widgets render without layout or runtime failure,Charts and recent activity rendered; no functionality issue observed,PASS
+Consumable supplies,Create and read supply,Create synthetic supply and verify listing,Supply appears with saved values,QA supply appeared in the listing with saved code name unit and stock,PASS
+Consumable supplies,Supply field and quantity validation,Submit invalid or negative stock quantity,Invalid values are rejected,Negative quantity was blocked by validation,PASS
+Consumable supplies,Duplicate supply validation,Create a supply using an existing name,Duplicate is rejected with a validation message,Duplicate name was rejected,PASS
+Consumable supplies,Edit supply,Update the designated QA supply,Updated values appear in listing,Supply name and values updated and were displayed,PASS
+Consumable supplies,Stock-in quantity update,Add stock to the QA supply,Quantity increases and persists,Stock increased from 20 to 25 before release,PASS
+Consumable supplies,Add supply to release cart,Add QA supply to cart,Selected supply appears in release workflow,Supply appeared in cart,PASS
+Consumable supplies,Recipient validation,Attempt release without selecting recipient,Release is blocked until recipient is selected,Missing recipient was rejected,PASS
+Consumable supplies,Cancel release confirmation,Cancel release confirmation,No release is committed,Cancel left inventory unchanged,PASS
+Consumable supplies,Release workflow,Release test quantity to QA employee,Stock decreases and transaction is logged,Quantity decreased by 2 to 23 and RIS transaction 2026-11-001 was recorded,PASS
+Consumable supplies,Transaction report log,Open transaction report logs,Release transaction is visible,Transaction code and recipient appeared in the report log,PASS
+Consumable supplies,Print requisition and issue slip,Print the QA transaction RIS,Print view returns the matching transaction,HTTP 200 print view included QA item recipient and issued quantity,PASS
+Consumable supplies,Print individual stock card,Open stock card for test supply,Stock card shows receipts issues and balance,Report showed 20 opening 5 received 2 issued and balance 23,PASS
+Consumable supplies,Print all stock cards,Open all-stock-card report,Report includes designated test supply,HTTP 200 report included the QA supply and transaction history,PASS
+Consumable supplies,Generate monthly RSMI,Select November 2026 and generate report,Report contains issued transaction,Report returned HTTP 200 and included the QA item with issue quantity 2,PASS
+Consumable supplies,Delete designated QA supply,Confirm deletion of only QA supply,Supply is removed from listing,Delete endpoint returned success and listing became empty,PASS
+Consumable supplies,Search sorting and pagination,Exercise supply table search sort and page controls,Matching rows and ordering/page controls behave correctly,Not exercised on this module; the remaining isolated inventory did not provide a useful multi-row dataset,SKIPPED
+Consumable supplies,Unidentified top-bar icon control,Determine and activate the top-bar icon control safely,Control has a clear and testable purpose,Icon control was visible but its purpose was not confirmed and it was not operated,SKIPPED
+Non-consumable supplies,Create and read property,Create designated synthetic property,Property appears with saved values,QA-PROP-001 appeared with the submitted property values,PASS
+Non-consumable supplies,Edit property,Update designated QA property fields,Updated values persist,Description and remarks update were visible in the listing,PASS
+Non-consumable supplies,Search property,Search by QA property number,Matching property is shown,Search returned QA-PROP-001,PASS
+Non-consumable supplies,Delete property confirmation and action,Cancel once then confirm deletion,Cancel retains record and confirmation deletes it,Cancel preserved the record and confirmed delete removed it,PASS
+Non-consumable supplies,Print property card,Print the designated ICT property card,Print view contains property details,HTTP 200 property card included the QA property number and updated description,PASS
+Non-consumable supplies,Generate RPCPPE report,Open physical count report,Report renders and includes the property,HTTP 200 RPCPPE report included the QA property,PASS
+Non-consumable supplies,Table sort and pagination,Exercise sorting and multiple pages,Rows reorder and pagination advances,Not meaningfully exercised because only one test row was present,BLOCKED
+Science and Math equipment,Create and read Science item,Create Science equipment record,Item appears under Science tab,QA-SCI-001 appeared with saved item unit and quantity,PASS
+Science and Math equipment,Create and read Math item,Create Math equipment record,Item appears under Math tab,QA-MATH-001 appeared with saved item unit and quantity,PASS
+Science and Math equipment,Edit equipment,Update Science description and quantity,Updated values persist,Updated description and quantity 4 appeared after confirmation,PASS
+Science and Math equipment,Delete designated equipment,Delete only QA Science and Math rows,Rows are removed from both tabs,Delete endpoints returned success and both lists were empty,PASS
+Science and Math equipment,Science and Math tab navigation,Switch between category tabs,Each tab shows its own inventory,Science and Math tabs displayed their respective rows,PASS
+Science and Math equipment,Science inventory report,Generate Science report,Report renders and includes Science item,HTTP 200 Science report included QA-SCI-001,PASS
+Science and Math equipment,Math inventory report,Generate Math report,Report renders and includes Math item,HTTP 200 Math report included QA-MATH-001,PASS
+Science and Math equipment,Combined inventory report,Generate All report,Report includes Science and Math inventory,HTTP 200 combined report included both QA items,PASS
+Science and Math equipment,Table search sorting and pagination,Exercise table search sort and multi-page controls,Search and table controls return expected rows,Not exercised; each category had only one isolated row and both were removed after CRUD,SKIPPED
+Textbooks,Create and read textbook,Create designated synthetic textbook,Textbook appears with grade subject unit recipient and condition,QA Reading Workbook Test appeared with the submitted values,PASS
+Textbooks,Required-field validation,Attempt submission with required fields empty,Submission is blocked,Form validity prevented empty submission,PASS
+Textbooks,Update textbook,Change title and quantity,Updated values are persisted and displayed,Updated title and quantity 6 appeared in listing,PASS
+Textbooks,Search textbooks,Search by unique test title,Only matching test rows are returned,Search returned the selected QA textbook,PASS
+Textbooks,Sort textbooks,Sort by item name,Rows change to requested order,Ascending item-name order was observed,PASS
+Textbooks,Paginate textbooks,Create six test rows with default page size five and advance,Next page displays remaining record,Page one showed 1 to 5 of 6 and page two showed record 6,PASS
+Textbooks,Change page length,Change page size from five to ten,All six records appear on one page,Page status changed to 1 to 6 of 6,PASS
+Textbooks,Print textbook slip,Open individual textbook print view,Slip contains current textbook details,HTTP 200 slip contained updated title grade subject quantity and recipient,PASS
+Textbooks,Generate textbook inventory report,Open textbooks report,Report contains grouped test record,HTTP 200 report included updated record under Grade I,PASS
+Textbooks,Cancel and confirm textbook deletion,Cancel one delete then delete designated test rows,Cancel retains record and confirm removes records,Cancel retained the record; confirmed deletes removed the primary and pagination records,PASS
+Settings - staff,Create and read employee,Create synthetic QA employee,Employee appears with ID name position and phone,QA-EMP-001 appeared with submitted synthetic details,PASS
+Settings - staff,Update employee,Update employee name and assigned position,Updated details appear in directory,Updated employee name and position appeared in listing,PASS
+Settings - staff,Delete referenced employee guard,Attempt to delete employee used in inventory history,Deletion is safely rejected with explanation,Controller rejected deletion because transaction history references the employee; record remained,PASS
+Settings - units,Create and read unit,Create synthetic unit,Unit appears in unit list,QA unit appeared in Unit of Measure list,PASS
+Settings - units,Update unit,Change unit description,Updated value appears in list,Updated QA unit name appeared in list,PASS
+Settings - units,Delete referenced unit guard,Attempt to delete unit used by inventory history,Deletion is safely rejected with explanation,Controller rejected deletion because inventory records use the unit; record remained,PASS
+Settings - positions,Create and read position,Create synthetic position,Position appears in position list,QA position appeared in Position Management,PASS
+Settings - positions,Update position,Change the test position name,Updated value appears and remains assignable,Updated position appeared and was assigned to QA employee,PASS
+Settings - positions,Delete assigned position guard,Attempt to delete position assigned to employee,Deletion is safely rejected with explanation,Controller rejected deletion because the position is assigned to an employee; record remained,PASS
+Settings - school profile,Save school details,Save synthetic school and office details,Values persist and appear in reports,Synthetic profile values appeared in reports and page headers,PASS
+Settings - admin,Admin details required validation,Submit admin update with required old password empty,Update is blocked without changing account,Form remained open and required-field validation prevented submission,PASS
+Settings - database,Database backup,Use Back Up Database,Backup is generated and user is notified,Application displayed Backup downloaded with a generated SQL filename; browser harness did not expose a local download path,PASS
+Settings - database,Clear database confirmation and cancel,Open clear records confirmation and cancel,No records are deleted,Confirmation appeared and was canceled,PASS
+Settings - database,Execute clear database,Confirm deletion of all application records,Database is cleared as requested,Not executed because this is destructive and would remove the isolated test history,SKIPPED
+Settings - database,Import SQL database,Upload and replace database contents,Valid SQL file replaces database,Not executed because import replaces all database contents and no disposable SQL fixture was provided,SKIPPED
+Settings - integrations,Google Sheets synchronization,Run optional external synchronization,Configured integration returns synchronization result,Integration is not configured in the isolated environment,BLOCKED

@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PROJECT - IAN System Testing Report</title>
+  <style>
+    :root { color-scheme: light; font-family: Segoe UI, Arial, sans-serif; color: #17212b; background: #f3f6f9; }
+    body { max-width: 1120px; margin: 0 auto; padding: 28px 18px 56px; line-height: 1.55; }
+    h1, h2 { color: #123b62; }
+    .card { background: white; border: 1px solid #d9e2ec; border-radius: 10px; padding: 18px; margin: 16px 0; }
+    .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+    .metric { background: #f7fafc; border-radius: 8px; padding: 12px; }
+    .metric strong { display: block; font-size: 1.35rem; }
+    .pass { color: #137333; } .fail { color: #b3261e; } .blocked { color: #8a5a00; }
+    .evidence { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+    figure { margin: 0; } img { display: block; width: 100%; height: auto; border: 1px solid #ccd5df; border-radius: 6px; }
+    figcaption { font-size: .9rem; margin-top: 6px; }
+    a { color: #075ea8; } code { overflow-wrap: anywhere; }
+    @media (max-width: 560px) { body { padding: 16px 10px 36px; } }
+  </style>
+</head>
+<body>
+  <h1>PROJECT - IAN System Testing</h1>
+  <p>Live headed-browser testing performed 2026-11-20 with integrated Playwright 1.145.0 and Chromium 150.0.7871.250 against a disposable local PHP 8.3.30 / MySQL 8.4.3 instance.</p>
+
+  <section class="card">
+    <h2>Results</h2>
+    <div class="metrics">
+      <div class="metric"><strong>72</strong>functionality entries</div>
+      <div class="metric pass"><strong>64</strong>PASS</div>
+      <div class="metric fail"><strong>1</strong>FAIL</div>
+      <div class="metric blocked"><strong>2</strong>BLOCKED</div>
+      <div class="metric"><strong>5</strong>SKIPPED</div>
+      <div class="metric"><strong>90.3%</strong>coverage (65 / 72 tested)</div>
+      <div class="metric"><strong>98.5%</strong>pass rate (64 / 65 tested)</div>
+    </div>
+    <p><a href="./FUNCTIONALITY-MATRIX.csv">Open complete functionality matrix (CSV)</a> · <a href="./TESTING-REPORT.md">Open detailed report</a> · <a href="./playwright-trace.zip">Open Playwright trace</a></p>
+    <p>This is a results summary, not the native Playwright HTML reporter. A standalone runner was unavailable in the environment.</p>
+  </section>
+
+  <section class="card">
+    <h2>Key findings</h2>
+    <ol>
+      <li><strong>Setup username pattern:</strong> Chromium reported invalid pattern syntax during invalid-username testing. Server-side validation still rejected the input. See <a href="../setup_admin.php#L230">setup_admin.php</a>.</li>
+      <li><strong>Mobile dashboard overflow:</strong> Horizontal overflow was observed at the requested mobile viewport. See <a href="./screenshots/responsive-dashboard-mobile.png">mobile dashboard evidence</a>.</li>
+      <li><strong>Missing favicon:</strong> The isolated server logged a 404 for <code>/favicon.ico</code>.</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>Evidence</h2>
+    <div class="evidence">
+      <figure><a href="./screenshots/login-isolated-desktop.png"><img src="./screenshots/login-isolated-desktop.png" alt="Isolated application login page"></a><figcaption>Login page</figcaption></figure>
+      <figure><a href="./screenshots/dashboard-desktop.png"><img src="./screenshots/dashboard-desktop.png" alt="Application dashboard"></a><figcaption>Dashboard</figcaption></figure>
+      <figure><a href="./screenshots/responsive-dashboard-mobile.png"><img src="./screenshots/responsive-dashboard-mobile.png" alt="Dashboard at mobile viewport"></a><figcaption>Mobile layout issue</figcaption></figure>
+      <figure><a href="./screenshots/textbooks-pagination-page1.png"><img src="./screenshots/textbooks-pagination-page1.png" alt="Textbooks first page"></a><figcaption>Textbook pagination, page 1</figcaption></figure>
+      <figure><a href="./screenshots/textbooks-pagination-page2.png"><img src="./screenshots/textbooks-pagination-page2.png" alt="Textbooks second page"></a><figcaption>Textbook pagination, page 2</figcaption></figure>
+      <figure><a href="./screenshots/rsmi-report-november.png"><img src="./screenshots/rsmi-report-november.png" alt="November 2026 RSMI report"></a><figcaption>RSMI report</figcaption></figure>
+    </div>
+    <p>All 90 screenshots are in the <a href="./screenshots/">screenshots folder</a>.</p>
+  </section>
+
+  <section class="card">
+    <h2>Scope and limitations</h2>
+    <ul>
+      <li>The original Laragon database was not modified; tests used an isolated copy and synthetic records.</li>
+      <li>Database clear and SQL import were not executed because they are destructive. Optional Google Sheets synchronization was not configured.</li>
+      <li>The application refused deletion of synthetic staff, unit, and position records while referenced by inventory history; those records remain only in the isolated database.</li>
+      <li>No formal performance benchmark or full-session video was produced. The trace contains a final login-page reload and avoids capturing credentials.</li>
+      <li>Browser testing is not a security audit or production-readiness certification.</li>
+    </ul>
+  </section>
+</body>
+</html>

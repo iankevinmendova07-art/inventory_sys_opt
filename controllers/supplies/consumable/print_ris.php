@@ -31,10 +31,10 @@ try {
 
     // Use the configured school head and custodian for the signature blocks.
     $schoolDetails = $pdo->query(
-        'SELECT Region, Division, school_name, school_address, head_name, head_position, custodian_name, custodian_position FROM school_details ORDER BY id ASC LIMIT 1'
+        'SELECT Region, Division AS division, school_name, school_address, head_name, head_position, custodian_name, custodian_position FROM school_details ORDER BY id ASC LIMIT 1'
     )->fetch(PDO::FETCH_ASSOC) ?: [];
     $schoolRegion = trim((string) ($schoolDetails['Region'] ?? ''));
-    $schoolDivision = trim((string) ($schoolDetails['Division'] ?? ''));
+    $schoolDivision = trim((string) ($schoolDetails['division'] ?? ''));
     $schoolName = trim((string) ($schoolDetails['school_name'] ?? ''));
     $schoolAddress = trim((string) ($schoolDetails['school_address'] ?? ''));
     $school_head_name = $schoolDetails['head_name'] ?? '';

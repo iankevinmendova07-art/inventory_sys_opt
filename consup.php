@@ -179,7 +179,7 @@ $adminRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'Administra
                 <form id="addItemForm">
                         <div class="mb-3">
                             <label for="itemCode" class="form-label fw-semibold">Item Code</label>
-                            <input type="text" class="form-control" id="itemCode" name="itemCode" placeholder="Enter item code" required>
+                            <input type="text" class="form-control" id="itemCode" name="itemCode" placeholder="Generated automatically" required readonly>
                         </div>
                         <div class="mb-3">
                             <label for="itemName" class="form-label fw-semibold">Item Name</label>

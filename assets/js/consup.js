@@ -98,6 +98,33 @@ function reloadSuppliesTable() {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
+    const addItemModal = document.getElementById('addItemModal');
+    const itemCodeField = document.getElementById('itemCode');
+    if (addItemModal && itemCodeField) {
+        addItemModal.addEventListener('show.bs.modal', function () {
+            itemCodeField.value = '';
+            itemCodeField.placeholder = 'Generating item code...';
+            requestJson('controllers/supplies/consumable/get_next_supply_code.php')
+                .then(data => {
+                    if (data.status !== 'success' || !data.itemCode) {
+                        throw new Error(data.message || 'Unable to generate the next item code.');
+                    }
+                    itemCodeField.value = data.itemCode;
+                    itemCodeField.placeholder = 'Generated automatically';
+                })
+                .catch(error => {
+                    itemCodeField.value = '';
+                    itemCodeField.placeholder = 'Unable to generate item code';
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Item Code Unavailable',
+                        text: error.message || 'Unable to generate the next item code.',
+                        confirmButtonColor: '#0D3B66'
+                    });
+                });
+        });
+    }
+
     // 1. Initialize Server-Side DataTable for Main Supplies Table
     if ($.fn.DataTable && document.getElementById('suppliesTable')) {
         suppliesTable = $('#suppliesTable').DataTable({
