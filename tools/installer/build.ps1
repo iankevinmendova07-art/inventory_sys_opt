@@ -5,11 +5,22 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+$ProgressPreference = 'SilentlyContinue'
 $installerRoot = $PSScriptRoot
 $repositoryRoot = (Resolve-Path (Join-Path $installerRoot '..\..')).Path
 $stageRoot = Join-Path $installerRoot 'stage'
 $outputRoot = Join-Path $installerRoot 'output'
 $mysqlOverlayRoot = Join-Path $installerRoot 'runtime-overlay\mysql'
+$bundledSchoolSyncSecret = [Environment]::GetEnvironmentVariable('INVENTORY_SCHOOL_DETAILS_WEBHOOK_SECRET')
+$schoolSyncUrl = 'https://script.google.com/macros/s/AKfycbx1DbWEEP66pn6RQbTIJeTwxI1ra8o5qy6HYvImZxCHvC5hmVmRannMVZpVX3MHHmxA/exec'
+if (-not [string]::IsNullOrWhiteSpace($bundledSchoolSyncSecret)) {
+    if ($bundledSchoolSyncSecret -match '[\r\n]') {
+        throw 'INVENTORY_SCHOOL_DETAILS_WEBHOOK_SECRET must be a single-line value.'
+    }
+    if ($schoolSyncUrl -notmatch '^https://script\.google\.com/macros/s/[A-Za-z0-9_-]+/exec$') {
+        throw 'The configured Google Apps Script deployment URL is invalid.'
+    }
+}
 
 foreach ($requiredPath in @(
     (Join-Path $PhpRuntimeRoot 'php.exe'),
@@ -21,6 +32,8 @@ foreach ($requiredPath in @(
     (Join-Path $MySqlRuntimeRoot 'share'),
     (Join-Path $mysqlOverlayRoot 'lib\plugin\component_reference_cache.dll'),
     (Join-Path $mysqlOverlayRoot 'lib\private\icudt73l'),
+    (Join-Path $installerRoot 'runtime-overlay\php\cacert.pem'),
+    (Join-Path $installerRoot 'runtime-overlay\php\CA-BUNDLE-NOTICE.txt'),
     (Join-Path $repositoryRoot 'database_schema.sql'),
     (Join-Path $installerRoot 'InventorySystemSetup.manifest'),
     (Join-Path $repositoryRoot 'assets\vendor\bootstrap\bootstrap.min.css'),
@@ -39,10 +52,18 @@ New-Item -ItemType Directory -Force -Path $stageRoot | Out-Null
 
 Get-ChildItem $repositoryRoot -Force |
     Where-Object {
-        $_.Name -notin @('.git', '.vscode', '.idea', 'tools', 'env', '.env') -and
+        $_.Name -notin @('.git', '.vscode', '.idea', 'tools', 'env', '.env', 'dist') -and
         -not $_.Name.StartsWith('.env.')
     } |
     ForEach-Object { Copy-Item $_.FullName -Destination $stageRoot -Recurse -Force }
+
+# Keep the Chart.js license beside the staged vendor assets after Markdown files
+# have been consolidated into MD FILES in the source repository.
+$chartLicense = Join-Path $stageRoot 'assets\vendor\chartjs\LICENSE.md'
+if (Test-Path (Join-Path $repositoryRoot 'MD FILES\LICENSE.md')) {
+    New-Item -ItemType Directory -Force -Path (Split-Path $chartLicense) | Out-Null
+    Copy-Item (Join-Path $repositoryRoot 'MD FILES\LICENSE.md') $chartLicense -Force
+}
 
 $sourceTools = Join-Path $repositoryRoot 'tools'
 $stagedTools = Join-Path $stageRoot 'tools'
@@ -50,6 +71,12 @@ New-Item -ItemType Directory -Force -Path $stagedTools | Out-Null
 Get-ChildItem $sourceTools -Force |
     Where-Object { $_.Name -ne 'installer' } |
     ForEach-Object { Copy-Item $_.FullName -Destination $stagedTools -Recurse -Force }
+
+if (-not [string]::IsNullOrWhiteSpace($bundledSchoolSyncSecret)) {
+    $stagedSyncEnv = Join-Path $stageRoot '.env'
+    $stagedSyncConfig = "SCHOOL_DETAILS_WEBHOOK_URL=$schoolSyncUrl`r`nSCHOOL_DETAILS_WEBHOOK_SECRET=$bundledSchoolSyncSecret`r`n"
+    [IO.File]::WriteAllText($stagedSyncEnv, $stagedSyncConfig, [Text.UTF8Encoding]::new($false))
+}
 
 $stagedInstallerTools = Join-Path $stageRoot 'tools\installer'
 if (Test-Path $stagedInstallerTools) {
@@ -68,6 +95,8 @@ $mysqlStage = Join-Path $stageRoot 'runtime\mysql'
 New-Item -ItemType Directory -Force -Path $phpStage, $mysqlStage | Out-Null
 Copy-Item (Join-Path $PhpRuntimeRoot '*') $phpStage -Recurse -Force
 Copy-Item (Join-Path $installerRoot 'PHP-LICENSE.txt') (Join-Path $phpStage 'PHP-LICENSE.txt')
+Copy-Item (Join-Path $installerRoot 'runtime-overlay\php\cacert.pem') (Join-Path $phpStage 'cacert.pem') -Force
+Copy-Item (Join-Path $installerRoot 'runtime-overlay\php\CA-BUNDLE-NOTICE.txt') (Join-Path $phpStage 'CA-BUNDLE-NOTICE.txt') -Force
 
 foreach ($runtimeDirectory in @('bin', 'lib', 'share')) {
     $sourceDirectory = Join-Path $MySqlRuntimeRoot $runtimeDirectory
@@ -142,7 +171,17 @@ try {
         }
 
         $payloadPath = Join-Path $buildRoot 'InventorySystemPayload.zip'
-        Compress-Archive -Path (Join-Path $stageRoot '*') -DestinationPath $payloadPath -CompressionLevel Optimal -Force
+        $archiveAttempts = 0
+        do {
+            $archiveAttempts++
+            try {
+                Compress-Archive -Path (Join-Path $stageRoot '*') -DestinationPath $payloadPath -CompressionLevel Optimal -Force
+                break
+            } catch {
+                if ($archiveAttempts -ge 5) { throw }
+                Start-Sleep -Seconds 2
+            }
+        } while ($archiveAttempts -lt 5)
         $setupPath = Join-Path $buildRoot 'InventorySystemSetup.exe'
         $installerSource = Join-Path $installerRoot 'InstallerBootstrap.cs'
         $installScript = Join-Path $installerRoot 'install-local.ps1'
@@ -192,6 +231,10 @@ try {
 
     Write-Host "Setup package created: $publishedPath"
 } finally {
+    $stagedSyncEnv = Join-Path $stageRoot '.env'
+    if (Test-Path $stagedSyncEnv -PathType Leaf) {
+        Remove-Item -LiteralPath $stagedSyncEnv -Force
+    }
     if (Test-Path $buildRoot) {
         Remove-Item -LiteralPath $buildRoot -Recurse -Force
     }

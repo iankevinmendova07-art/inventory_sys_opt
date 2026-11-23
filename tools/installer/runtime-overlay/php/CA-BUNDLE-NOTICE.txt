@@ -1,0 +1,5 @@
+Mozilla CA certificate bundle in PEM format, distributed by the curl project.
+Source: https://curl.se/ca/cacert.pem
+Bundle date reported by curl: 2026-11-05
+License: Mozilla Public License 2.0 (MPL-2.0)
+Information: https://curl.se/docs/caextract.html

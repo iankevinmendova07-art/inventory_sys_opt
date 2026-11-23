@@ -24,6 +24,9 @@ $appWindows = @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Wh
 })
 foreach ($windowProcess in $appWindows) { Stop-Process -Id $windowProcess.ProcessId -Force -ErrorAction SilentlyContinue }
 foreach ($windowProcess in $appWindows) { Wait-Process -Id $windowProcess.ProcessId -Timeout 10 -ErrorAction SilentlyContinue }
+# Signal the launcher loop as soon as the Stop action has closed the app window.
+$browserPidPath = Join-Path $dataRoot 'browser.pid'
+if (Test-Path $browserPidPath) { Remove-Item $browserPidPath -Force -ErrorAction SilentlyContinue }
 
 $processes = @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue)
 $managedPhp = @($processes | Where-Object {

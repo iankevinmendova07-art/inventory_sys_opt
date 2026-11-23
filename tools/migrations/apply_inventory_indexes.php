@@ -187,7 +187,36 @@ if ($v4Applied === 0) {
     echo 'Migration version 4 applied.' . PHP_EOL;
 }
 
-$pdo->exec('INSERT IGNORE INTO schema_migrations (version) VALUES (5)');
-echo 'Migration version 5 applied.' . PHP_EOL;
+// Migration version 5 adds login_attempts table for rate-limiting and brute-force protection.
+$v5Applied = (int) $pdo->query('SELECT COUNT(*) FROM schema_migrations WHERE version = 5')->fetchColumn();
+if ($v5Applied === 0) {
+    $pdo->exec("CREATE TABLE IF NOT EXISTS login_attempts (
+        bucket_hash CHAR(64) NOT NULL,
+        failures INT NOT NULL DEFAULT 0,
+        window_started DATETIME NOT NULL,
+        locked_until DATETIME DEFAULT NULL,
+        PRIMARY KEY (bucket_hash),
+        KEY idx_login_attempts_locked_until (locked_until)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $pdo->exec('INSERT IGNORE INTO schema_migrations (version) VALUES (5)');
+    echo 'Migration version 5 applied.' . PHP_EOL;
+}
+
+// Migration version 6 adds the school ID used by the School/Office settings modal.
+$v6Applied = (int) $pdo->query('SELECT COUNT(*) FROM schema_migrations WHERE version = 6')->fetchColumn();
+if ($v6Applied === 0) {
+    $hasSchoolId = (int) $pdo->query(
+        "SELECT COUNT(*) FROM information_schema.columns
+         WHERE table_schema = DATABASE()
+           AND table_name = 'school_details'
+           AND column_name = 'school_id'"
+    )->fetchColumn();
+    if ($hasSchoolId === 0) {
+        $pdo->exec("ALTER TABLE school_details ADD COLUMN school_id VARCHAR(255) NOT NULL DEFAULT '' AFTER school_name");
+        echo 'Added school_id column to school_details.' . PHP_EOL;
+    }
+    $pdo->exec('INSERT IGNORE INTO schema_migrations (version) VALUES (6)');
+    echo 'Migration version 6 applied.' . PHP_EOL;
+}
 
 echo 'Additive inventory schema migration completed.' . PHP_EOL;

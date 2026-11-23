@@ -20,9 +20,9 @@ The application was launched and exercised in a visible browser using a blank, i
 | Functions actually tested (PASS + FAIL) | 65 / 72 |
 | Functionality coverage | **90.3%** |
 | Pass rate among tested functions | **98.5%** (64 / 65) |
-| Screenshots | 90 PNGs |
+| Screenshots | 90 PNGs in `../test-results/screenshots/` |
 
-Coverage is `(PASS + FAIL) / all matrix entries`; blocked and skipped entries remain in the denominator. The detailed cases and actual outcomes are in [FUNCTIONALITY-MATRIX.csv](./FUNCTIONALITY-MATRIX.csv).
+Coverage is `(PASS + FAIL) / all matrix entries`; blocked and skipped entries remain in the denominator. The detailed cases and actual outcomes are in [FUNCTIONALITY-MATRIX.csv](../test-results/FUNCTIONALITY-MATRIX.csv).
 
 ## Project and test setup
 
@@ -48,10 +48,10 @@ Coverage is `(PASS + FAIL) / all matrix entries`; blocked and skipped entries re
 | ID | Severity | Finding | Evidence / impact |
 |---|---|---|---|
 | F-01 | Medium | Setup username HTML pattern is invalid in Chromium’s current regular-expression mode. | [setup_admin.php](../setup_admin.php#L230) uses `pattern="[A-Za-z0-9._-]+"`. Chromium logged a pattern syntax error for the invalid-input test. Server-side validation still rejected the invalid value, but browser validation emitted an error. |
-| F-02 | Medium | Dashboard horizontal overflow at the requested mobile size. | [responsive-dashboard-mobile.png](./screenshots/responsive-dashboard-mobile.png). With `390 × 844` requested, the integrated browser reported a CSS viewport of `468 × 1036`; document width was `543px`, producing horizontal overflow. The dashboard activity table and chart canvas extended beyond the viewport. |
+| F-02 | Medium | Dashboard horizontal overflow at the requested mobile size. | [responsive-dashboard-mobile.png](../test-results/screenshots/responsive-dashboard-mobile.png). With `390 × 844` requested, the integrated browser reported a CSS viewport of `468 × 1036`; document width was `543px`, producing horizontal overflow. The dashboard activity table and chart canvas extended beyond the viewport. |
 | F-03 | Low | Missing favicon request. | The isolated PHP access log recorded `GET /favicon.ico` as 404. Add the asset or configure the page to use an existing icon. |
 
-The setup regex issue is the single FAIL in the functionality matrix. The mobile layout issue is recorded in the separate responsive results below. A second 404 in the log was caused by a test-only request to a guessed, nonexistent endpoint while checking an equipment update; it is not counted as an application defect.
+The setup regex issue was the single FAIL in the functionality matrix at the time of this test (20 November 2026). Recheck it against current source before treating it as an open defect. The mobile layout issue is recorded in the separate responsive results below. A second 404 in the log was caused by a test-only request to a guessed endpoint while checking an equipment update; it is not counted as an application defect.
 
 ### Responsive results
 
@@ -83,10 +83,10 @@ The requested sizes were set in Playwright. The integrated browser’s reported 
 
 ## Evidence and automation limitations
 
-- Screenshots are in [screenshots/](./screenshots/).
-- [playwright-trace.zip](./playwright-trace.zip) is a Playwright trace of a final login-page reload. Tracing was started after the main live session to avoid capturing authentication data; it is not a full-session trace.
+- Screenshots are in [screenshots/](../test-results/screenshots/).
+- [playwright-trace.zip](../test-results/playwright-trace.zip) is a Playwright trace of a final login-page reload. Tracing was started after the main live session to avoid capturing authentication data; it is not a full-session trace.
 - The integrated headed Playwright browser was available and used for the live demonstration. No standalone Playwright runner or Node/npm executable was available; the Python launcher also could not run. Therefore, a portable `.spec` test script and the official Playwright HTML reporter could not be produced or executed.
-- [HTML-REPORT.html](./HTML-REPORT.html) is a browsable summary generated from the recorded results, not the native Playwright HTML reporter. Video recording was not available in the already-running browser context.
+- [HTML-REPORT.html](../test-results/HTML-REPORT.html) is a browsable summary generated from the recorded results, not the native Playwright HTML reporter. Video recording was not available in the already-running browser context.
 - The application displayed a “Backup downloaded” success notice with a generated SQL filename. The browser harness did not expose a local download path, so no backup contents were inspected or included in evidence.
 
 ## Recommendations

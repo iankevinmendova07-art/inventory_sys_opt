@@ -6,7 +6,9 @@ Run `InventorySystemSetup.exe` and follow the installer. It installs for the cur
 
 Open **Inventory System** from the desktop or Start Menu. The launcher starts its local services and opens an application window. Close that window to stop the services. If the system opens in your default browser, use **Stop Inventory System** in the Start Menu when finished.
 
-For a step-by-step walkthrough with screen captures and annotated examples, see the [printable Project IAN User Manual](docs/Project-IAN-User-Manual.pdf).
+During installation, you can connect school-profile saves to the configured Google Sheet by entering the shared secret from the administrator. Choose **Skip** to use the local application without sheet sync. Setup details are in [Google Sheets school profile sync](google_sheets_school_details_sync.md).
+
+For a step-by-step walkthrough with screen captures and annotated examples, see the [printable Project IAN User Manual](../docs/Project-IAN-User-Manual.pdf), if included in your project copy.
 
 ## Back up and restore
 
@@ -32,4 +34,4 @@ For startup diagnostics, inspect `%LOCALAPPDATA%\InventorySystem\logs\startup-st
 
 ## Release status
 
-This build has passed the installer integration checks listed in `STANDALONE_STATUS.md`. Full authenticated business-workflow testing and clean Windows 10/11 virtual-machine testing remain outstanding. The installer is unsigned, so Windows may display a publisher warning.
+Installer checks and release limitations are listed in [Standalone Release Status](STANDALONE_STATUS.md). The separate [System Testing Report](TESTING-REPORT.md) records authenticated QA workflows, test findings, and remaining gaps. The installer is unsigned, so Windows may display a publisher warning.

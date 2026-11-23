@@ -69,10 +69,9 @@ if ((!$adminExists || $editSchoolDetails) && ($_SERVER['REQUEST_METHOD'] ?? 'GET
         http_response_code(403);
         $error = 'The setup form expired. Reload the page and try again.';
     } else {
-        $adminName = 'Administrator';
+        $adminName = trim((string)($_POST['admin_name'] ?? ''));
         $username = trim((string)($_POST['username'] ?? ''));
         $password = (string)($_POST['password'] ?? '');
-        $passwordConfirmation = (string)($_POST['password_confirmation'] ?? '');
         $region = trim((string)($_POST['region'] ?? ''));
         $division = trim((string)($_POST['division'] ?? ''));
         $schoolName = trim((string)($_POST['school_name'] ?? ''));
@@ -86,20 +85,20 @@ if ((!$adminExists || $editSchoolDetails) && ($_SERVER['REQUEST_METHOD'] ?? 'GET
         $custodianName = trim((string)($_POST['custodian_name'] ?? ''));
         $custodianPosition = trim((string)($_POST['custodian_position'] ?? ''));
 
-        if (!$editSchoolDetails && !preg_match('/^[A-Za-z0-9._-]{3,50}$/', $username)) {
+        if (!$editSchoolDetails && ($adminName === '' || strlen($adminName) > 255)) {
+            $error = 'Enter a name between 1 and 255 characters.';
+        } elseif (!$editSchoolDetails && !preg_match('/^[A-Za-z0-9._-]{3,50}$/', $username)) {
             $error = 'Username must be 3 to 50 characters using letters, numbers, dots, underscores, or hyphens.';
         } elseif (!$editSchoolDetails && (strlen($password) < 6 || strlen($password) > 72)) {
             $error = 'Password must be between 6 and 72 bytes.';
-        } elseif (!$editSchoolDetails && !hash_equals($password, $passwordConfirmation)) {
-            $error = 'The passwords do not match.';
-        } elseif ($region === '' || !in_array($region, $philippineRegions, true)) {
+        } elseif (($editSchoolDetails && $region === '') || ($region !== '' && !in_array($region, $philippineRegions, true))) {
             $error = 'Please select a valid Philippine Region.';
-        } elseif ($division === '' || strlen($division) > 255) {
-            $error = 'Enter a division name between 1 and 255 characters.';
-        } elseif ($schoolName === '' || strlen($schoolName) > 255) {
-            $error = 'Enter a school name between 1 and 255 characters.';
-        } elseif ($schoolAddress === '' || strlen($schoolAddress) > 255) {
-            $error = 'Enter a school address between 1 and 255 characters.';
+        } elseif (($editSchoolDetails && $division === '') || strlen($division) > 255) {
+            $error = 'Enter a division name of 255 characters or fewer.';
+        } elseif (($editSchoolDetails && $schoolName === '') || strlen($schoolName) > 255) {
+            $error = 'Enter a school name of 255 characters or fewer.';
+        } elseif (($editSchoolDetails && $schoolAddress === '') || strlen($schoolAddress) > 255) {
+            $error = 'Enter a school address of 255 characters or fewer.';
         } elseif ($editSchoolDetails && !in_array($schoolType, ['Regional Office', 'Division Office', 'Secondary Level', 'Elementary Level'], true)) {
             $error = 'Please select a valid office or school type.';
         } elseif ($editSchoolDetails && ($headName === '' || $headPosition === '' || $custodianName === '' || $custodianPosition === '')) {
@@ -158,6 +157,7 @@ if ((!$adminExists || $editSchoolDetails) && ($_SERVER['REQUEST_METHOD'] ?? 'GET
                         'Division' => $division,
                         'type' => $editSchoolDetails ? $schoolType : (string)($schoolDetails['type'] ?? ''),
                         'school_name' => $schoolName,
+                        'school_id' => (string)($schoolDetails['school_id'] ?? ''),
                         'school_address' => $schoolAddress,
                         'head_name' => $editSchoolDetails ? $headName : (string)($schoolDetails['head_name'] ?? ''),
                         'head_position' => $editSchoolDetails ? $headPosition : (string)($schoolDetails['head_position'] ?? ''),
@@ -226,17 +226,17 @@ if ((!$adminExists || $editSchoolDetails) && ($_SERVER['REQUEST_METHOD'] ?? 'GET
             <?php echo csrf_field(); ?>
             
             <?php if (!$editSchoolDetails): ?>
+                <label for="admin_name">Name</label>
+                <input id="admin_name" name="admin_name" type="text" maxlength="255" value="<?php echo htmlspecialchars($_POST['admin_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" required>
                 <label for="username">Username</label>
                 <input id="username" name="username" value="<?php echo htmlspecialchars($_POST['username'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" minlength="3" maxlength="50" pattern="[A-Za-z0-9._-]+" required>
                 <label for="password">Password</label>
                 <input id="password" name="password" type="password" minlength="6" maxlength="72" autocomplete="new-password" required>
-                <label for="password_confirmation">Confirm password</label>
-                <input id="password_confirmation" name="password_confirmation" type="password" minlength="6" maxlength="72" autocomplete="new-password" required>
             <?php endif; ?>
 
             <div class="section-title" style="margin-top: 24px;"><?php echo $editSchoolDetails ? 'School/Office Details' : 'School Jurisdiction'; ?></div>
             <label for="region">Region</label>
-            <select id="region" name="region" required>
+            <select id="region" name="region" <?php echo $editSchoolDetails ? 'required' : ''; ?>>
                 <option value="" disabled <?php echo empty($_POST['region'] ?? $schoolDetails['Region'] ?? '') ? 'selected' : ''; ?>>Select a Region</option>
                 <?php 
                 $selectedRegion = $_POST['region'] ?? $schoolDetails['Region'] ?? 'Region VIII - Eastern Visayas';
@@ -249,7 +249,7 @@ if ((!$adminExists || $editSchoolDetails) && ($_SERVER['REQUEST_METHOD'] ?? 'GET
             </select>
 
             <label for="division">School Division</label>
-            <input id="division" name="division" type="text" maxlength="255" placeholder="e.g. Schools Division of Catbalogan City" value="<?php echo htmlspecialchars($divisionValue, ENT_QUOTES, 'UTF-8'); ?>" required>
+            <input id="division" name="division" type="text" maxlength="255" placeholder="e.g. Schools Division of Catbalogan City" value="<?php echo htmlspecialchars($divisionValue, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $editSchoolDetails ? 'required' : ''; ?>>
 
             <?php if ($editSchoolDetails): ?>
                 <label for="school_type">Office/School Type</label>
@@ -262,10 +262,10 @@ if ((!$adminExists || $editSchoolDetails) && ($_SERVER['REQUEST_METHOD'] ?? 'GET
             <?php endif; ?>
 
             <label for="school_name">School Name</label>
-            <input id="school_name" name="school_name" type="text" maxlength="255" style="text-transform: uppercase;" value="<?php echo htmlspecialchars($_POST['school_name'] ?? $schoolDetails['school_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" oninput="this.value = this.value.toLocaleUpperCase();" required>
+            <input id="school_name" name="school_name" type="text" maxlength="255" style="text-transform: uppercase;" value="<?php echo htmlspecialchars($_POST['school_name'] ?? $schoolDetails['school_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" oninput="this.value = this.value.toLocaleUpperCase();" <?php echo $editSchoolDetails ? 'required' : ''; ?>>
 
             <label for="school_address">Address</label>
-            <input id="school_address" name="school_address" type="text" maxlength="255" value="<?php echo htmlspecialchars($_POST['school_address'] ?? $schoolDetails['school_address'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" required>
+            <input id="school_address" name="school_address" type="text" maxlength="255" value="<?php echo htmlspecialchars($_POST['school_address'] ?? $schoolDetails['school_address'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" <?php echo $editSchoolDetails ? 'required' : ''; ?>>
 
             <?php if ($editSchoolDetails): ?>
                 <?php

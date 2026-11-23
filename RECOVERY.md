@@ -7,7 +7,7 @@ finds or guesses that URL — this is exactly what happened with the old
 so anyone who found it could take over the admin account, no password
 required.
 
-Because you have phpMyAdmin access, here's the safe way instead:
+Use the command-line hash generator and a database administration tool to update the password hash:
 
 ## Steps
 
@@ -53,7 +53,7 @@ whoever manages your hosting/cPanel account. No application-level
 password reset feature can help you at that point, and any that claims
 to would itself be a security hole (see: `eme.php`).
 
-## My Personal Reset of admin
+## Local Windows/Laragon example
 1. Open Laragon Terminal
-2. Run this cd C:\laragon\www\inventory_sys_opt
+2. Run `cd C:\laragon\www\inventory_sys_opt`
 3. Run this php tools\generate_password_hash.php

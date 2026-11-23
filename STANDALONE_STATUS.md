@@ -2,6 +2,8 @@
 
 Reviewed 12 October 2026. This is a tested release candidate, not a production release certification.
 
+This installer-focused status predates the browser QA run documented in [System Testing Report](TESTING-REPORT.md), dated 20 November 2026. That report found a setup username-pattern validation issue and mobile dashboard overflow; see its findings for evidence and test limitations.
+
 ## Architecture shipped
 
 The package preserves the PHP application and runs bundled PHP 8.3.30 and MySQL Community Server 8.4.3. A PowerShell lifecycle launcher starts the services on available loopback ports, verifies readiness, and opens an Edge app-mode window with a private profile. Closing the window stops package-owned services. If Edge is absent, it opens the default browser and exposes a Stop shortcut. This minimizes changes to business logic and avoids an Electron runtime.

@@ -3,6 +3,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     const loginForm = document.getElementById('loginForm');
     const forgotPasswordButton = document.getElementById('forgotPasswordButton');
+    let lockoutTimer = null;
 
     if (loginForm) {
         loginForm.addEventListener('submit', function(e) {
@@ -23,6 +24,10 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'success') {
+                    if (lockoutTimer) {
+                        clearInterval(lockoutTimer);
+                        lockoutTimer = null;
+                    }
                     Swal.fire({
                         icon: 'success',
                         title: `WELCOME, ${data.admin_name}!`,
@@ -34,15 +39,48 @@ document.addEventListener('DOMContentLoaded', function() {
                         window.location.href = 'index.php';
                     });
                 } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Login Failed',
-                        text: data.message,
-                        confirmButtonColor: '#0D3B66'
-                    });
-                    // Re-enable button on failure
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = 'SECURE LOGIN';
+                    if (data.locked_out) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Access Restricted',
+                            text: data.message,
+                            confirmButtonColor: '#0D3B66'
+                        });
+
+                        submitBtn.disabled = true;
+                        let remaining = parseInt(data.retry_after, 10) || 60;
+
+                        if (lockoutTimer) {
+                            clearInterval(lockoutTimer);
+                        }
+
+                        const updateCountdown = () => {
+                            const mins = Math.floor(remaining / 60);
+                            const secs = remaining % 60;
+                            const secStr = secs < 10 ? '0' + secs : secs;
+                            submitBtn.textContent = `LOCKED (${mins}m ${secStr}s)`;
+                            if (remaining <= 0) {
+                                clearInterval(lockoutTimer);
+                                lockoutTimer = null;
+                                submitBtn.disabled = false;
+                                submitBtn.textContent = 'SECURE LOGIN';
+                            }
+                            remaining--;
+                        };
+
+                        updateCountdown();
+                        lockoutTimer = setInterval(updateCountdown, 1000);
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Login Failed',
+                            text: data.message,
+                            confirmButtonColor: '#0D3B66'
+                        });
+                        // Re-enable button on failure
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'SECURE LOGIN';
+                    }
                 }
             })
             .catch(error => {

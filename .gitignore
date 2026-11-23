@@ -11,6 +11,7 @@ env
 .idea/
 tools/installer/stage/
 tools/installer/output/
+MD FILES/
 
 # OS files
 .DS_Store

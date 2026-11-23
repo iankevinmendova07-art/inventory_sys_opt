@@ -78,11 +78,23 @@ require_once 'controllers/setting/setting_controller.php';
             <div class="alert alert-primary border-0 shadow-sm d-flex align-items-center mb-4" style="background: linear-gradient(135deg, #0D3B66 0%, #1a528a 100%); color: white; border-radius: 12px; padding: 1.5rem;">
                 <div>
                     <h4 class="alert-heading fw-bold mb-1">Welcome back, <?php echo htmlspecialchars($adminName); ?></h4>
-                    <p class="mb-0 text-white-50" style="font-size: 0.95rem;">Manage Staff, Units of Measure, and Positions via interactive DataTables below.</p>
+                    <p class="mb-0 text-white-50" style="font-size: 0.95rem;">Manage Positions, Staff, Units of Measure, administrators, school details, and database settings below.</p>
                 </div>
             </div>
             <!-- Quick Metrics Row -->
             <div class="row g-4 mb-4">
+                <!-- Clickable Position Management Card -->
+                <div class="col-md-3">
+                    <div class="card stat-card p-3 border-start border-4 border-success shadow-sm h-100 d-flex flex-column justify-content-between clickable-card" data-bs-toggle="modal" data-bs-target="#addPositionModal">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="flex-grow-1">
+                                <span class="text-muted fw-semibold text-uppercase" style="font-size: 0.75rem;">Organizational Setup</span>
+                                <h5 class="fw-bold text-dark mb-0">Position Management</h5>
+                            </div>
+                            <div class="fs-1 text-success opacity-50"><i class="bi bi-briefcase"></i></div>
+                        </div>
+                    </div>
+                </div>
                 <!-- Clickable Staff Management Card -->
                 <div class="col-md-3">
                     <div class="card stat-card p-3 border-start border-4 border-primary shadow-sm h-100 d-flex flex-column justify-content-between clickable-card" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
@@ -107,18 +119,6 @@ require_once 'controllers/setting/setting_controller.php';
                         </div>
                     </div>
                 </div>
-                <!-- Clickable Position Management Card -->
-                <div class="col-md-3">
-                    <div class="card stat-card p-3 border-start border-4 border-success shadow-sm h-100 d-flex flex-column justify-content-between clickable-card" data-bs-toggle="modal" data-bs-target="#addPositionModal">
-                        <div class="d-flex align-items-center mb-2">
-                            <div class="flex-grow-1">
-                                <span class="text-muted fw-semibold text-uppercase" style="font-size: 0.75rem;">Organizational Setup</span>
-                                <h5 class="fw-bold text-dark mb-0">Position Management</h5>
-                            </div>
-                            <div class="fs-1 text-success opacity-50"><i class="bi bi-briefcase"></i></div>
-                        </div>
-                    </div>
-                </div>
                 <!-- Clickable Add Admin Card -->
                 <div class="col-md-3">
                     <div class="card stat-card p-3 border-start border-4 border-dark shadow-sm h-100 d-flex flex-column justify-content-between clickable-card" data-bs-toggle="modal" data-bs-target="#addAdminModal">
@@ -128,6 +128,17 @@ require_once 'controllers/setting/setting_controller.php';
                                 <h5 class="fw-bold text-dark mb-0">Admin Management</h5>
                             </div>
                             <div class="fs-1 text-dark opacity-50"><i class="bi bi-shield-lock-fill"></i></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stat-card p-3 border-start border-4 border-danger shadow-sm h-100 clickable-card" role="button" tabindex="0" data-bs-toggle="modal" data-bs-target="#schoolDetailsModal" aria-controls="schoolDetailsModal" aria-label="Edit school details">
+                        <div class="d-flex align-items-start justify-content-between gap-3">
+                            <div class="flex-grow-1">
+                                <span class="text-muted fw-semibold text-uppercase" style="font-size: 0.75rem;">System Profile</span>
+                                <h5 class="fw-bold text-dark mb-0">School/Office Details</h5>
+                            </div>
+                            <div class="text-danger fs-2 opacity-50"><i class="bi bi-building"></i></div>
                         </div>
                     </div>
                 </div>
@@ -144,17 +155,6 @@ require_once 'controllers/setting/setting_controller.php';
                             </div>
                         </div>
                     </a>
-                </div>
-                <div class="col-md-3">
-                    <div class="card stat-card p-3 border-start border-4 border-danger shadow-sm h-100 clickable-card" role="button" tabindex="0" data-bs-toggle="modal" data-bs-target="#schoolDetailsModal" aria-controls="schoolDetailsModal" aria-label="Edit school details">
-                        <div class="d-flex align-items-start justify-content-between gap-3">
-                            <div class="flex-grow-1">
-                                <span class="text-muted fw-semibold text-uppercase" style="font-size: 0.75rem;">System Profile</span>
-                                <h5 class="fw-bold text-dark mb-0">School/Office Details</h5>
-                            </div>
-                            <div class="text-danger fs-2 opacity-50"><i class="bi bi-building"></i></div>
-                        </div>
-                    </div>
                 </div>
             </div>
 <div class="modal fade" id="databaseModal" tabindex="-1" aria-labelledby="databaseModalLabel" aria-hidden="true">
@@ -190,7 +190,7 @@ require_once 'controllers/setting/setting_controller.php';
             <form action="controllers/setting/save_school_details.php" method="post">
                 <?php echo csrf_field(); ?>
                 <div class="modal-header text-white" style="background-color: #0D3B66;">
-                    <h5 class="modal-title fw-bold" id="schoolDetailsModalLabel"><i class="bi bi-building me-2"></i>School Details</h5>
+                    <h5 class="modal-title fw-bold" id="schoolDetailsModalLabel"><i class="bi bi-building me-2"></i>School/Office</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
@@ -219,6 +219,10 @@ require_once 'controllers/setting/setting_controller.php';
                     <div class="mb-3">
                         <label for="schoolName" class="form-label fw-semibold">School Name</label>
                         <input type="text" class="form-control" id="schoolName" name="school_name" maxlength="255" value="<?php echo htmlspecialchars($schoolDetails['school_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                    </div>
+                    <div class="mb-3">
+                        <label for="schoolId" class="form-label fw-semibold">School ID</label>
+                        <input type="text" class="form-control" id="schoolId" name="school_id" maxlength="255" value="<?php echo htmlspecialchars($schoolDetails['school_id'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
                     </div>
                     <div class="mb-3">
                         <label for="schoolAddress" class="form-label fw-semibold">School Address</label>
@@ -278,7 +282,12 @@ require_once 'controllers/setting/setting_controller.php';
             <!-- Nav Tabs for DataTables -->
             <ul class="nav nav-tabs custom-tabs mb-3" id="settingsTab" role="tablist">
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link active fw-bold text-dark" id="staff-tab" data-bs-toggle="tab" data-bs-target="#staff-panel" type="button" role="tab" aria-controls="staff-panel" aria-selected="true">
+                    <button class="nav-link active fw-bold text-dark" id="position-tab" data-bs-toggle="tab" data-bs-target="#position-panel" type="button" role="tab" aria-controls="position-panel" aria-selected="true">
+                        <i class="bi bi-briefcase-fill me-2 text-success"></i> Position Management
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold text-dark" id="staff-tab" data-bs-toggle="tab" data-bs-target="#staff-panel" type="button" role="tab" aria-controls="staff-panel" aria-selected="false">
                         <i class="bi bi-people-fill me-2 text-primary"></i> Staff Management
                     </button>
                 </li>
@@ -287,16 +296,11 @@ require_once 'controllers/setting/setting_controller.php';
                         <i class="bi bi-tags-fill me-2 text-warning"></i> Unit of Measure
                     </button>
                 </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link fw-bold text-dark" id="position-tab" data-bs-toggle="tab" data-bs-target="#position-panel" type="button" role="tab" aria-controls="position-panel" aria-selected="false">
-                        <i class="bi bi-briefcase-fill me-2 text-success"></i> Position Management
-                    </button>
-                </li>
             </ul>
             <!-- Tab Content containing 3 DataTables -->
             <div class="tab-content" id="settingsTabContent">
-                <!-- 1. Staff Management DataTable Panel -->
-                <div class="tab-pane fade show active" id="staff-panel" role="tabpanel" aria-labelledby="staff-tab">
+                <!-- Staff Management DataTable Panel -->
+                <div class="tab-pane fade" id="staff-panel" role="tabpanel" aria-labelledby="staff-tab">
                     <div class="card border-0 shadow-sm" style="border-radius: 12px;">
                         <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom-0">
                             <h5 class="fw-bold text-dark mb-0"><i class="bi bi-person-badge me-2 text-primary"></i> Staff / Employee Directory</h5>
@@ -338,7 +342,7 @@ require_once 'controllers/setting/setting_controller.php';
                         </div>
                     </div>
                 </div>
-                <!-- 2. Unit of Measure DataTable Panel -->
+                <!-- Unit of Measure DataTable Panel -->
                 <div class="tab-pane fade" id="category-panel" role="tabpanel" aria-labelledby="category-tab">
                     <div class="card border-0 shadow-sm" style="border-radius: 12px;">
                         <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom-0">
@@ -377,8 +381,8 @@ require_once 'controllers/setting/setting_controller.php';
                         </div>
                     </div>
                 </div>
-                <!-- 3. Position Management DataTable Panel -->
-                <div class="tab-pane fade" id="position-panel" role="tabpanel" aria-labelledby="position-tab">
+                <!-- Position Management DataTable Panel -->
+                <div class="tab-pane fade show active" id="position-panel" role="tabpanel" aria-labelledby="position-tab">
                     <div class="card border-0 shadow-sm" style="border-radius: 12px;">
                         <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom-0">
                             <h5 class="fw-bold text-dark mb-0"><i class="bi bi-briefcase me-2 text-success"></i> Organizational Position List</h5>

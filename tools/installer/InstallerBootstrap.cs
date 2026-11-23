@@ -99,9 +99,12 @@ internal static class InstallerBootstrap
                 }
             }
 
-            string desktopShortcutPath = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory),
-                "Inventory System.lnk");
+            string desktopDirectory = Environment.GetEnvironmentVariable("INVENTORY_DESKTOP_PATH");
+            if (String.IsNullOrWhiteSpace(desktopDirectory))
+            {
+                desktopDirectory = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+            }
+            string desktopShortcutPath = Path.Combine(desktopDirectory, "Inventory System.lnk");
             if (!File.Exists(desktopShortcutPath))
             {
                 throw new InvalidOperationException("Installation finished, but the Inventory System desktop icon could not be found.");

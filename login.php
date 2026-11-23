@@ -9,6 +9,24 @@ if (isset($_SESSION['admin_id']) && !isset($_GET['success'])) {
 
 // Prepare the admin name for the data attribute (converted to uppercase)
 $adminNameUpper = isset($_SESSION['admin_name']) ? strtoupper($_SESSION['admin_name']) : 'ADMIN';
+
+$isIpLocked = false;
+$ipLockoutMessage = '';
+$ipRetryAfter = 0;
+
+try {
+    require_once __DIR__ . '/config/db.php';
+    require_once __DIR__ . '/includes/login_security.php';
+    $clientIp = get_client_ip();
+    $lockoutInfo = check_login_lockout($pdo, '', $clientIp);
+    if (!empty($lockoutInfo['locked'])) {
+        $isIpLocked = true;
+        $ipLockoutMessage = $lockoutInfo['message'];
+        $ipRetryAfter = (int) $lockoutInfo['remaining_seconds'];
+    }
+} catch (Throwable $e) {
+    // If database connection is not established yet, allow login page to render cleanly
+}
 ?>
 
 <!DOCTYPE html>
@@ -39,19 +57,25 @@ $adminNameUpper = isset($_SESSION['admin_name']) ? strtoupper($_SESSION['admin_n
 
         <h1 class="school-title">PROJECT - IAN (Inventory and Assets Navigation)</h1>
 
+        <?php if ($isIpLocked): ?>
+            <div class="alert alert-warning py-2 mb-3 text-start" role="alert" style="font-size: 0.85rem;">
+                <strong>Notice:</strong> <?php echo htmlspecialchars($ipLockoutMessage, ENT_QUOTES, 'UTF-8'); ?>
+            </div>
+        <?php endif; ?>
+
         <form id="loginForm" action="controllers/login/login_process.php" method="POST">
             <?php echo csrf_field(); ?>
             <div class="mb-3 text-start">
                 <label for="username" class="form-label">Username</label>
-                <input type="text" class="form-control" id="username" name="username" required autofocus placeholder="Enter your username">
-            </div>
-            
-            <div class="mb-4 text-start">
-                <label for="password" class="form-label">Password</label>
-                <input type="password" class="form-control" id="password" name="password" required placeholder="Enter your password">
+                <input type="text" class="form-control" id="username" name="username" required autofocus placeholder="Enter your username" <?php echo $isIpLocked ? 'disabled' : ''; ?>>
             </div>
 
-            <button type="submit" class="btn btn-primary-custom w-100 mb-2">SECURE LOGIN</button>
+            <div class="mb-4 text-start">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" class="form-control" id="password" name="password" required placeholder="Enter your password" <?php echo $isIpLocked ? 'disabled' : ''; ?>>
+            </div>
+
+            <button type="submit" class="btn btn-primary-custom w-100 mb-2" <?php echo $isIpLocked ? 'disabled' : ''; ?>><?php echo $isIpLocked ? 'ACCESS LOCKED' : 'SECURE LOGIN'; ?></button>
         </form>
 
         <button type="button" class="btn btn-link p-0" id="forgotPasswordButton">Forgot password?</button>
@@ -73,7 +97,7 @@ $adminNameUpper = isset($_SESSION['admin_name']) ? strtoupper($_SESSION['admin_n
 <script src="assets/vendor/sweetalert2/sweetalert2.min.js"></script>
 
 <!-- External Custom Login JS -->
-<script src="assets/js/login.js?v=2"></script>
+<script src="assets/js/login.js?v=3"></script>
 
 </body>
 </html>

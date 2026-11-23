@@ -10,7 +10,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
     exit;
 }
 
-$fields = ['Region', 'Division', 'type', 'school_name', 'school_address', 'head_name', 'head_position', 'custodian_name', 'custodian_position'];
+$fields = ['Region', 'Division', 'type', 'school_name', 'school_id', 'school_address', 'head_name', 'head_position', 'custodian_name', 'custodian_position'];
 $philippineRegions = [
     'NCR - National Capital Region',
     'CAR - Cordillera Administrative Region',
@@ -33,8 +33,11 @@ $philippineRegions = [
 $values = [];
 foreach ($fields as $field) {
     $value = trim((string)($_POST[$field] ?? ''));
+    if ($field === 'type' && $value === '') {
+        $value = 'Elementary Level';
+    }
     $length = function_exists('mb_strlen') ? mb_strlen($value, 'UTF-8') : strlen($value);
-    if ((!in_array($field, ['school_name', 'school_address'], true) && $value === '') || $length > 255) {
+    if ((!in_array($field, ['school_name', 'school_id', 'school_address'], true) && $value === '') || $length > 255) {
         $_SESSION['school_details_status'] = 'invalid';
         header('Location: ../../setting.php');
         exit;
@@ -60,6 +63,7 @@ try {
         Division VARCHAR(255) NOT NULL DEFAULT '',
         type VARCHAR(255) NOT NULL DEFAULT '',
         school_name VARCHAR(255) NOT NULL DEFAULT '',
+        school_id VARCHAR(255) NOT NULL DEFAULT '',
         school_address VARCHAR(255) NOT NULL DEFAULT '',
         head_name VARCHAR(255) NOT NULL,
         head_position VARCHAR(255) NOT NULL,
@@ -67,32 +71,38 @@ try {
         custodian_position VARCHAR(255) NOT NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
-    $employeeCheck = $pdo->prepare('SELECT COUNT(*) FROM employee WHERE emp_name = :employee_name');
-    foreach (['head_name', 'custodian_name'] as $employeeField) {
-        $employeeCheck->execute(['employee_name' => $values[$employeeField]]);
-        if ((int)$employeeCheck->fetchColumn() === 0) {
-            $_SESSION['school_details_status'] = 'invalid_employee';
-            header('Location: ../../setting.php');
-            exit;
-        }
+    $employeeCheck = $pdo->prepare('SELECT COUNT(*) FROM employee WHERE emp_name = ?');
+    $employeeCheck->execute([$values['head_name']]);
+    $headNameValid = ((int)$employeeCheck->fetchColumn()) > 0;
+
+    $employeeCheck->execute([$values['custodian_name']]);
+    $custodianNameValid = ((int)$employeeCheck->fetchColumn()) > 0;
+
+    if (!$headNameValid || !$custodianNameValid) {
+        $_SESSION['school_details_status'] = 'invalid_employee';
+        header('Location: ../../setting.php');
+        exit;
     }
-    $positionCheck = $pdo->prepare('SELECT COUNT(*) FROM position WHERE position_name = :position_name');
-    foreach (['head_position', 'custodian_position'] as $positionField) {
-        $positionCheck->execute(['position_name' => $values[$positionField]]);
-        if ((int)$positionCheck->fetchColumn() === 0) {
-            $_SESSION['school_details_status'] = 'invalid_position';
-            header('Location: ../../setting.php');
-            exit;
-        }
+
+    $positionCheck = $pdo->prepare('SELECT COUNT(*) FROM position WHERE position_name = ?');
+    $positionCheck->execute([$values['head_position']]);
+    $headPositionValid = ((int)$positionCheck->fetchColumn()) > 0;
+
+    $positionCheck->execute([$values['custodian_position']]);
+    $custodianPositionValid = ((int)$positionCheck->fetchColumn()) > 0;
+
+    if (!$headPositionValid || !$custodianPositionValid) {
+        $_SESSION['school_details_status'] = 'invalid_position';
+        header('Location: ../../setting.php');
+        exit;
     }
 
     $existingId = $pdo->query('SELECT id FROM school_details ORDER BY id ASC LIMIT 1')->fetchColumn();
     if ($existingId !== false) {
-        $stmt = $pdo->prepare('UPDATE school_details SET Region = :Region, Division = :Division, type = :type, school_name = :school_name, school_address = :school_address, head_name = :head_name, head_position = :head_position, custodian_name = :custodian_name, custodian_position = :custodian_position WHERE id = :id');
-        $values['id'] = (int)$existingId;
-        $stmt->execute($values);
+        $stmt = $pdo->prepare("UPDATE school_details SET Region = :Region, Division = :Division, type = :type, school_name = :school_name, school_id = :school_id, school_address = :school_address, head_name = :head_name, head_position = :head_position, custodian_name = :custodian_name, custodian_position = :custodian_position WHERE id = :id");
+        $stmt->execute(array_merge($values, ['id' => $existingId]));
     } else {
-        $stmt = $pdo->prepare('INSERT INTO school_details (Region, Division, type, school_name, school_address, head_name, head_position, custodian_name, custodian_position) VALUES (:Region, :Division, :type, :school_name, :school_address, :head_name, :head_position, :custodian_name, :custodian_position)');
+        $stmt = $pdo->prepare("INSERT INTO school_details (Region, Division, type, school_name, school_id, school_address, head_name, head_position, custodian_name, custodian_position) VALUES (:Region, :Division, :type, :school_name, :school_id, :school_address, :head_name, :head_position, :custodian_name, :custodian_position)");
         $stmt->execute($values);
     }
     $syncStatus = sync_school_details_to_sheet($values);

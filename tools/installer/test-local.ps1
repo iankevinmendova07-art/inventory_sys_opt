@@ -4,6 +4,7 @@ $ErrorActionPreference = 'Stop'
 $testRoot = Join-Path ([IO.Path]::GetTempPath()) ('inventory-local-test-' + [Guid]::NewGuid().ToString('N'))
 $env:LOCALAPPDATA = Join-Path $testRoot 'Local'
 $env:APPDATA = Join-Path $testRoot 'Roaming'
+$env:INVENTORY_DESKTOP_PATH = Join-Path $testRoot 'Desktop'
 $env:TEMP = Join-Path $testRoot 'Temp'
 $env:TMP = $env:TEMP
 $env:INVENTORY_MYSQL_PORT = ''
@@ -13,7 +14,13 @@ $installer = Get-ChildItem (Join-Path $PSScriptRoot 'output') -Filter 'Inventory
 $installRoot = Join-Path $env:LOCALAPPDATA 'Programs\InventorySystem'
 $setupProcess = $null
 if (-not $installer -or -not (Test-Path $installer -PathType Leaf)) { throw 'Build the installer before running this test.' }
-New-Item -ItemType Directory -Force -Path $env:LOCALAPPDATA,$env:APPDATA,$env:TEMP | Out-Null
+New-Item -ItemType Directory -Force -Path $env:LOCALAPPDATA,$env:APPDATA,$env:TEMP,$env:INVENTORY_DESKTOP_PATH | Out-Null
+$desktopShortcutPath = Join-Path $env:INVENTORY_DESKTOP_PATH 'Inventory System.lnk'
+$testShell = New-Object -ComObject WScript.Shell
+$oldDesktopShortcut = $testShell.CreateShortcut($desktopShortcutPath)
+$oldDesktopShortcut.TargetPath = Join-Path $env:WINDIR 'notepad.exe'
+$oldDesktopShortcut.IconLocation = Join-Path $env:WINDIR 'notepad.exe'
+$oldDesktopShortcut.Save()
 $conflictListeners = New-Object System.Collections.Generic.List[System.Net.Sockets.TcpListener]
 $conflictWebPort = $false
 $conflictMySqlPort = $false
@@ -37,6 +44,22 @@ try {
     }
     if ($setupProcess.ExitCode -ne 0) { throw "Setup exited with code $($setupProcess.ExitCode). Review $env:LOCALAPPDATA\InventorySystem\logs." }
 
+    $installedEnvPath = Join-Path $installRoot '.env'
+    if (-not (Test-Path $installedEnvPath -PathType Leaf)) { throw 'The installer did not create the application .env file.' }
+    $installedEnv = Get-Content $installedEnvPath -Raw
+    if ($installedEnv -notmatch '(?m)^SCHOOL_DETAILS_WEBHOOK_URL=https://script\.google\.com/macros/s/[A-Za-z0-9_-]+/exec\r?$' -or $installedEnv -notmatch '(?m)^SCHOOL_DETAILS_WEBHOOK_SECRET=\r?$') {
+        throw 'The generated .env file is missing the webhook URL or secret setting.'
+    }
+    Write-Host 'PASS: installer generated a local .env file with the webhook URL and a blank secret for quiet setup.'
+
+    $desktopShortcut = $testShell.CreateShortcut($desktopShortcutPath)
+    $expectedDesktopTarget = Join-Path $installRoot 'tools\installer\start-local.ps1'
+    $expectedDesktopIcon = Join-Path $installRoot 'assets\img\inventory-system.ico'
+    if ($desktopShortcut.TargetPath -ine $powerShellPath -or $desktopShortcut.Arguments -notlike "*`"$expectedDesktopTarget`"*" -or $desktopShortcut.IconLocation -notlike "$expectedDesktopIcon,*") {
+        throw 'The installer did not replace the old desktop shortcut with the current app target and icon.'
+    }
+    Write-Host 'PASS: upgrade replaced the existing desktop shortcut target and icon.'
+
     $dataRoot = Join-Path $env:LOCALAPPDATA 'InventorySystem'
     $ports = Get-Content (Join-Path $dataRoot 'secure\ports.json') -Raw | ConvertFrom-Json
     foreach ($listener in $conflictListeners) { $listener.Stop() }
@@ -56,9 +79,17 @@ try {
     if ($LASTEXITCODE -ne 0 -or [int]$tableCount -lt 14) { throw 'The fresh application schema was incomplete or its restricted database account failed.' }
     $jurisdictionColumnCount = (& $mysql "--defaults-extra-file=$appClient" --protocol=TCP --host=127.0.0.1 "--port=$($ports.mysql)" --database=inventory_sys_db --batch --skip-column-names --execute="SELECT COUNT(*) FROM information_schema.columns WHERE table_schema='inventory_sys_db' AND table_name='school_details' AND column_name IN ('Region','Division')").Trim()
     if ($LASTEXITCODE -ne 0 -or [int]$jurisdictionColumnCount -ne 2) { throw 'The fresh application schema is missing the school Region or Division column.' }
+    $startScript = Join-Path $installRoot 'tools\installer\start-local.ps1'
+    & $mysql @rootArgs "--database=inventory_sys_db" "--execute=DELETE FROM schema_migrations WHERE version=6; ALTER TABLE school_details DROP COLUMN school_id"
+    if ($LASTEXITCODE -ne 0) { throw 'Could not prepare the isolated school ID migration check.' }
+    $schoolIdMigration = Start-Process -FilePath $powerShellPath -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$startScript`" -NoBrowser -QuietErrors" -PassThru -Wait -WindowStyle Hidden
+    if ($schoolIdMigration.ExitCode -ne 0) { throw 'Startup did not run the isolated school ID migration.' }
+    $schoolIdColumnCount = (& $mysql @rootArgs "--database=inventory_sys_db" --batch --skip-column-names --execute="SELECT COUNT(*) FROM information_schema.columns WHERE table_schema='inventory_sys_db' AND table_name='school_details' AND column_name='school_id'").Trim()
+    $schoolIdMigrationCount = (& $mysql @rootArgs "--database=inventory_sys_db" --batch --skip-column-names --execute='SELECT COUNT(*) FROM schema_migrations WHERE version=6').Trim()
+    if ($LASTEXITCODE -ne 0 -or [int]$schoolIdColumnCount -ne 1 -or [int]$schoolIdMigrationCount -ne 1) { throw 'The missing school ID column was not restored and recorded by migration version 6.' }
+    Write-Host 'PASS: startup detects and applies the missing school ID migration.'
     & $mysql @rootArgs "--database=inventory_sys_db" "--execute=INSERT INTO school_details (Region,Division,school_name,school_address,head_name,head_position,custodian_name,custodian_position) VALUES ('Old Region','Old Division','Migration Preservation School','Migration Address','Old Head','Old Position','Old Custodian','Old Position'); DELETE FROM schema_migrations WHERE version=3; ALTER TABLE school_details DROP COLUMN Region, DROP COLUMN Division"
     if ($LASTEXITCODE -ne 0) { throw 'Could not prepare the isolated version-2 schema upgrade.' }
-    $startScript = Join-Path $installRoot 'tools\installer\start-local.ps1'
     $migrationUpgrade = Start-Process -FilePath $powerShellPath -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$startScript`" -NoBrowser -QuietErrors" -PassThru -Wait -WindowStyle Hidden
     if ($migrationUpgrade.ExitCode -ne 0) { throw 'The isolated version-2 database did not migrate to the Region/Division schema.' }
     $upgradedJurisdictionColumnCount = (& $mysql "--defaults-extra-file=$appClient" --protocol=TCP --host=127.0.0.1 "--port=$($ports.mysql)" --database=inventory_sys_db --batch --skip-column-names --execute="SELECT COUNT(*) FROM information_schema.columns WHERE table_schema='inventory_sys_db' AND table_name='school_details' AND column_name IN ('Region','Division')").Trim()
@@ -115,7 +146,7 @@ try {
     if ($setupPage.Content -notmatch 'name="csrf_token" value="([^"]+)"') { throw 'Could not read the setup CSRF token.' }
     $setupToken = $Matches[1]
     $setupResponse = Invoke-WebRequest -Uri "http://127.0.0.1:$($ports.web)/setup_admin.php" -Method Post -WebSession $backupSession -Body @{
-        csrf_token=$setupToken; username=$backupSmokeUser; password=$backupSmokePassword; password_confirmation=$backupSmokePassword;
+        csrf_token=$setupToken; admin_name='QA Administrator'; username=$backupSmokeUser; password=$backupSmokePassword; password_confirmation=$backupSmokePassword;
         region='Region VIII - Eastern Visayas'; division='Smoke Test Division'; school_name='SMOKE TEST SCHOOL'; school_address='Smoke Test Address'
     } -UseBasicParsing -TimeoutSec 15
     $setupAdminCount = (& $mysql "--defaults-extra-file=$appClient" --protocol=TCP --host=127.0.0.1 "--port=$($ports.mysql)" --database=inventory_sys_db --batch --skip-column-names --execute='SELECT COUNT(*) FROM admin').Trim()
@@ -380,7 +411,9 @@ try {
         $stopScript = Join-Path $installRoot 'tools\installer\stop-local.ps1'
         $stop = Start-Process -FilePath $powerShellPath -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$stopScript`"" -PassThru -Wait -WindowStyle Hidden
         if ($stop.ExitCode -ne 0) { throw 'The app stop action failed.' }
-        $deadline = [DateTime]::UtcNow.AddSeconds(20)
+        # The launcher performs its own graceful database shutdown after the
+        # stop shortcut closes the app window; allow time for that second stop.
+        $deadline = [DateTime]::UtcNow.AddSeconds(60)
         while (-not $launcher.HasExited -and [DateTime]::UtcNow -lt $deadline) { Start-Sleep -Milliseconds 250 }
         if (-not $launcher.HasExited) { throw 'Closing the desktop window did not finish its launcher.' }
         Write-Host "PASS: $((Split-Path -Leaf $appBrowser)) app window launch and owned-service shutdown."
@@ -389,7 +422,7 @@ try {
 
     $uninstaller = Join-Path $installRoot 'tools\installer\remove-local.ps1'
     $remove = Start-Process -FilePath $powerShellPath -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$uninstaller`" -RetainData" -PassThru -Wait -WindowStyle Hidden
-    if ($remove.ExitCode -ne 0) { throw 'Uninstall with data retention failed.' }
+    if ($remove.ExitCode -ne 0) { throw "Uninstall with data retention failed (exit code $($remove.ExitCode))." }
     $deadline = [DateTime]::UtcNow.AddSeconds(30)
     while ((Test-Path $installRoot) -and [DateTime]::UtcNow -lt $deadline) { Start-Sleep -Milliseconds 250 }
     if (Test-Path $installRoot) { throw 'Uninstaller did not remove the application files.' }
@@ -410,5 +443,5 @@ try {
         & icacls.exe $resolvedTest /reset /T /C | Out-Null
         Remove-Item -LiteralPath $resolvedTest -Recurse -Force -ErrorAction SilentlyContinue
     }
-    Remove-Item Env:\LOCALAPPDATA,Env:\APPDATA,Env:\TEMP,Env:\TMP,Env:\INVENTORY_MYSQL_PORT,Env:\INVENTORY_WEB_PORT -ErrorAction SilentlyContinue
+    Remove-Item Env:\LOCALAPPDATA,Env:\APPDATA,Env:\INVENTORY_DESKTOP_PATH,Env:\TEMP,Env:\TMP,Env:\INVENTORY_MYSQL_PORT,Env:\INVENTORY_WEB_PORT -ErrorAction SilentlyContinue
 }

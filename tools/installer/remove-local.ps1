@@ -4,7 +4,7 @@ Add-Type -AssemblyName System.Windows.Forms
 $appRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 $localAppData = if ($env:LOCALAPPDATA) { $env:LOCALAPPDATA } else { [Environment]::GetFolderPath('LocalApplicationData') }
 $appData = if ($env:APPDATA) { $env:APPDATA } else { [Environment]::GetFolderPath('ApplicationData') }
-$desktop = [Environment]::GetFolderPath([Environment+SpecialFolder]::DesktopDirectory)
+$desktop = if ($env:INVENTORY_DESKTOP_PATH) { $env:INVENTORY_DESKTOP_PATH } else { [Environment]::GetFolderPath([Environment+SpecialFolder]::DesktopDirectory) }
 $dataRoot = Join-Path $localAppData 'InventorySystem'
 $menuFolder = Join-Path $appData 'Microsoft\Windows\Start Menu\Programs\Inventory System'
 if ($RemoveData) { $removeData = $true }

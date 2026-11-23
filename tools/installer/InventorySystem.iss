@@ -20,8 +20,8 @@ Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern
 
-[Tasks]
-Name: "desktopicon"; Description: "Create a desktop shortcut"; GroupDescription: "Additional shortcuts:"
+[InstallDelete]
+Type: files; Name: "{autodesktop}\{#AppName}.lnk"
 
 [Files]
 Source: "stage\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
@@ -32,7 +32,7 @@ Name: "{autoprograms}\Stop {#AppName}"; Filename: "{sys}\WindowsPowerShell\v1.0\
 Name: "{autoprograms}\Back Up {#AppName}"; Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File ""{app}\tools\installer\backup-local.ps1"""; WorkingDir: "{app}"; IconFilename: "{app}\assets\img\inventory-system.ico"
 Name: "{autoprograms}\Restore {#AppName}"; Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File ""{app}\tools\installer\restore-local.ps1"""; WorkingDir: "{app}"; IconFilename: "{app}\assets\img\inventory-system.ico"
 Name: "{autoprograms}\Remove {#AppName}"; Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File ""{app}\tools\installer\remove-local.ps1"""; WorkingDir: "{app}"; IconFilename: "{app}\assets\img\inventory-system.ico"
-Name: "{autodesktop}\{#AppName}"; Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File ""{app}\tools\installer\start-local.ps1"""; WorkingDir: "{app}"; Tasks: desktopicon; IconFilename: "{app}\assets\img\inventory-system.ico"
+Name: "{autodesktop}\{#AppName}"; Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File ""{app}\tools\installer\start-local.ps1"""; WorkingDir: "{app}"; IconFilename: "{app}\assets\img\inventory-system.ico"
 
 [Run]
 Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\tools\installer\start-local.ps1"""; WorkingDir: "{app}"; Description: "Launch {#AppName}"; Flags: postinstall nowait skipifsilent

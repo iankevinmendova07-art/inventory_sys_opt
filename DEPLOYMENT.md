@@ -30,6 +30,8 @@ It uses a temporary Windows user-data root and empty database, checks port confl
 
 Run `InventorySystemSetup.exe`. It installs to `%LOCALAPPDATA%\Programs\InventorySystem`, creates a desktop shortcut and Start Menu entries, and creates the data folder `%LOCALAPPDATA%\InventorySystem`. On first launch, create the administrator account on the local setup page.
 
+The installer can optionally connect school-profile saves to Google Sheets. Enter the Apps Script shared secret when prompted, or choose **Skip**. See [Google Sheets school profile sync](google_sheets_school_details_sync.md) for receiver setup and manual configuration. Never commit the shared secret.
+
 The standalone setup targets 64-bit Windows 10 and Windows 11 and declares support for both in its embedded application manifest; it does not require Compatibility Mode. The setup includes no existing inventory, employee, administrator, or transaction records. Do not copy a production data directory into the test harness. To migrate an existing MySQL installation, use a separate cold backup and a test copy before using the release package.
 
 ## Persistent data and security
@@ -70,6 +72,6 @@ Logs are in `%LOCALAPPDATA%\InventorySystem\logs`.
 - **Startup reports a schema import or migration failure:** keep the application data folder and inspect `schema-import.log` or `schema-migration.log` in `%LOCALAPPDATA%\InventorySystem\logs`. An incomplete schema is backed up before repair; the backup remains in `%LOCALAPPDATA%\InventorySystem\backups`. Do not send SQL backups because they may contain private data.
 - **The app window does not appear:** open the Start Menu Inventory System shortcut and inspect `startup-steps.log`, `php.err`, and `mysql.err`. If Edge is unavailable, use the default browser and Stop Inventory System shortcut.
 - **Database startup fails after an unexpected power loss:** launch again and allow MySQL crash recovery to finish; do not delete the `mysql` data directory. Restore the most recent SQL backup if recovery fails.
-- **Forgot the administrator password:** use the existing database recovery procedure in `RECOVERY.md`. Do not expose a password-reset endpoint.
+- **Forgot the administrator password:** use the [database recovery procedure](RECOVERY.md). Do not expose a password-reset endpoint.
 
-See `WINDOWS_USER_GUIDE.md`, `STANDALONE_STATUS.md`, and `THIRD_PARTY_NOTICES.md` for the end-user instructions, test status, and license inventory.
+See [Windows user guide](WINDOWS_USER_GUIDE.md), [standalone release status](STANDALONE_STATUS.md), and [third-party notices](THIRD_PARTY_NOTICES.md) for end-user instructions, test status, and license inventory.

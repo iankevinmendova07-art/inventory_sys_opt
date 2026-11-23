@@ -21,7 +21,7 @@
  *   4. Paste the hash into the `password` column (replacing the old value).
  *   5. Save. Log in with the new password you typed in step 1.
  *
- * See RECOVERY.md for the full walkthrough with screenshots-in-words.
+ * See "MD FILES/RECOVERY.md" for the full walkthrough.
  */
 
 if (php_sapi_name() !== 'cli') {

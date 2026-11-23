@@ -9,17 +9,19 @@ if (!function_exists('school_sync_config')) {
         }
 
         // This project keeps local settings in its ignored root .env file.
-        $envPath = dirname(__DIR__) . DIRECTORY_SEPARATOR . '.env';
-        if (!is_readable($envPath)) {
-            return '';
-        }
-        foreach (file($envPath, FILE_IGNORE_NEW_LINES) ?: [] as $line) {
-            if (preg_match('/^\s*' . preg_quote($key, '/') . '\s*=\s*(.*?)\s*$/', $line, $matches)) {
-                $value = trim($matches[1]);
-                if (strlen($value) >= 2 && (($value[0] === '"' && substr($value, -1) === '"') || ($value[0] === "'" && substr($value, -1) === "'"))) {
-                    $value = substr($value, 1, -1);
+        foreach (['.env', 'env'] as $envFile) {
+            $envPath = dirname(__DIR__) . DIRECTORY_SEPARATOR . $envFile;
+            if (!is_readable($envPath)) {
+                continue;
+            }
+            foreach (file($envPath, FILE_IGNORE_NEW_LINES) ?: [] as $line) {
+                if (preg_match('/^\s*' . preg_quote($key, '/') . '\s*=\s*(.*?)\s*$/', $line, $matches)) {
+                    $value = trim($matches[1]);
+                    if (strlen($value) >= 2 && (($value[0] === '"' && substr($value, -1) === '"') || ($value[0] === "'" && substr($value, -1) === "'"))) {
+                        $value = substr($value, 1, -1);
+                    }
+                    return trim($value);
                 }
-                return trim($value);
             }
         }
         return '';
@@ -50,6 +52,7 @@ if (!function_exists('sync_school_details_to_sheet')) {
                 'School Division' => (string)$values['Division'],
                 'Office/School Type' => (string)$values['type'],
                 'School Name' => (string)$values['school_name'],
+                'School ID' => (string)($values['school_id'] ?? ''),
                 'School Address' => (string)$values['school_address'],
                 'School Head/Supply Officer' => (string)$values['head_name'],
                 'Property Custodian Name' => (string)$values['custodian_name'],
@@ -66,9 +69,22 @@ if (!function_exists('sync_school_details_to_sheet')) {
             return 'failed';
         }
 
+        // The bundled Windows PHP build has no built-in CA bundle. Prefer the
+        // deployed runtime copy, then the repository copy used by Laragon.
+        $caBundle = null;
+        foreach ([
+            dirname(__DIR__) . DIRECTORY_SEPARATOR . 'runtime' . DIRECTORY_SEPARATOR . 'php' . DIRECTORY_SEPARATOR . 'cacert.pem',
+            dirname(__DIR__) . DIRECTORY_SEPARATOR . 'tools' . DIRECTORY_SEPARATOR . 'installer' . DIRECTORY_SEPARATOR . 'runtime-overlay' . DIRECTORY_SEPARATOR . 'php' . DIRECTORY_SEPARATOR . 'cacert.pem',
+        ] as $candidateBundle) {
+            if (is_readable($candidateBundle)) {
+                $caBundle = $candidateBundle;
+                break;
+            }
+        }
+
         if (function_exists('curl_init')) {
             $handle = curl_init($url);
-            curl_setopt_array($handle, [
+            $curlOptions = [
                 CURLOPT_POST => true,
                 CURLOPT_POSTFIELDS => $envelope,
                 CURLOPT_HTTPHEADER => ['Content-Type: application/json', 'Accept: application/json'],
@@ -80,13 +96,21 @@ if (!function_exists('sync_school_details_to_sheet')) {
                 CURLOPT_SSL_VERIFYPEER => true,
                 CURLOPT_SSL_VERIFYHOST => 2,
                 CURLOPT_USERAGENT => 'Project-IAN-School-Details-Sync/1.0',
-            ]);
+            ];
+            if ($caBundle !== null) {
+                $curlOptions[CURLOPT_CAINFO] = $caBundle;
+            }
+            curl_setopt_array($handle, $curlOptions);
             $response = curl_exec($handle);
             $status = (int)curl_getinfo($handle, CURLINFO_HTTP_CODE);
             $contentType = (string)curl_getinfo($handle, CURLINFO_CONTENT_TYPE);
             $error = curl_error($handle);
             curl_close($handle);
         } else {
+            $sslOptions = ['verify_peer' => true, 'verify_peer_name' => true];
+            if ($caBundle !== null) {
+                $sslOptions['cafile'] = $caBundle;
+            }
             $context = stream_context_create([
                 'http' => [
                     'method' => 'POST',
@@ -97,7 +121,7 @@ if (!function_exists('sync_school_details_to_sheet')) {
                     'content' => $envelope,
                     'ignore_errors' => true,
                 ],
-                'ssl' => ['verify_peer' => true, 'verify_peer_name' => true],
+                'ssl' => $sslOptions,
             ]);
             $response = @file_get_contents($url, false, $context);
             $status = 0;
@@ -113,8 +137,15 @@ if (!function_exists('sync_school_details_to_sheet')) {
         }
 
         $result = is_string($response) ? json_decode($response, true) : null;
+        $expectedSchoolId = trim((string)($values['school_id'] ?? ''));
         if ($status >= 200 && $status < 300 && is_array($result) && ($result['ok'] ?? false) === true) {
-            return 'synced';
+            if (($result['schemaVersion'] ?? null) === 2
+                && trim((string)($result['schoolId'] ?? '')) === $expectedSchoolId) {
+                return 'synced';
+            }
+            $diagnostic = 'receiver is outdated or did not confirm the saved School ID; redeploy the latest Apps Script version';
+            error_log('School details sheet sync failed (HTTP ' . $status . '): ' . $diagnostic);
+            return 'failed';
         }
         if ($error !== '') {
             $diagnostic = $error;

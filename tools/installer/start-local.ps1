@@ -237,9 +237,9 @@ if ($missingTables.Count -gt 0) {
 $migrationVersion = (& $mysqlExe @client --batch --skip-column-names --execute="SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='$databaseName' AND table_name='schema_migrations'").Trim()
 $migrationNeeded = ([int]$migrationVersion -eq 0)
 if (-not $migrationNeeded) {
-    # Keep this in sync with the newest version in apply_inventory_indexes.php.
-    $migrationDone = (& $mysqlExe @client "--database=$databaseName" --batch --skip-column-names --execute='SELECT COUNT(*) FROM schema_migrations WHERE version=5').Trim()
-    $migrationNeeded = ([int]$migrationDone -eq 0)
+    # Keep this in sync with all versions in apply_inventory_indexes.php.
+    $migrationDone = (& $mysqlExe @client "--database=$databaseName" --batch --skip-column-names --execute='SELECT COUNT(DISTINCT version) FROM schema_migrations WHERE version IN (1,2,3,4,5,6)').Trim()
+    $migrationNeeded = ([int]$migrationDone -lt 6)
 }
 if ($migrationNeeded -and -not $freshDatabase) {
     $backupName = 'pre-migration-' + (Get-Date -Format 'yyyyMMdd-HHmmss') + '.sql'
@@ -350,7 +350,8 @@ if (-not $NoBrowser) {
         if (-not $windowOpened) { throw 'The desktop app window did not become available.' }
 
         $noWindowSince = $null
-        while ($true) {
+        $browserPidPath = Join-Path $dataRoot 'browser.pid'
+        while (Test-Path $browserPidPath) {
             if (Test-AppBrowserWindow $browserName $profile) {
                 $noWindowSince = $null
             } elseif (-not $noWindowSince) {

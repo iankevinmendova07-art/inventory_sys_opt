@@ -10,7 +10,7 @@ The standalone package includes the following separately licensed components. Li
 | jQuery | 3.7.0 | MIT; `assets/vendor/jquery/LICENSE.txt`. |
 | SweetAlert2 | 11.22.0 | MIT; `assets/vendor/sweetalert2/LICENSE`. |
 | DataTables | 1.13.6 | MIT; `assets/vendor/datatables/LICENSE.txt`. |
-| Chart.js | 4.5.0 | MIT; `assets/vendor/chartjs/LICENSE.md`. |
+| Chart.js | 4.5.0 | MIT; [Chart.js license](LICENSE.md), relocated here with the project Markdown files. |
 | Bootstrap Icons | 1.10.5 | MIT; `assets/vendor/bootstrap-icons/LICENSE`. |
 | Font Awesome Free | 6.4.0 | CSS/code MIT, icon fonts SIL OFL 1.1, icon artwork CC BY 4.0; `assets/vendor/fontawesome/LICENSE.txt`. |
 
